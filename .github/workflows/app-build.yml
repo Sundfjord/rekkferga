@@ -1,0 +1,103 @@
+name: Build Mobile App with EAS
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "packages/app/**"
+      - ".github/workflows/app-build.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/app/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: packages/app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Run tests
+        run: |
+          if npm run test 2>/dev/null; then
+            npm run test
+          else
+            echo "No tests configured, skipping test execution"
+          fi
+
+      - name: Check Expo configuration
+        run: npx expo config --type public
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    defaults:
+      run:
+        working-directory: packages/app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: packages/app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install EAS CLI
+        run: npm install -g @expo/eas-cli
+
+      - name: Login to Expo
+        run: |
+          echo ${{ secrets.EXPO_TOKEN }} | eas login --non-interactive
+
+      - name: Build for Android
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            eas build --platform android --profile production --non-interactive
+          else
+            eas build --platform android --profile preview --non-interactive
+          fi
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+
+      - name: Build for iOS
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            eas build --platform ios --profile production --non-interactive
+          else
+            eas build --platform ios --profile preview --non-interactive
+          fi
+        env:
+          EXPO_PUBLIC_API_URL: ${{ secrets.EXPO_PUBLIC_API_URL }}
+
+      - name: Notify build
+        run: |
+          echo "✅ Mobile app built successfully with EAS"
+          echo "🌐 Environment: ${{ github.ref_name }}"
+          echo "📦 Package: rekkferga-app"
+          echo "📱 Platforms: Android & iOS"

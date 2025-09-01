@@ -1,0 +1,46 @@
+{
+  "name": "rekkferga",
+  "version": "1.0.0",
+  "description": "A comprehensive ferry information and journey planning platform",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "cd packages/api && python -m flask run",
+    "dev:web": "cd packages/web && npm run dev",
+    "dev:app": "cd packages/app && npm start",
+    "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:app\"",
+    "build:api": "cd packages/api && docker build -t rekkferga-api .",
+    "build:web": "cd packages/web && npm run build",
+    "build:app": "cd packages/app && eas build --platform all",
+    "build:all": "npm run build:api && npm run build:web && npm run build:app",
+    "deploy:api": "cd packages/api && railway up",
+    "deploy:web": "cd packages/web && vercel --prod",
+    "deploy:cron": "cd packages/cron && func azure functionapp publish rekkferga-cron",
+    "deploy:all": "npm run deploy:api && npm run deploy:web && npm run deploy:cron",
+    "test:api": "cd packages/api && python -m pytest",
+    "test:web": "cd packages/web && npm test",
+    "test:app": "cd packages/app && npm test",
+    "test:all": "npm run test:api && npm run test:web && npm run test:app",
+    "lint:all": "npm run lint:web && npm run lint:app",
+    "lint:web": "cd packages/web && npm run lint",
+    "lint:app": "cd packages/app && npm run lint"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "concurrently": "^8.2.2",
+    "typescript": "^5"
+  },
+  "keywords": [
+    "ferry",
+    "transport",
+    "journey-planning",
+    "norway",
+    "api",
+    "mobile-app",
+    "web-app"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

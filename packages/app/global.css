@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Define color values once */
+:root {
+  /* Light theme colors */
+  --light-primary: #2196f3;
+  --light-primary-light: #bbdefb;
+  --light-primary-dark: #1565c0;
+  --light-on-primary: #ffffff;
+
+  --light-background: #bbdefb;
+  --light-on-background: #000000;
+
+  --light-surface: #ffffff;
+  --light-surface-variant: #eeeeee;
+  --light-on-surface: #000000;
+
+  --light-border: #e0e0e0;
+  --light-border-variant: #f5f5f5;
+
+  --light-error: #d32f2f;
+  --light-on-error: #ffffff;
+
+  --light-success: #388e3c;
+  --light-on-success: #ffffff;
+
+  /* Dark theme colors */
+  --dark-primary: #42a5f5;
+  --dark-primary-light: #1565c0;
+  --dark-primary-dark: #011638;
+  --dark-on-primary: #ffffff;
+
+  --dark-background: #000000;
+  --dark-on-background: #ffffff;
+
+  --dark-surface: #121212;
+  --dark-surface-variant: #1e1e1e;
+  --dark-on-surface: #ffffff;
+
+  --dark-border: #424242;
+  --dark-border-variant: #616161;
+
+  --dark-error: #ef5350;
+  --dark-on-error: #000000;
+
+  --dark-success: #66bb6a;
+  --dark-on-success: #000000;
+}
+
+/* Light theme (default) */
+:root {
+  --color-primary: var(--light-primary);
+  --color-primary-light: var(--light-primary-light);
+  --color-primary-dark: var(--light-primary-dark);
+  --color-on-primary: var(--light-on-primary);
+
+  --color-background: var(--light-background);
+  --color-on-background: var(--light-on-background);
+
+  --color-surface: var(--light-surface);
+  --color-surface-variant: var(--light-surface-variant);
+  --color-on-surface: var(--light-on-surface);
+
+  --color-border: var(--light-border);
+  --color-border-variant: var(--light-border-variant);
+
+  --color-error: var(--light-error);
+  --color-on-error: var(--light-on-error);
+
+  --color-success: var(--light-success);
+  --color-on-success: var(--light-on-success);
+}
+
+/* Dark theme */
+.dark {
+  --color-primary: var(--dark-primary);
+  --color-primary-light: var(--dark-primary-light);
+  --color-primary-dark: var(--dark-primary-dark);
+  --color-on-primary: var(--dark-on-primary);
+
+  --color-background: var(--dark-background);
+  --color-on-background: var(--dark-on-background);
+
+  --color-surface: var(--dark-surface);
+  --color-surface-variant: var(--dark-surface-variant);
+  --color-on-surface: var(--dark-on-surface);
+
+  --color-border: var(--dark-border);
+  --color-border-variant: var(--dark-border-variant);
+
+  --color-error: var(--dark-error);
+  --color-on-error: var(--dark-on-error);
+
+  --color-success: var(--dark-success);
+  --color-on-success: var(--dark-on-success);
+}
+
+/* System theme - light preference */
+@media (prefers-color-scheme: light) {
+  .system {
+    --color-primary: var(--light-primary);
+    --color-primary-light: var(--light-primary-light);
+    --color-primary-dark: var(--light-primary-dark);
+    --color-on-primary: var(--light-on-primary);
+
+    --color-background: var(--light-background);
+    --color-on-background: var(--light-on-background);
+
+    --color-surface: var(--light-surface);
+    --color-surface-variant: var(--light-surface-variant);
+    --color-on-surface: var(--light-on-surface);
+
+    --color-border: var(--light-border);
+    --color-border-variant: var(--light-border-variant);
+
+    --color-error: var(--light-error);
+    --color-on-error: var(--light-on-error);
+
+    --color-success: var(--light-success);
+    --color-on-success: var(--light-on-success);
+  }
+}
+
+/* System theme - dark preference */
+@media (prefers-color-scheme: dark) {
+  .system {
+    --color-primary: var(--dark-primary);
+    --color-primary-light: var(--dark-primary-light);
+    --color-primary-dark: var(--dark-primary-dark);
+    --color-on-primary: var(--dark-on-primary);
+
+    --color-background: var(--dark-background);
+    --color-on-background: var(--dark-on-background);
+
+    --color-surface: var(--dark-surface);
+    --color-surface-variant: var(--dark-surface-variant);
+    --color-on-surface: var(--dark-on-surface);
+
+    --color-border: var(--dark-border);
+    --color-border-variant: var(--dark-border-variant);
+
+    --color-error: var(--dark-error);
+    --color-on-error: var(--dark-on-error);
+
+    --color-success: var(--dark-success);
+    --color-on-success: var(--dark-on-success);
+  }
+}

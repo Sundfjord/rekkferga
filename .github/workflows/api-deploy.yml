@@ -1,0 +1,78 @@
+name: Deploy API to Railway
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "packages/api/**"
+      - ".github/workflows/api-deploy.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "packages/api/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: packages/api/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          if [ -f "test_app.py" ]; then
+            python -m pytest test_app.py -v
+          else
+            echo "No tests found, skipping test execution"
+          fi
+        env:
+          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+
+      - name: Run linting
+        run: |
+          if command -v flake8 &> /dev/null; then
+            flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          else
+            echo "flake8 not available, skipping linting"
+          fi
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    defaults:
+      run:
+        working-directory: packages/api
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway
+        run: railway up
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+
+      - name: Notify deployment
+        run: |
+          echo "✅ API deployed successfully to Railway"
+          echo "🌐 Environment: ${{ github.ref_name }}"
+          echo "📦 Package: rekkferga-api"
