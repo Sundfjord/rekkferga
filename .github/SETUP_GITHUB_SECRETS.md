@@ -69,6 +69,18 @@ This guide explains how to set up all the required GitHub secrets for the Rekkfe
 **Description**: Public API URL for the web app
 **Value**: `https://api.rekkferga.com`
 
+### API Geocoding (OpenRouteService)
+
+#### `ORS_API_KEY`
+
+**Description**: OpenRouteService API key (used as fallback geocoding in the API)
+**How to get it**:
+
+1. Go to [OpenRouteService](https://openrouteservice.org/dev/#/signup)
+2. Sign up for a free account
+3. Go to Dashboard → Request a Token
+4. Copy the API key
+
 ### Cron Deployment (Azure Functions)
 
 #### `AZURE_FUNCTIONAPP_PUBLISH_PROFILE`
@@ -118,6 +130,7 @@ gh auth login
 gh secret set RAILWAY_TOKEN --body "your-railway-token"
 gh secret set RAILWAY_PROJECT_ID --body "your-project-id"
 gh secret set COSMOS_CONNECTION_STRING --body "your-cosmos-connection-string"
+gh secret set ORS_API_KEY --body "your-ors-api-key"
 gh secret set VERCEL_TOKEN --body "your-vercel-token"
 gh secret set VERCEL_ORG_ID --body "your-org-id"
 gh secret set VERCEL_PROJECT_ID --body "your-project-id"
@@ -234,6 +247,7 @@ EXPO_PUBLIC_API_URL=https://api.rekkferga.com
 - [ ] Azure Functions publish profile
 - [ ] Expo token
 - [ ] Cosmos DB connection string
+- [ ] ORS API key
 - [ ] API URLs for different environments
 - [ ] Test all deployment workflows
 - [ ] Verify secrets are working correctly

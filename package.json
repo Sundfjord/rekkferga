@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:api": "cd packages/api && python -m flask run",
+    "dev:api": "cd packages/api && python -m flask run --port 5000",
     "dev:web": "cd packages/web && npm run dev",
     "dev:app": "cd packages/app && npm start",
     "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:app\"",

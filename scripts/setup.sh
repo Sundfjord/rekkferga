@@ -12,6 +12,7 @@ echo "Setting up environment files..."
 cp packages/api/.env.example packages/api/.env 2>/dev/null || echo "API .env already exists"
 cp packages/app/env.example packages/app/.env 2>/dev/null || echo "App .env already exists"
 cp packages/web/.env.example packages/web/.env 2>/dev/null || echo "Web .env already exists"
+cp packages/cron/.env.example packages/cron/.env 2>/dev/null || echo "Cron .env already exists"
 
 echo "✅ Setup complete!"
 echo ""

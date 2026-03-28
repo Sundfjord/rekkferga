@@ -7,6 +7,7 @@ services:
       - "5000:5000"
     environment:
       - COSMOS_CONNECTION_STRING=${COSMOS_CONNECTION_STRING}
+      - ORS_API_KEY=${ORS_API_KEY}
       - FLASK_ENV=development
     volumes:
       - ../packages/api:/app

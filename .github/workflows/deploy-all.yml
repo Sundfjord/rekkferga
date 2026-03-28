@@ -18,34 +18,98 @@ on:
           - staging
 
 jobs:
-  test-all:
+  test-api:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        package: [api, web, cron, app]
-
+    defaults:
+      run:
+        working-directory: packages/api
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: packages/api/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          if [ -f "test_app.py" ]; then
+            python -m pytest test_app.py -v
+          else
+            echo "No tests found, skipping"
+          fi
+        env:
+          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
 
-      - name: Test API
-        if: matrix.package == 'api'
-        uses: ./.github/actions/test-api
+  test-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/web
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: packages/web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test --if-present
 
-      - name: Test Web
-        if: matrix.package == 'web'
-        uses: ./.github/actions/test-web
+  test-cron:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/cron
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          cache-dependency-path: packages/cron/requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: |
+          if [ -f "test_function_app.py" ]; then
+            python -m pytest test_function_app.py -v
+          else
+            echo "No tests found, skipping"
+          fi
+        env:
+          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
 
-      - name: Test Cron
-        if: matrix.package == 'cron'
-        uses: ./.github/actions/test-cron
-
-      - name: Test App
-        if: matrix.package == 'app'
-        uses: ./.github/actions/test-app
+  test-app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: packages/app/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test --if-present
 
   deploy-api:
-    needs: test-all
+    needs: [test-api, test-web, test-cron, test-app]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     defaults:
@@ -66,7 +130,7 @@ jobs:
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
 
   deploy-web:
-    needs: test-all
+    needs: [test-api, test-web, test-cron, test-app]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     defaults:
@@ -99,7 +163,7 @@ jobs:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
   deploy-cron:
-    needs: test-all
+    needs: [test-api, test-web, test-cron, test-app]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     defaults:
@@ -133,7 +197,7 @@ jobs:
           COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
 
   build-app:
-    needs: test-all
+    needs: [test-api, test-web, test-cron, test-app]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     defaults:

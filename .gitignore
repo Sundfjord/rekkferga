@@ -71,3 +71,10 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Azure Functions
+local.settings.json
+__azurite_db*__.json
+__blobstorage__
+__queuestorage__
+.python_packages
