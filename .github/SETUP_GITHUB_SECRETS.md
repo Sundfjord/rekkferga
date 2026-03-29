@@ -25,14 +25,15 @@ This guide explains how to set up all the required GitHub secrets for the Rekkfe
 2. Click on Settings → General
 3. Copy the Project ID
 
-#### `COSMOS_CONNECTION_STRING`
+#### `DATABASE_URL`
 
-**Description**: Azure Cosmos DB connection string
+**Description**: PostgreSQL connection string (Railway Postgres addon)
 **How to get it**:
 
-1. Go to Azure Portal → Cosmos DB
-2. Select your database → Keys
-3. Copy the Primary Connection String
+1. Go to your Railway project
+2. Click on the Postgres addon
+3. Go to the "Connect" tab
+4. Copy the value of `DATABASE_URL` (format: `postgresql://user:pass@host:port/dbname`)
 
 ### Web Deployment (Vercel)
 
@@ -129,7 +130,7 @@ gh auth login
 # Add secrets
 gh secret set RAILWAY_TOKEN --body "your-railway-token"
 gh secret set RAILWAY_PROJECT_ID --body "your-project-id"
-gh secret set COSMOS_CONNECTION_STRING --body "your-cosmos-connection-string"
+gh secret set DATABASE_URL --body "your-database-url"
 gh secret set ORS_API_KEY --body "your-ors-api-key"
 gh secret set VERCEL_TOKEN --body "your-vercel-token"
 gh secret set VERCEL_ORG_ID --body "your-org-id"
@@ -246,7 +247,7 @@ EXPO_PUBLIC_API_URL=https://api.rekkferga.com
 - [ ] Vercel token, org ID, and project ID
 - [ ] Azure Functions publish profile
 - [ ] Expo token
-- [ ] Cosmos DB connection string
+- [ ] Railway DATABASE_URL
 - [ ] ORS API key
 - [ ] API URLs for different environments
 - [ ] Test all deployment workflows

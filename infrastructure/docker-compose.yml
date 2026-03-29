@@ -1,16 +1,30 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: rekkferga
+      POSTGRES_PASSWORD: rekkferga
+      POSTGRES_DB: rekkferga
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   api:
     build: ../packages/api
     ports:
       - "5000:5000"
     environment:
-      - COSMOS_CONNECTION_STRING=${COSMOS_CONNECTION_STRING}
+      - DATABASE_URL=postgresql://rekkferga:rekkferga@postgres:5432/rekkferga
       - ORS_API_KEY=${ORS_API_KEY}
       - FLASK_ENV=development
     volumes:
       - ../packages/api:/app
+    depends_on:
+      - postgres
     restart: unless-stopped
 
   web:
@@ -26,7 +40,10 @@ services:
   cron:
     build: ../packages/cron
     environment:
-      - COSMOS_CONNECTION_STRING=${COSMOS_CONNECTION_STRING}
+      - DATABASE_URL=postgresql://rekkferga:rekkferga@postgres:5432/rekkferga
     depends_on:
-      - api
+      - postgres
     restart: unless-stopped
+
+volumes:
+  postgres_data:

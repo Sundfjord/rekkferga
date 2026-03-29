@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:api": "cd packages/api && python -m flask run --port 5000",
+    "dev:api": "cd packages/api && source .venv/bin/activate && python3 -m flask run --host 0.0.0.0 --port 5000",
     "dev:web": "cd packages/web && npm run dev",
     "dev:app": "cd packages/app && npm start",
     "dev:all": "concurrently \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:app\"",
@@ -19,7 +19,7 @@
     "deploy:web": "cd packages/web && vercel --prod",
     "deploy:cron": "cd packages/cron && func azure functionapp publish rekkferga-cron",
     "deploy:all": "npm run deploy:api && npm run deploy:web && npm run deploy:cron",
-    "test:api": "cd packages/api && python -m pytest",
+    "test:api": "cd packages/api && source .venv/bin/activate && python3 -m pytest",
     "test:web": "cd packages/web && npm test",
     "test:app": "cd packages/app && npm test",
     "test:all": "npm run test:api && npm run test:web && npm run test:app",

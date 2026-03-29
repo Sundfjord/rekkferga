@@ -1,8 +1,9 @@
 from flask import Flask, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from azure.cosmos import CosmosClient
-from util import strip_meta, is_valid_nsr_id, cache
+import psycopg2
+import psycopg2.extras
+from util import is_valid_nsr_id, cache
 from geopy.distance import geodesic
 from journey_planner import (
     get_route_to_nsr_id,
@@ -23,13 +24,34 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+
+def get_db_conn():
+    return psycopg2.connect(DATABASE_URL)
+
+
+def init_db():
+    with get_db_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS quays (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    municipality TEXT,
+                    region TEXT,
+                    latitude DOUBLE PRECISION NOT NULL,
+                    longitude DOUBLE PRECISION NOT NULL,
+                    related_quay_ids TEXT[]
+                )
+            """)
+        conn.commit()
+
+
 try:
-    CONN_STR = os.environ["COSMOS_CONNECTION_STRING"]
-    client = CosmosClient.from_connection_string(conn_str=CONN_STR)
-    database = client.get_database_client("fergo-db")
-    container = database.get_container_client("quays")
+    init_db()
 except Exception as e:
-    logging.error(f"Unable to connect to CosmosDB:\n{traceback.format_exc()}")
+    logging.error(f"Unable to initialise database:\n{traceback.format_exc()}")
 
 
 @app.get("/")
@@ -105,14 +127,15 @@ def get_quay_details():
     # Get base quay data
     quay_data = None
     try:
-        quay_results = container.query_items(
-            query="SELECT * FROM quays q WHERE q.id = @quay_id",
-            parameters=[{"name": "@quay_id", "value": request.args.get("quayId")}],
-            enable_cross_partition_query=True,
-        )
-        quay_list = list(quay_results)
-        if quay_list:
-            quay_data = strip_meta(quay_list[0])
+        with get_db_conn() as conn:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    'SELECT id, name, municipality, region, latitude, longitude, related_quay_ids AS "relatedQuayIds" FROM quays WHERE id = %s',
+                    (request.args.get("quayId"),),
+                )
+                row = cur.fetchone()
+                if row:
+                    quay_data = dict(row)
     except Exception as e:
         print(f"Error fetching quay data: {str(e)}")
 
@@ -168,32 +191,25 @@ def get_search_results():
 
 
 def get_quays():
-    result = container.read_all_items()
-    quays = []
-    for row in result:
-        quays.append(strip_meta(row))
-
-    return quays
+    with get_db_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                'SELECT id, name, municipality, region, latitude, longitude, related_quay_ids AS "relatedQuayIds" FROM quays'
+            )
+            return [dict(row) for row in cur.fetchall()]
 
 
 def get_quays_from_nsr_ids(nsr_ids):
-    valid_nsr_ids = []
-    for nsr_id in nsr_ids:
-        if is_valid_nsr_id(nsr_id):
-            valid_nsr_ids.append(nsr_id)
-
-    quays_results = container.query_items(
-        # Build a query WHERE d.id IN ('abc', 'def', 'ghi')
-        query="SELECT * FROM quays q WHERE ARRAY_CONTAINS(@ids, q.id)",
-        parameters=[{"name": "@ids", "value": valid_nsr_ids}],
-        enable_cross_partition_query=True,
-    )
-
-    quays = []
-    for quay in quays_results:
-        quays.append(strip_meta(quay))
-
-    return quays
+    valid_nsr_ids = [nsr_id for nsr_id in nsr_ids if is_valid_nsr_id(nsr_id)]
+    if not valid_nsr_ids:
+        return []
+    with get_db_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(
+                'SELECT id, name, municipality, region, latitude, longitude, related_quay_ids AS "relatedQuayIds" FROM quays WHERE id = ANY(%s)',
+                (valid_nsr_ids,),
+            )
+            return [dict(row) for row in cur.fetchall()]
 
 
 def get_quays_by_distance(args):

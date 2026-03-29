@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { Platform } from "react-native";
 import { useTheme } from "../contexts/ThemeContext";
 
 interface ThemeWrapperProps {
@@ -9,6 +10,8 @@ export const ThemeWrapper: React.FC<ThemeWrapperProps> = ({ children }) => {
   const { themeMode, isDark } = useTheme();
 
   useEffect(() => {
+    if (Platform.OS !== "web") return;
+
     // Apply theme class to document root for CSS variables to work
     const root = document.documentElement;
 

@@ -48,7 +48,7 @@ jobs:
             echo "No tests found, skipping test execution"
           fi
         env:
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   deploy:
     needs: test
@@ -83,7 +83,7 @@ jobs:
           func azure functionapp publish rekkferga-cron --python
         env:
           AZURE_FUNCTIONAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Notify deployment
         run: |

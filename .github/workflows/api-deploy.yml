@@ -40,7 +40,7 @@ jobs:
             echo "No tests found, skipping test execution"
           fi
         env:
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Run linting
         run: |

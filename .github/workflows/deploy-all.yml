@@ -42,7 +42,7 @@ jobs:
             echo "No tests found, skipping"
           fi
         env:
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   test-web:
     runs-on: ubuntu-latest
@@ -87,7 +87,7 @@ jobs:
             echo "No tests found, skipping"
           fi
         env:
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   test-app:
     runs-on: ubuntu-latest
@@ -194,7 +194,7 @@ jobs:
         run: func azure functionapp publish rekkferga-cron --python
         env:
           AZURE_FUNCTIONAPP_PUBLISH_PROFILE: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          COSMOS_CONNECTION_STRING: ${{ secrets.COSMOS_CONNECTION_STRING }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
   build-app:
     needs: [test-api, test-web, test-cron, test-app]
