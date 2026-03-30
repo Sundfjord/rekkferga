@@ -3,7 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
-    "start": "bash set-api-url.sh && expo start",
+    "start": "bash set-api-url.sh && REACT_NATIVE_PACKAGER_HOSTNAME=$(ipconfig getifaddr en0) expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -53,6 +53,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@expo/ngrok": "^4.1.0",
     "@types/react": "~19.1.10",
     "@types/react-native-maps": "^0.24.2",
     "eslint": "^9.25.0",

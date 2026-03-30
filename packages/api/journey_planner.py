@@ -236,6 +236,7 @@ def get_nearest_ferry_stops(lat, lng, maximum_results=10, maximum_distance=20000
                 longitude: $lng
                 maximumDistance: $maximumDistance
                 maximumResults: $maximumResults
+                filterByPlaceTypes: [stopPlace]
                 filterByModes: [water]
             ) {
                 edges {
@@ -245,9 +246,8 @@ def get_nearest_ferry_stops(lat, lng, maximum_results=10, maximum_distance=20000
                             ... on StopPlace {
                                 id
                                 name
-                                geometry {
-                                    coordinates
-                                }
+                                latitude
+                                longitude
                                 transportMode
                             }
                         }
@@ -271,12 +271,11 @@ def get_nearest_ferry_stops(lat, lng, maximum_results=10, maximum_distance=20000
         place = node.get("place", {})
         if not place.get("id"):
             continue
-        coords = place.get("geometry", {}).get("coordinates", [0, 0])
         stops.append({
             "id": place["id"],
             "name": place.get("name", ""),
-            "latitude": coords[1],
-            "longitude": coords[0],
+            "latitude": place.get("latitude", 0),
+            "longitude": place.get("longitude", 0),
             "distance": round(node.get("distance", 0) / 1000),
         })
     return stops

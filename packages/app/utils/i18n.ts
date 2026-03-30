@@ -18,7 +18,9 @@ class I18n {
   private listeners: Set<() => void> = new Set();
 
   constructor() {
-    this.loadLanguage();
+    // Do not call loadLanguage here — AsyncStorage is not available at module
+    // initialization time (before the React Native runtime is ready).
+    // Call i18n.loadLanguage() explicitly from your root component instead.
   }
 
   async loadLanguage() {

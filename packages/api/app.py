@@ -142,17 +142,20 @@ def get_quays_by_distance(args):
     limit = int(args.getlist("limit")[0]) if "limit" in args else 10
     offset = int(args.getlist("offset")[0]) if "offset" in args else 0
 
-    stops = get_nearest_ferry_stops(float(user_lat), float(user_lng), offset + limit)
+    # Fetch more candidates than needed since most EnTur stops won't be in Vegvesen
+    stops = get_nearest_ferry_stops(float(user_lat), float(user_lng), max(50, offset + limit))
 
     quay_list = get_vegvesen_quay_list()
     result = []
     for stop in stops:
         vegvesen_quay = quay_list.get(stop["id"])
+        if not vegvesen_quay:
+            continue
         result.append({
             **stop,
-            "municipality": vegvesen_quay["municipality"] if vegvesen_quay else None,
-            "region": vegvesen_quay["region"] if vegvesen_quay else None,
-            "relatedQuayIds": vegvesen_quay["relatedQuayIds"] if vegvesen_quay else [],
+            "municipality": vegvesen_quay["municipality"],
+            "region": vegvesen_quay["region"],
+            "relatedQuayIds": vegvesen_quay["relatedQuayIds"],
         })
 
     return result[offset:offset + limit]
