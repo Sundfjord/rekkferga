@@ -1,13 +1,86 @@
 import requests
 import urllib.parse
+import threading
+from cachetools import TTLCache, cached
 from datetime import datetime
 from util import format_datetime_for_api
 
 VEGVESEN_API_URL = "https://ferry.atlas.vegvesen.no"
+KARTVERKET_API_URL = "https://api.kartverket.no/kommuneinfo/v1"
 
 headers = {
     "X-System-ID": "rekkferga",
 }
+
+_counties_cache = TTLCache(maxsize=1, ttl=86400)
+_counties_lock = threading.Lock()
+
+_municipalities_cache = TTLCache(maxsize=1, ttl=86400)
+_municipalities_lock = threading.Lock()
+
+_vegvesen_quays_cache = TTLCache(maxsize=1, ttl=3600)
+_vegvesen_quays_lock = threading.Lock()
+
+
+@cached(cache=_counties_cache, lock=_counties_lock)
+def _get_counties():
+    response = requests.get(
+        f"{KARTVERKET_API_URL}/fylker",
+        headers={"Content-Type": "application/json"},
+    )
+    return {c["fylkesnummer"]: c["fylkesnavn"] for c in response.json()}
+
+
+@cached(cache=_municipalities_cache, lock=_municipalities_lock)
+def _get_municipalities():
+    response = requests.get(
+        f"{KARTVERKET_API_URL}/kommuner",
+        headers={"Content-Type": "application/json"},
+    )
+    return {m["kommunenummer"]: m["kommunenavn"] for m in response.json()}
+
+
+@cached(cache=_vegvesen_quays_cache, lock=_vegvesen_quays_lock)
+def get_vegvesen_quay_list():
+    """
+    Fetch all ferry quays from Vegvesen, enriched with Kartverket municipality/region names.
+    Returns a dict keyed by NSR ID. Cached for 1 hour.
+    """
+    response = requests.get(f"{VEGVESEN_API_URL}/quays", headers=headers)
+    if not response.ok:
+        return {}
+
+    quays_data = response.json().get("quays", [])
+    counties = _get_counties()
+    municipalities = _get_municipalities()
+
+    result = {}
+    for quay in quays_data:
+        try:
+            location = quay.get("location", {})
+            coords = location.get("geometry", {}).get("coordinates", [0, 0])
+            muni_list = location.get("municipalities", [])
+            county_list = location.get("counties", [])
+            municipality = municipalities.get(str(muni_list[0]["code"]), "") if muni_list else ""
+            region = counties.get(str(county_list[0]["code"]), "") if county_list else ""
+            result[quay["id"]] = {
+                "id": quay["id"],
+                "name": quay["name"],
+                "municipality": municipality,
+                "region": region,
+                "latitude": coords[1],
+                "longitude": coords[0],
+                "relatedQuayIds": quay.get("relatedQuayIds", []),
+            }
+        except (KeyError, IndexError):
+            continue
+
+    return result
+
+
+def get_vegvesen_quay(nsr_id):
+    """Look up a single quay by NSR ID from the cached Vegvesen list."""
+    return get_vegvesen_quay_list().get(nsr_id)
 
 
 def get_departures_from_vegvesen(quay, route=None):

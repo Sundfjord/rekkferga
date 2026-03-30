@@ -1,10 +1,15 @@
 import requests
 import json
+import threading
+from cachetools import TTLCache, cached
 from datetime import datetime, timedelta
 from util import format_datetime_for_api
 
 base_url = "https://api.entur.io/journey-planner/v3/graphql"
 headers = {"Content-Type": "application/json", "ET-Client-Name": "miles-fergo_app"}
+
+_nearest_cache = TTLCache(maxsize=100, ttl=60)
+_nearest_lock = threading.Lock()
 
 
 def query_journey_planner(query, variables={}):
@@ -215,6 +220,66 @@ def get_journey_with_ferries(from_coords, to_coords):
         print(f"Error in get_journey_with_ferries: {str(e)}")
         print(f"Full response: {result if 'result' in locals() else 'No result'}")
         return []
+
+
+@cached(cache=_nearest_cache, lock=_nearest_lock)
+def get_nearest_ferry_stops(lat, lng, maximum_results=10, maximum_distance=200000):
+    """
+    Find the nearest ferry stops to the given coordinates using EnTur.
+    Returns a list of dicts with id, name, latitude, longitude, distance (km).
+    Cached for 60 seconds.
+    """
+    query = """
+        query ($lat: Float!, $lng: Float!, $maximumResults: Int!, $maximumDistance: Float!) {
+            nearest(
+                latitude: $lat
+                longitude: $lng
+                maximumDistance: $maximumDistance
+                maximumResults: $maximumResults
+                filterByModes: [water]
+            ) {
+                edges {
+                    node {
+                        distance
+                        place {
+                            ... on StopPlace {
+                                id
+                                name
+                                geometry {
+                                    coordinates
+                                }
+                                transportMode
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    variables = {
+        "lat": lat,
+        "lng": lng,
+        "maximumResults": maximum_results,
+        "maximumDistance": float(maximum_distance),
+    }
+    result = query_journey_planner(query, variables)
+    if "data" not in result or "nearest" not in result["data"]:
+        return []
+    stops = []
+    for edge in result["data"]["nearest"]["edges"]:
+        node = edge.get("node", {})
+        place = node.get("place", {})
+        if not place.get("id"):
+            continue
+        coords = place.get("geometry", {}).get("coordinates", [0, 0])
+        stops.append({
+            "id": place["id"],
+            "name": place.get("name", ""),
+            "latitude": coords[1],
+            "longitude": coords[0],
+            "distance": round(node.get("distance", 0) / 1000),
+        })
+    return stops
 
 
 def health_check():
