@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Fergo",
-    "slug": "fergo",
+    "name": "Rekkferga",
+    "slug": "rekkferga",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "fergo",
+    "scheme": "rekkferga",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/splash.png",
+      "image": "./assets/images/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,14 +17,18 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.sundfjord.fergo"
+      "bundleIdentifier": "com.sundfjord.rekkferga"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.sundfjord.fergo"
+      "package": "com.sundfjord.rekkferga",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -38,6 +42,13 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "owner": "sundfjord",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4ed00515-4de3-4ace-a391-119c94eec8ca"
+      }
     }
   }
 }
