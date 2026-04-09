@@ -1,19 +1,11 @@
-# All route calculation functions (ORS/OSRM) have been removed as requested.
-# Only geocoding functions are kept if still used elsewhere in the project.
-
+import logging
 import requests
 import os
 
+logger = logging.getLogger(__name__)
+
 base_url = "https://api.openrouteservice.org"
 api_key = os.getenv("ORS_API_KEY")
-
-
-def get_trip_to_nsr_id(location_coords, quay_coords):
-    user_lat, user_lng = location_coords.split(",")
-    quay_lat, quay_lng = quay_coords.split(",")
-    url = f"{base_url}/v2/directions/driving-car?api_key={api_key}&start={user_lat},{user_lng}&end={quay_lat},{quay_lng}"
-    response = requests.get(url)
-    return response.json()
 
 
 def get_locations_ors(query: str | None, size: int = 5):
@@ -59,6 +51,6 @@ def get_locations_ors(query: str | None, size: int = 5):
                     }
                 )
         return results
-    except Exception as e:
-        print(f"ORS fallback error: {e}")
+    except Exception:
+        logger.exception("ORS fallback error")
         return []
