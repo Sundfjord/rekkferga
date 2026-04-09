@@ -1,29 +1,82 @@
-import { View } from "react-native";
+import React from "react";
+import { View, Platform, Text } from "react-native";
+import type { JourneyResult, FerryLeg } from "@shared/types";
 
-export default function Map() {
-  return <View />;
+interface MapProps {
+  journey: JourneyResult | null;
+  userLocation: { latitude: number; longitude: number } | null;
 }
 
-// import { Platform } from "react-native";
-// import React, { useEffect, useState } from "react";
+function MapNativeImpl({ journey, userLocation }: MapProps) {
+  // Dynamic require to avoid bundling react-native-maps on web
+  const MapView = require("react-native-maps").default;
+  const { Marker, Polyline } = require("react-native-maps");
 
-// export default function Map() {
-//   const [MapComponent, setMapComponent] = useState<React.ComponentType | null>(
-//     null
-//   );
+  const initialRegion = userLocation
+    ? { ...userLocation, latitudeDelta: 1.5, longitudeDelta: 1.5 }
+    : { latitude: 60.472, longitude: 8.468, latitudeDelta: 5, longitudeDelta: 5 };
 
-//   useEffect(() => {
-//     if (Platform.OS === "web") {
-//       import("../components/MapWeb").then((mod) =>
-//         setMapComponent(() => mod.default)
-//       );
-//     } else {
-//       import("../components/MapNative").then((mod) =>
-//         setMapComponent(() => mod.default)
-//       );
-//     }
-//   }, []);
+  return (
+    <MapView style={{ flex: 1 }} initialRegion={initialRegion} showsUserLocation>
+      {journey?.legs.map((leg, i) => {
+        const from = leg.fromPlace;
+        const to = leg.toPlace;
+        if (!from.latitude || !from.longitude || !to.latitude || !to.longitude) return null;
+        const isFerry = leg.mode === "water";
+        return (
+          <Polyline
+            key={i}
+            coordinates={[
+              { latitude: from.latitude, longitude: from.longitude },
+              { latitude: to.latitude, longitude: to.longitude },
+            ]}
+            strokeColor={isFerry ? "#0ea5e9" : "#3b82f6"}
+            strokeWidth={4}
+            lineDashPattern={isFerry ? [8, 6] : undefined}
+          />
+        );
+      })}
 
-//   if (!MapComponent) return null;
-//   return <MapComponent />;
-// }
+      {journey?.legs
+        .filter((l) => l.mode === "water")
+        .flatMap((leg, i) => {
+          const ferryLeg = leg as FerryLeg;
+          const from = ferryLeg.fromPlace;
+          const to = ferryLeg.toPlace;
+          const markers = [];
+          if (from.latitude && from.longitude) {
+            markers.push(
+              <Marker
+                key={`from-${i}`}
+                coordinate={{ latitude: from.latitude, longitude: from.longitude }}
+                title={from.name}
+                pinColor="#0ea5e9"
+              />
+            );
+          }
+          if (to.latitude && to.longitude) {
+            markers.push(
+              <Marker
+                key={`to-${i}`}
+                coordinate={{ latitude: to.latitude, longitude: to.longitude }}
+                title={to.name}
+                pinColor="#0ea5e9"
+              />
+            );
+          }
+          return markers;
+        })}
+    </MapView>
+  );
+}
+
+export default function Map(props: MapProps) {
+  if (Platform.OS === "web") {
+    return (
+      <View className="flex-1 items-center justify-center bg-surface">
+        <Text className="text-surface-on opacity-50">Map not available on web</Text>
+      </View>
+    );
+  }
+  return <MapNativeImpl {...props} />;
+}

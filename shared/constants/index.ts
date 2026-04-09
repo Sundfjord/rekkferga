@@ -1,10 +1,9 @@
 // Shared constants for Rekkferga platform
 
 export const API_ENDPOINTS = {
-  QUAYS: '/quays',
-  QUAY_DETAILS: '/quay/details',
+  JOURNEY: '/journey',
+  QUAY_DEPARTURES: '/quay/departures',
   SEARCH: '/search',
-  ROUTE: '/quays/route'
 } as const;
 
 export const TRANSPORT_MODES = {

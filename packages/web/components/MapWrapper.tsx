@@ -1,29 +1,17 @@
 "use client";
 
-import { Quay } from "@/types/quay";
+import type { JourneyResult } from "@shared/types";
 import Map from "@/components/Map";
 
 interface MapWrapperProps {
-  quays: Quay[];
-  position: [number, number];
-  onQuaySelect: (quay: Quay) => void;
-  onUserLocationChange?: (coords: [number, number]) => void; // Add this prop
+  journey: JourneyResult | null;
+  userLocation: [number, number] | null;
 }
 
-export default function MapWrapper({
-  quays,
-  position,
-  onQuaySelect,
-  onUserLocationChange,
-}: MapWrapperProps) {
+export default function MapWrapper({ journey, userLocation }: MapWrapperProps) {
   return (
     <div className="w-full h-full">
-      <Map
-        quays={quays}
-        position={position}
-        onQuaySelect={onQuaySelect}
-        onUserLocationChange={onUserLocationChange}
-      />
+      <Map journey={journey} userLocation={userLocation} />
     </div>
   );
 }

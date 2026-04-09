@@ -1,49 +1,43 @@
 import React from "react";
 import { View, Text } from "react-native";
-import { calculateMarginText, getTimeDifferenceMinutes } from "@/utils";
-import { useTranslation } from "@/hooks/useTranslation";
 
 interface MarginBadgeProps {
-  arrivalTime: string | Date;
-  departureTime: string | Date;
+  marginMinutes: number;
 }
 
-export default function MarginBadge({
-  arrivalTime,
-  departureTime,
-}: MarginBadgeProps) {
-  const { t } = useTranslation();
-  const marginMinutes = getTimeDifferenceMinutes(arrivalTime, departureTime);
-  const marginText = calculateMarginText(arrivalTime, departureTime, t);
-
-  if (!marginText) return null;
+export default function MarginBadge({ marginMinutes }: MarginBadgeProps) {
+  const abs = Math.abs(marginMinutes);
+  const label =
+    abs >= 60
+      ? `${Math.floor(abs / 60)}h ${abs % 60}m`
+      : `${abs}m`;
 
   let bgColor = "";
   let textColor = "";
   let prefix = "";
 
-  if (marginMinutes > 0) {
-    // Positive margin - green badge (reachable)
+  if (marginMinutes > 10) {
     bgColor = "bg-success";
     textColor = "text-success-on";
     prefix = "+";
-  } else if (marginMinutes < 0) {
-    // Negative margin - red badge (unreachable)
-    bgColor = "bg-error";
-    textColor = "text-error-on";
-    prefix = "-";
-  } else {
-    // Zero margin - yellow badge (exact timing)
+  } else if (marginMinutes >= 2) {
+    bgColor = "bg-warning";
+    textColor = "text-warning-on";
+    prefix = "+";
+  } else if (marginMinutes >= 0) {
     bgColor = "bg-primary";
     textColor = "text-primary-on";
     prefix = "";
+  } else {
+    bgColor = "bg-error";
+    textColor = "text-error-on";
+    prefix = "-";
   }
 
   return (
-    <View className={`${bgColor} p-1 rounded-lg`}>
+    <View className={`${bgColor} px-2 py-1 rounded-lg`}>
       <Text className={`${textColor} text-xs font-bold`}>
-        {prefix}
-        {marginText}
+        {prefix}{label}
       </Text>
     </View>
   );

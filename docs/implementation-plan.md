@@ -10,31 +10,35 @@ Rekkferga's core value: enter a destination, get a complete route with real-time
 
 ## Current State Summary
 
-### API (`packages/api/`)
-- `/quays`, `/quay/details` — quay browsing endpoints (to be removed)
-- `/quays/route` — `get_journey_with_ferries()` identifies ferry legs between two coordinate pairs (core, to be promoted)
-- `/search` — unified autocomplete returning ferry stops + locations (to be narrowed to locations only)
-- ORS route calculation stubbed and dead
-- Vegvesen departures always report `realtime: False`
-- EnTur client header incorrectly set to `"miles-fergo_app"`
-- No logging, no tests
+_Updated after Phase 0, Phase 1a, Phase 2 preamble, and Phase 2._
 
-### Web (`packages/web/`)
-- Leaflet map with quay markers, autocomplete search, basic quay card
-- Quay card close button calls `window.close()` (broken)
-- No route visualization, no departure display
-- Debug logs in Map.tsx, no theme toggle UI
+### API (`packages/api/`) — Phase 0 + preamble complete
+- `GET /journey?from=lat,lng&to=lat,lng` — returns `JourneyResult[]` (serialised, typed). Car and ferry legs distinguished, ferry legs include `fromQuayId`/`toQuayId`.
+- `GET /quay/departures?quayId=NSR:...&arrivalTime=ISO` — returns departures grouped by destination with `marginMinutes` (signed int) on each option.
+- `GET /search?query=X&size=N` — returns locations only (`type: 'location'`). Nominatim primary, ORS fallback.
+- `GET /` — health check.
+- Files: `app.py`, `journey_planner.py`, `nominatim.py`, `ors.py`, `util.py`. Python `logging` throughout.
 
-### App (`packages/app/`)
-- Home with search / favorites (quay-based) / nearby quays
-- Quay details page with departures and margin badges — functional
-- Theming (light/dark/system), i18n (en/no/nn), AsyncStorage favorites
-- Destination/location results page (`[destination]/[location].tsx`) is a stub
-- Directions component unclear if fully wired
+### Shared types (`shared/types/index.ts`) — Phase 1 complete
+- Types: `JourneyResult`, `CarLeg`, `FerryLeg`, `LegPlace`, `DepartureOption`, `JourneyCall`, `Destination`, `SavedDestination`, `SearchResult` (location-only).
+- `@shared/*` path alias added to both web and app tsconfigs.
 
-### Shared
-- `shared/types` largely ignored — web and app both define types locally
-- Constants unused by Python API
+### Web (`packages/web/`) — Phase 2 complete
+- Map-first layout: full-screen Leaflet map, search overlay top-left, journey panel below search.
+- `Search.tsx` — location-only autocomplete, placeholder "Where are you going today?"
+- `Map.tsx` — route polylines (car=solid blue, ferry=dashed cyan), quay waypoint markers, user location dot.
+- `JourneyPanel.tsx` — left sidebar: destination, total duration, per-leg breakdown (drive time / ferry + departure time + margin badge).
+- `page.tsx` — orchestrates GPS → `/journey` → `/quay/departures` per ferry leg; hydrates `FerryLeg.departures`.
+- Local type files deleted; all types imported from `@shared/types`.
+
+### App (`packages/app/`) — Phase 2 complete
+- Map-first layout: full-screen native map (`react-native-maps`), search overlay at top, `@gorhom/bottom-sheet` journey panel.
+- `Search.tsx` — location-only autocomplete, triggers journey flow via `onSelect` callback.
+- `Map.tsx` — polylines + ferry quay markers; no-op stub on web platform.
+- `JourneyPanel.tsx` — bottom sheet, peek (20%): next ferry + margin; expanded (80%): full leg breakdown.
+- `MarginBadge.tsx` — updated to accept `marginMinutes: number` directly (API-computed, no frontend recalculation).
+- `index.tsx` — orchestrates GPS → `/journey` → `/quay/departures` per ferry leg.
+- Quay-centric components deleted: Nearby, Favourites, QuayCard, DepartureBoard, DepartureCard, Directions, Timeline, MapNative, MapWeb, useQuayDetails, [quayId].tsx.
 
 ---
 
