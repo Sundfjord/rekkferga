@@ -75,9 +75,9 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
           <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto z-20">
-            {results.map((r) => (
+            {results.map((r, i) => (
               <div
-                key={r.id}
+                key={`${r.id}-${i}`}
                 onClick={() => handleSelect(r)}
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
               >

@@ -93,7 +93,7 @@ export default function Search({ onSelect }: SearchProps) {
           <ScrollView style={{ maxHeight: 240 }} showsVerticalScrollIndicator={false}>
             {searchResults.map((item, index) => (
               <SearchResultItem
-                key={item.id}
+                key={`${item.id}-${index}`}
                 item={item}
                 isLastItem={index === searchResults.length - 1}
                 onSelect={handleSelect}
