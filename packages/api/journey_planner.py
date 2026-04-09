@@ -100,8 +100,22 @@ def get_journey_with_ferries(from_coords, to_coords):
                     distance
                     legs {
                         mode
-                        fromPlace { name quay { stopPlace { id } } }
-                        toPlace { name quay { stopPlace { id } } }
+                        expectedStartTime
+                        expectedEndTime
+                        duration
+                        distance
+                        fromPlace {
+                            name
+                            latitude
+                            longitude
+                            quay { stopPlace { id name } }
+                        }
+                        toPlace {
+                            name
+                            latitude
+                            longitude
+                            quay { stopPlace { id name } }
+                        }
                         line { id transportMode transportSubmode }
                     }
                 }
@@ -131,6 +145,66 @@ def get_journey_with_ferries(from_coords, to_coords):
     except Exception:
         logger.exception("Error in get_journey_with_ferries")
         return []
+
+
+def serialise_journey(pattern):
+    """
+    Map a raw EnTur tripPattern dict to the JourneyResult shape expected by frontends.
+    Ferry legs get mode='water' with fromQuayId/toQuayId; all others get mode='car'.
+    """
+    legs = []
+    for leg in pattern.get("legs", []):
+        mode = leg.get("mode", "")
+        line = leg.get("line") or {}
+        is_ferry = mode == "water" or line.get("transportMode") == "water"
+
+        from_place_raw = leg.get("fromPlace") or {}
+        to_place_raw = leg.get("toPlace") or {}
+
+        from_place = {
+            "name": from_place_raw.get("name"),
+            "latitude": from_place_raw.get("latitude"),
+            "longitude": from_place_raw.get("longitude"),
+        }
+        to_place = {
+            "name": to_place_raw.get("name"),
+            "latitude": to_place_raw.get("latitude"),
+            "longitude": to_place_raw.get("longitude"),
+        }
+
+        base = {
+            "expectedStartTime": leg.get("expectedStartTime"),
+            "expectedEndTime": leg.get("expectedEndTime"),
+            "duration": leg.get("duration"),
+            "distance": leg.get("distance"),
+            "fromPlace": from_place,
+            "toPlace": to_place,
+        }
+
+        if is_ferry:
+            from_quay_id = (from_place_raw.get("quay") or {}).get("stopPlace", {}).get("id")
+            to_quay_id = (to_place_raw.get("quay") or {}).get("stopPlace", {}).get("id")
+            legs.append({**base, "mode": "water", "fromQuayId": from_quay_id, "toQuayId": to_quay_id})
+        else:
+            legs.append({**base, "mode": "car"})
+
+    return {
+        "expectedStartTime": pattern.get("expectedStartTime"),
+        "expectedEndTime": pattern.get("expectedEndTime"),
+        "duration": pattern.get("duration"),
+        "distance": pattern.get("distance"),
+        "legs": legs,
+    }
+
+
+def _compute_margin_minutes(departure_time_str, arrival_time_str):
+    """Signed margin in minutes: positive = will make it, negative = will miss it."""
+    try:
+        dep = datetime.fromisoformat(departure_time_str.replace("Z", "+00:00"))
+        arr = datetime.fromisoformat(arrival_time_str.replace("Z", "+00:00"))
+        return int((dep - arr).total_seconds() / 60)
+    except (ValueError, AttributeError):
+        return None
 
 
 def health_check():
@@ -224,6 +298,13 @@ def process_departures(departure_data, route=None):
             if destination not in departures_by_destination:
                 departures_by_destination[destination] = []
 
+            arrival_time = route.get("expectedEndTime") if route else None
+            margin_minutes = (
+                _compute_margin_minutes(departure.get("expectedDepartureTime"), arrival_time)
+                if arrival_time
+                else None
+            )
+
             departures_by_destination[destination].append(
                 {
                     "expectedDepartureTime": departure.get("expectedDepartureTime"),
@@ -231,6 +312,7 @@ def process_departures(departure_data, route=None):
                     "journey": journey,
                     "relevant": False,
                     "isFirstReachableDeparture": is_first_reachable,
+                    "marginMinutes": margin_minutes,
                 }
             )
 

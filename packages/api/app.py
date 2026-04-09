@@ -6,6 +6,7 @@ from util import is_valid_nsr_id
 from journey_planner import (
     get_journey_with_ferries,
     get_departures_from_entur,
+    serialise_journey,
 )
 from nominatim import get_locations_nominatim
 from ors import get_locations_ors
@@ -37,7 +38,7 @@ def get_journey():
         if not journey_patterns:
             return []
         journey_patterns.sort(key=lambda x: x["duration"])
-        return journey_patterns
+        return [serialise_journey(p) for p in journey_patterns]
     except Exception as e:
         logger.exception("Error in get_journey")
         return {"error": "Internal server error"}, 500
