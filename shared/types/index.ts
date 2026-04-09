@@ -1,51 +1,20 @@
 // Shared types for Rekkferga platform
 
-export interface QuayDetails {
+// ---------------------------------------------------------------------------
+// Search & saved destinations
+// ---------------------------------------------------------------------------
+
+export interface Destination {
   id: string;
   name: string;
-  municipality: string;
-  region: string;
+  subName?: string;
   latitude: number;
   longitude: number;
-  distance?: number;
 }
 
-export interface Departure {
-  destination: string;
-  departureTime: string;
-  expectedDepartureTime: string;
-  realTime: boolean;
-  line?: string;
-  transportMode?: string;
-}
-
-export interface Route {
-  duration: number;
-  distance: number;
-  expectedEndTime?: string;
-  legs: RouteLeg[];
-}
-
-export interface RouteLeg {
-  mode: string;
-  fromPlace: Place;
-  toPlace: Place;
-  line?: Line;
-  duration: number;
-  distance: number;
-}
-
-export interface Place {
-  name: string;
-  latitude: number;
-  longitude: number;
-  quay?: QuayDetails;
-}
-
-export interface Line {
-  id: string;
-  name: string;
-  transportMode: string;
+export interface SavedDestination {
+  destination: Destination;
+  savedAt: string; // ISO timestamp
 }
 
 export interface SearchResult {
@@ -54,8 +23,73 @@ export interface SearchResult {
   sub_name?: string;
   latitude: number;
   longitude: number;
-  type: 'quay' | 'location';
+  type: 'location';
 }
+
+// ---------------------------------------------------------------------------
+// Journey & legs
+// ---------------------------------------------------------------------------
+
+export interface JourneyResult {
+  expectedStartTime: string;
+  expectedEndTime: string;
+  duration: number; // seconds
+  distance: number; // metres
+  legs: JourneyLeg[];
+}
+
+export type JourneyLeg =
+  | CarLeg
+  | FerryLeg;
+
+interface BaseLeg {
+  expectedStartTime: string;
+  expectedEndTime: string;
+  duration: number; // seconds
+  distance: number; // metres
+  fromPlace: LegPlace;
+  toPlace: LegPlace;
+}
+
+export interface CarLeg extends BaseLeg {
+  mode: 'car';
+}
+
+export interface FerryLeg extends BaseLeg {
+  mode: 'water';
+  fromQuayId: string; // NSR stop place ID
+  toQuayId: string;
+  departures?: DepartureOption[];
+}
+
+export interface LegPlace {
+  name: string;
+  latitude?: number;
+  longitude?: number;
+}
+
+// ---------------------------------------------------------------------------
+// Departures
+// ---------------------------------------------------------------------------
+
+export interface DepartureOption {
+  expectedDepartureTime: string;
+  realtime: boolean;
+  marginMinutes: number; // positive = can make it, negative = will miss it
+  isFirstReachable: boolean;
+  relevant: boolean;
+  journey: JourneyCall[];
+}
+
+export interface JourneyCall {
+  time: string;
+  realtime: boolean;
+  stopPlaceName: string;
+}
+
+// ---------------------------------------------------------------------------
+// Generic
+// ---------------------------------------------------------------------------
 
 export interface ApiResponse<T> {
   data: T;

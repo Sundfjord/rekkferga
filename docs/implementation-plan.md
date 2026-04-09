@@ -57,17 +57,20 @@ _Prerequisite for all subsequent phases._
 
 ## Phase 1 — Shared Type Alignment
 
-_Unblocks Phase 2. Ensures single source of truth._
+Split into two steps because the local type files are still imported by active quay-centric components. Deleting them before Phase 2 rewrites those components would break both builds.
 
-Update `shared/types/index.ts` to reflect the destination-routing model:
+### Phase 1a — Add new types (additive, non-breaking)
 
-- `JourneyResult` — full journey with ordered legs
-- `JourneyLeg` — `type: 'car' | 'ferry'`; ferry legs include quay NSR IDs, departure options, and margins
-- `DepartureOption` — specific departure with time, realtime status, and margin (±minutes)
-- `Destination` — search result (location name, coords, display label)
-- `SavedDestination` — favorited or recent destination with timestamp
+Update `shared/types/index.ts`:
+- **Add** destination-routing types: `JourneyResult`, `JourneyLeg`, `DepartureOption`, `Destination`, `SavedDestination`
+- **Remove** `QuayDetails` — no longer used anywhere after Phase 0
+- **Fix** `SearchResult.type` — remove `'quay'` variant, leaving `type: 'location'` only
 
-Delete local type files in web (`types/index.ts`, `types/quay.ts`) and app (`types.ts`). Import from `shared/types` in both packages.
+### Phase 1b — Migrate and delete local types (done during Phase 2)
+
+As each component is rewritten in Phase 2, migrate its type imports to `shared/types`. Once all references to a local type file are gone, delete it:
+- `packages/app/types.ts` — delete when all app components are migrated
+- `packages/web/types/index.ts` and `types/quay.ts` — delete when all web components are migrated
 
 ---
 
@@ -99,6 +102,9 @@ On destination selection:
 - **Web:** Left sidebar panel. Same content, static layout.
 - Margin badge thresholds: >10 min = green, 2–10 min = amber, <2 min = red.
 - "Next departure" automatically advances when a missed ferry is passed.
+
+### Margin calculation ownership
+The API owns margin calculation. `/quay/departures` returns `marginMinutes` as a signed integer on each `DepartureOption` — positive means the user can make the departure, negative means they will miss it. The frontend renders the value directly; it does not recompute margins from raw timestamps. This keeps display logic simple and ensures both platforms behave identically.
 
 ---
 
