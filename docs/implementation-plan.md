@@ -78,6 +78,12 @@ As each component is rewritten in Phase 2, migrate its type imports to `shared/t
 
 _Main product feature. App and web can be implemented in parallel._
 
+### Preamble — API response contracts (prerequisite before touching frontends)
+
+1. **Expand `/journey` GraphQL query** to include leg-level `expectedStartTime`, `expectedEndTime`, `duration`, `distance`, and `latitude`/`longitude` on `fromPlace`/`toPlace`.
+2. **Add `serialise_journey()`** in the API — maps raw EnTur `tripPattern` dicts to `JourneyResult` shape: `CarLeg` or `FerryLeg` per leg, with `fromQuayId`/`toQuayId` extracted for ferry legs.
+3. **Add `_compute_margin_minutes()`** and wire into `process_departures()` — returns `marginMinutes` as a signed integer on every `DepartureOption`. The frontend renders this value directly and never recomputes margins from raw timestamps.
+
 ### Search
 - Single autocomplete field, placeholder: `"Where are you going today?"`
 - Calls `/search` (locations only)
