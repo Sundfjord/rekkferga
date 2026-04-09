@@ -14,4 +14,9 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, "node_modules"),
 ];
 
+// Resolve @shared/* → shared/ in the monorepo root
+config.resolver.extraNodeModules = {
+  "@shared": path.resolve(workspaceRoot, "shared"),
+};
+
 module.exports = withNativeWind(config, { input: "./global.css" });
