@@ -15,10 +15,7 @@ async function fetchJourney(
   toLng: number
 ): Promise<JourneyResult[]> {
   const url = process.env.NEXT_PUBLIC_API_URL;
-  const res = await fetch(
-    `${url}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`,
-    { headers: { "ngrok-skip-browser-warning": "true" } }
-  );
+  const res = await fetch(`${url}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
   if (!res.ok) return [];
   return res.json();
 }
@@ -28,10 +25,7 @@ async function fetchDeparturesForLeg(
 ): Promise<DepartureOption[]> {
   if (!ferryLeg.fromQuayId) return [];
   const url = process.env.NEXT_PUBLIC_API_URL;
-  const res = await fetch(
-    `${url}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`,
-    { headers: { "ngrok-skip-browser-warning": "true" } }
-  );
+  const res = await fetch(`${url}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`);
   if (!res.ok) return [];
   const data: Record<string, DepartureOption[]> = await res.json();
   // Find the bucket matching this leg's destination quay

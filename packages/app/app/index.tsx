@@ -15,20 +15,14 @@ async function fetchJourney(
   toLat: number,
   toLng: number
 ): Promise<JourneyResult[]> {
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_URL}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`,
-    { headers: { "ngrok-skip-browser-warning": "true" } }
-  );
+  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
   if (!res.ok) return [];
   return res.json();
 }
 
 async function fetchDeparturesForLeg(ferryLeg: FerryLeg): Promise<DepartureOption[]> {
   if (!ferryLeg.fromQuayId) return [];
-  const res = await fetch(
-    `${process.env.EXPO_PUBLIC_API_URL}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`,
-    { headers: { "ngrok-skip-browser-warning": "true" } }
-  );
+  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`);
   if (!res.ok) return [];
   const data: Record<string, DepartureOption[]> = await res.json();
   const destName = ferryLeg.toPlace.name;

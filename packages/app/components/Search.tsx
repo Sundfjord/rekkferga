@@ -37,10 +37,7 @@ export default function Search({ onSelect }: SearchProps) {
       if (debouncedPhrase.length > 2) {
         setLoading(true);
         try {
-          const res = await fetch(
-            `${process.env.EXPO_PUBLIC_API_URL}/search?query=${encodeURIComponent(debouncedPhrase)}`,
-            { headers: { "ngrok-skip-browser-warning": "true" } }
-          );
+          const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/search?query=${encodeURIComponent(debouncedPhrase)}`);
           const data: SearchResult[] = await res.json();
           setSearchResults(data);
           setShowDropdown(true);

@@ -21,10 +21,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
       setIsSearching(true);
       try {
         const url = process.env.NEXT_PUBLIC_API_URL;
-        const res = await fetch(
-          `${url}/search?query=${encodeURIComponent(query)}`,
-          { headers: { "ngrok-skip-browser-warning": "true" } }
-        );
+        const res = await fetch(`${url}/search?query=${encodeURIComponent(query)}`);
         if (res.ok) {
           const data: SearchResult[] = await res.json();
           setResults(data);
