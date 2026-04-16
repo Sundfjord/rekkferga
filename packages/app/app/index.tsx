@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import { useRouter, type Href } from "expo-router";
 import {
   requestForegroundPermissionsAsync,
   getCurrentPositionAsync,
@@ -20,9 +21,12 @@ async function fetchJourney(
   return res.json();
 }
 
-async function fetchDeparturesForLeg(ferryLeg: FerryLeg): Promise<DepartureOption[]> {
+async function fetchDeparturesForLeg(
+  ferryLeg: FerryLeg,
+  arrivalTimeAtQuay: string
+): Promise<DepartureOption[]> {
   if (!ferryLeg.fromQuayId) return [];
-  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`);
+  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(arrivalTimeAtQuay)}`);
   if (!res.ok) return [];
   const data: Record<string, DepartureOption[]> = await res.json();
   const destName = ferryLeg.toPlace.name;
@@ -34,62 +38,111 @@ async function fetchDeparturesForLeg(ferryLeg: FerryLeg): Promise<DepartureOptio
 }
 
 export default function HomeScreen() {
+  const router = useRouter();
   const [journey, setJourney] = useState<JourneyResult | null>(null);
   const [destination, setDestination] = useState<SearchResult | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDestinationSelect = useCallback(async (result: SearchResult) => {
     setDestination(result);
+    setError(null);
+    setIsLoading(true);
     setJourney(null);
 
     const { status } = await requestForegroundPermissionsAsync();
-    if (status !== "granted") return;
+    if (status !== "granted") {
+      setError("Location access denied. Please enable location services.");
+      setIsLoading(false);
+      return;
+    }
 
-    const { coords } = await getCurrentPositionAsync({});
-    setUserLocation({ latitude: coords.latitude, longitude: coords.longitude });
+    try {
+      const { coords } = await getCurrentPositionAsync({});
+      setUserLocation({ latitude: coords.latitude, longitude: coords.longitude });
 
-    const journeys = await fetchJourney(
-      coords.latitude,
-      coords.longitude,
-      result.latitude,
-      result.longitude
-    );
-    if (!journeys.length) return;
+      const journeys = await fetchJourney(
+        coords.latitude,
+        coords.longitude,
+        result.latitude,
+        result.longitude
+      );
+      if (!journeys.length) {
+        setError("No route found to this destination.");
+        return;
+      }
 
-    const base = journeys[0];
-    const hydratedLegs = await Promise.all(
-      base.legs.map(async (leg) => {
-        if (leg.mode !== "water") return leg;
-        const departures = await fetchDeparturesForLeg(leg as FerryLeg);
-        return { ...leg, departures };
-      })
-    );
+      const base = journeys[0];
+      const hydratedLegs = await Promise.all(
+        base.legs.map(async (leg, index) => {
+          if (leg.mode !== "water") return leg;
+          const prevLeg = index > 0 ? base.legs[index - 1] : null;
+          const arrivalTimeAtQuay = prevLeg?.expectedEndTime ?? leg.expectedStartTime;
+          const departures = await fetchDeparturesForLeg(leg as FerryLeg, arrivalTimeAtQuay);
+          return { ...leg, departures };
+        })
+      );
 
-    setJourney({ ...base, legs: hydratedLegs });
+      setJourney({ ...base, legs: hydratedLegs });
+    } catch {
+      setError("Failed to calculate route. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  return (
-    <View style={styles.container}>
-      <Map journey={journey} userLocation={userLocation} />
+  const handleClose = () => {
+    setJourney(null);
+    setDestination(null);
+    setError(null);
+    setUserLocation(null);
+  };
 
-      <View style={styles.searchOverlay}>
+  // Landing state
+  if (!destination) {
+    return (
+      <View className="flex-1 px-4 pt-4">
+        <Search onSelect={handleDestinationSelect} />
+      </View>
+    );
+  }
+
+  // Result / loading state
+  return (
+    <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+      <View className="px-4 pt-4">
         <Search onSelect={handleDestinationSelect} />
       </View>
 
-      {journey && destination && (
-        <JourneyPanel journey={journey} destination={destination} />
+      {isLoading && (
+        <View className="flex-row items-center mx-4 mt-3 px-4 py-3 bg-surface rounded-xl"
+          style={{ gap: 10 }}>
+          <ActivityIndicator size="small" />
+          <Text className="text-surface-on text-sm">Calculating route...</Text>
+        </View>
       )}
-    </View>
+
+      {error && (
+        <View className="mx-4 mt-3 px-4 py-3 rounded-xl"
+          style={{ backgroundColor: "#fef2f2", borderColor: "#fecaca", borderWidth: 1 }}>
+          <Text style={{ color: "#dc2626", fontSize: 14 }}>{error}</Text>
+        </View>
+      )}
+
+      {journey && (
+        <>
+          <View style={{ height: 200, marginHorizontal: 16, marginTop: 12, borderRadius: 12, overflow: "hidden" }}>
+            <Map journey={journey} userLocation={userLocation} />
+          </View>
+          <JourneyPanel
+            journey={journey}
+            destination={destination}
+            onClose={handleClose}
+            onStartTrip={() => router.push("/trip" as Href)}
+          />
+        </>
+      )}
+    </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  searchOverlay: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    right: 12,
-    zIndex: 10,
-  },
-});

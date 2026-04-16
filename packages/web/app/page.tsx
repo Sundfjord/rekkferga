@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Search from "@/components/Search";
 import JourneyPanel from "@/components/JourneyPanel";
@@ -21,14 +22,14 @@ async function fetchJourney(
 }
 
 async function fetchDeparturesForLeg(
-  ferryLeg: FerryLeg
+  ferryLeg: FerryLeg,
+  arrivalTimeAtQuay: string
 ): Promise<DepartureOption[]> {
   if (!ferryLeg.fromQuayId) return [];
   const url = process.env.NEXT_PUBLIC_API_URL;
-  const res = await fetch(`${url}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(ferryLeg.expectedStartTime)}`);
+  const res = await fetch(`${url}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(arrivalTimeAtQuay)}`);
   if (!res.ok) return [];
   const data: Record<string, DepartureOption[]> = await res.json();
-  // Find the bucket matching this leg's destination quay
   const destName = ferryLeg.toPlace.name;
   const key =
     Object.keys(data).find((k) => k === destName) ??
@@ -38,6 +39,7 @@ async function fetchDeparturesForLeg(
 }
 
 export default function Home() {
+  const router = useRouter();
   const [journey, setJourney] = useState<JourneyResult | null>(null);
   const [destination, setDestination] = useState<SearchResult | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -69,12 +71,12 @@ export default function Home() {
       }
 
       const base = journeys[0];
-
-      // Hydrate ferry legs with departure data
       const hydratedLegs = await Promise.all(
-        base.legs.map(async (leg) => {
+        base.legs.map(async (leg, index) => {
           if (leg.mode !== "water") return leg;
-          const departures = await fetchDeparturesForLeg(leg as FerryLeg);
+          const prevLeg = index > 0 ? base.legs[index - 1] : null;
+          const arrivalTimeAtQuay = prevLeg?.expectedEndTime ?? leg.expectedStartTime;
+          const departures = await fetchDeparturesForLeg(leg as FerryLeg, arrivalTimeAtQuay);
           return { ...leg, departures };
         })
       );
@@ -91,37 +93,55 @@ export default function Home() {
     }
   }, []);
 
-  return (
-    <div className="relative flex h-screen w-screen overflow-hidden">
-      <div className="flex-1 h-full">
-        <MapWrapper journey={journey} userLocation={userLocation} />
-      </div>
+  const handleClose = () => {
+    setJourney(null);
+    setDestination(null);
+    setError(null);
+    setUserLocation(null);
+  };
 
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-2 w-80">
+  // Landing state: vertically centered, nothing but the search input
+  if (!destination) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full px-4">
+        <div className="w-full max-w-lg">
+          <Search onSelect={handleDestinationSelect} />
+        </div>
+      </div>
+    );
+  }
+
+  // Result state: top-aligned scrollable column
+  return (
+    <div className="flex flex-col items-center overflow-y-auto h-full px-4 py-8">
+      <div className="w-full max-w-lg flex flex-col gap-4">
         <Search onSelect={handleDestinationSelect} />
 
         {isLoading && (
-          <div className="px-4 py-2 bg-white rounded-lg shadow text-sm text-gray-600 flex items-center gap-2">
+          <div className="px-4 py-3 bg-white rounded-xl shadow-sm text-sm text-gray-600 flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
             Calculating route...
           </div>
         )}
 
         {error && (
-          <div className="px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600">
             {error}
           </div>
         )}
 
-        {journey && destination && (
-          <JourneyPanel
-            journey={journey}
-            destination={destination}
-            onClose={() => {
-              setJourney(null);
-              setDestination(null);
-            }}
-          />
+        {journey && (
+          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="h-56">
+              <MapWrapper journey={journey} userLocation={userLocation} />
+            </div>
+            <JourneyPanel
+              journey={journey}
+              destination={destination}
+              onClose={handleClose}
+              onStartTrip={() => router.push("/trip")}
+            />
+          </div>
         )}
       </div>
     </div>

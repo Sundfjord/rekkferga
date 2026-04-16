@@ -13,7 +13,7 @@ const Header: React.FC<HeaderProps> = ({
   onToggleSettings,
   showSettings = false,
 }) => {
-  const { resolvedTheme, theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Ensure component is mounted before accessing theme
@@ -49,13 +49,6 @@ const Header: React.FC<HeaderProps> = ({
           className="h-[60px] w-[137px] object-contain"
         />
       </div>
-
-      {/* Debug info - remove this in production */}
-      {mounted && (
-        <div className="absolute top-2 left-2 text-xs bg-white bg-opacity-90 px-2 py-1 rounded">
-          Theme: {resolvedTheme}
-        </div>
-      )}
 
       {onToggleSettings && (
         <button

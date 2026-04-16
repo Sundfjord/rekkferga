@@ -1,11 +1,7 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions } from "react-native";
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { JourneyResult, FerryLeg, DepartureOption, SearchResult } from "@shared/types";
 import MarginBadge from "./MarginBadge";
-
-const SCREEN_HEIGHT = Dimensions.get("window").height;
-const COLLAPSED_HEIGHT = 130;
-const EXPANDED_HEIGHT = Math.round(SCREEN_HEIGHT * 0.75);
 
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
@@ -26,162 +22,119 @@ function firstReachable(deps: DepartureOption[] | undefined): DepartureOption | 
 interface JourneyPanelProps {
   journey: JourneyResult;
   destination: SearchResult;
+  onClose: () => void;
+  onStartTrip: () => void;
 }
 
-export default function JourneyPanel({ journey, destination }: JourneyPanelProps) {
-  const [expanded, setExpanded] = useState(false);
-
-  const nextFerryLeg = journey.legs.find((l) => l.mode === "water") as FerryLeg | undefined;
-  const nextDep = firstReachable(nextFerryLeg?.departures);
-
+export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
   return (
-    <View style={[styles.panel, { height: expanded ? EXPANDED_HEIGHT : COLLAPSED_HEIGHT }]}>
-      {/* Drag handle / tap to toggle */}
-      <TouchableOpacity onPress={() => setExpanded((v) => !v)} style={styles.handleArea} activeOpacity={0.8}>
-        <View style={styles.handleBar} />
-      </TouchableOpacity>
-
-      {/* Peek row — always visible */}
-      <View style={styles.peek}>
-        <View style={styles.peekLeft}>
+    <View style={styles.card}>
+      {/* Header */}
+      <View style={styles.header}>
+        <View style={styles.headerText}>
           <Text style={styles.destinationName} numberOfLines={1}>{destination.name}</Text>
           <Text style={styles.totalDuration}>{formatDuration(journey.duration)} total</Text>
         </View>
-        {nextFerryLeg && nextDep && (
-          <View style={styles.peekRight}>
-            <Text style={styles.peekFerry} numberOfLines={1}>
-              {nextFerryLeg.fromPlace.name} → {nextFerryLeg.toPlace.name}
-            </Text>
-            <View style={styles.peekRow}>
-              <Text style={styles.peekTime}>{formatTime(nextDep.expectedDepartureTime)}</Text>
-              <MarginBadge marginMinutes={nextDep.marginMinutes} />
-            </View>
-          </View>
-        )}
+        <TouchableOpacity onPress={onClose} style={styles.closeButton} hitSlop={8}>
+          <Text style={styles.closeIcon}>✕</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Expanded leg list */}
-      {expanded && (
-        <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-          <View style={styles.divider} />
-          {journey.legs.map((leg, i) => {
-            if (leg.mode === "water") {
-              const ferryLeg = leg as FerryLeg;
-              const dep = firstReachable(ferryLeg.departures);
-              return (
-                <View key={i} style={styles.legRow}>
-                  <Text style={styles.legIcon}>⛴</Text>
-                  <View style={styles.legContent}>
-                    <Text style={styles.legTitle}>
-                      {ferryLeg.fromPlace.name} → {ferryLeg.toPlace.name}
-                    </Text>
-                    {dep ? (
-                      <View style={styles.depRow}>
-                        <Text style={styles.depTime}>Departs {formatTime(dep.expectedDepartureTime)}</Text>
-                        <MarginBadge marginMinutes={dep.marginMinutes} />
-                      </View>
-                    ) : (
-                      <Text style={styles.noData}>No departure data</Text>
-                    )}
-                  </View>
-                </View>
-              );
-            }
+      {/* Legs */}
+      <View style={styles.legs}>
+        {journey.legs.map((leg, i) => {
+          if (leg.mode === "water") {
+            const ferryLeg = leg as FerryLeg;
+            const dep = firstReachable(ferryLeg.departures);
             return (
               <View key={i} style={styles.legRow}>
-                <Text style={styles.legIcon}>🚗</Text>
-                <Text style={styles.legTitle}>
-                  Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
-                </Text>
+                <Text style={styles.legIcon}>⛴</Text>
+                <View style={styles.legContent}>
+                  <Text style={styles.legTitle}>
+                    {ferryLeg.fromPlace.name} → {ferryLeg.toPlace.name}
+                  </Text>
+                  {dep ? (
+                    <View style={styles.depRow}>
+                      <Text style={styles.depTime}>Departs {formatTime(dep.expectedDepartureTime)}</Text>
+                      <MarginBadge marginMinutes={dep.marginMinutes} />
+                    </View>
+                  ) : (
+                    <Text style={styles.noData}>No departure data</Text>
+                  )}
+                </View>
               </View>
             );
-          })}
-          <View style={styles.arrival}>
-            <Text style={styles.arrivalText}>
-              Arrive around{" "}
-              <Text style={styles.arrivalTime}>{formatTime(journey.expectedEndTime)}</Text>
-            </Text>
-          </View>
-        </ScrollView>
-      )}
+          }
+          return (
+            <View key={i} style={styles.legRow}>
+              <Text style={styles.legIcon}>🚗</Text>
+              <Text style={styles.legTitle}>
+                Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
+              </Text>
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.arrivalText}>
+          Arrive around{" "}
+          <Text style={styles.arrivalTime}>{formatTime(journey.expectedEndTime)}</Text>
+        </Text>
+        <TouchableOpacity onPress={onStartTrip} style={styles.startButton}>
+          <Text style={styles.startButtonText}>Start trip →</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  panel: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
+  card: {
+    marginHorizontal: 16,
+    marginTop: 12,
     backgroundColor: "white",
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
+    borderRadius: 12,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
     shadowRadius: 8,
-    elevation: 12,
-    zIndex: 20,
+    elevation: 4,
+    overflow: "hidden",
   },
-  handleArea: {
-    alignItems: "center",
-    paddingVertical: 10,
-  },
-  handleBar: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#ddd",
-  },
-  peek: {
+  header: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    gap: 12,
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
   },
-  peekLeft: {
+  headerText: {
     flex: 1,
+    marginRight: 8,
   },
   destinationName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#111",
+    color: "#111827",
   },
   totalDuration: {
-    fontSize: 12,
-    color: "#888",
+    fontSize: 13,
+    color: "#6b7280",
     marginTop: 2,
   },
-  peekRight: {
-    alignItems: "flex-end",
+  closeButton: {
+    padding: 4,
   },
-  peekFerry: {
-    fontSize: 12,
-    color: "#0369a1",
-    fontWeight: "600",
-    marginBottom: 4,
-    maxWidth: 160,
-    textAlign: "right",
+  closeIcon: {
+    fontSize: 16,
+    color: "#9ca3af",
   },
-  peekRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  peekTime: {
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#111",
-  },
-  scroll: {
-    flex: 1,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: "#f0f0f0",
-    marginHorizontal: 16,
-    marginBottom: 4,
+  legs: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#f3f4f6",
   },
   legRow: {
     flexDirection: "row",
@@ -190,7 +143,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "#f8f8f8",
+    borderBottomColor: "#f9fafb",
   },
   legIcon: {
     fontSize: 18,
@@ -201,7 +154,7 @@ const styles = StyleSheet.create({
   },
   legTitle: {
     fontSize: 14,
-    color: "#222",
+    color: "#1f2937",
     fontWeight: "500",
   },
   depRow: {
@@ -212,23 +165,37 @@ const styles = StyleSheet.create({
   },
   depTime: {
     fontSize: 13,
-    color: "#555",
+    color: "#4b5563",
   },
   noData: {
     fontSize: 13,
-    color: "#aaa",
+    color: "#9ca3af",
     marginTop: 4,
   },
-  arrival: {
+  footer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     padding: 16,
-    backgroundColor: "#fafafa",
+    backgroundColor: "#f9fafb",
   },
   arrivalText: {
-    fontSize: 14,
-    color: "#555",
+    fontSize: 13,
+    color: "#4b5563",
   },
   arrivalTime: {
     fontWeight: "700",
-    color: "#111",
+    color: "#111827",
+  },
+  startButton: {
+    backgroundColor: "#2563eb",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  startButtonText: {
+    color: "white",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

@@ -55,7 +55,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder="Where are you going today?"
-          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12"
+          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 text-gray-900 placeholder-gray-500"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">
           {isSearching ? (

@@ -38,18 +38,19 @@ interface JourneyPanelProps {
   journey: JourneyResult;
   destination: SearchResult;
   onClose: () => void;
+  onStartTrip: () => void;
 }
 
-export default function JourneyPanel({ journey, destination, onClose }: JourneyPanelProps) {
+export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col" style={{ maxHeight: "calc(100vh - 120px)" }}>
+    <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between p-4 border-b border-gray-100">
         <div>
           <div className="font-semibold text-gray-900">{destination.name}</div>
           <div className="text-sm text-gray-500">{formatDuration(journey.duration)} total</div>
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 -mr-1 -mt-1 flex-shrink-0">
+        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 -mr-1 -mt-1 flex-shrink-0" aria-label="Close">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -57,7 +58,7 @@ export default function JourneyPanel({ journey, destination, onClose }: JourneyP
       </div>
 
       {/* Legs */}
-      <div className="overflow-y-auto flex-1 divide-y divide-gray-50">
+      <div className="divide-y divide-gray-50">
         {journey.legs.map((leg, i) => {
           if (leg.mode === "water") {
             const ferryLeg = leg as FerryLeg;
@@ -92,12 +93,18 @@ export default function JourneyPanel({ journey, destination, onClose }: JourneyP
         })}
       </div>
 
-      {/* Arrival */}
-      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+      {/* Footer */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
         <div className="text-sm text-gray-600">
           Arrive around{" "}
           <span className="font-medium text-gray-900">{formatTime(journey.expectedEndTime)}</span>
         </div>
+        <button
+          onClick={onStartTrip}
+          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Start trip →
+        </button>
       </div>
     </div>
   );
