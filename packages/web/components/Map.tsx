@@ -50,6 +50,8 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
         mapInstanceRef.current = null;
         fitBoundsDoneRef.current = false;
       }
+      routeLayersRef.current = [];
+      userMarkerRef.current = null;
     };
   }, []);
 

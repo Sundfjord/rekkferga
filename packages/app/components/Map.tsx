@@ -1,5 +1,5 @@
-import React from "react";
-import { View, Platform, Text } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Platform, Text, Animated } from "react-native";
 import type { JourneyResult, CarLeg, FerryLeg } from "@shared/types";
 
 interface MapProps {
@@ -7,6 +7,56 @@ interface MapProps {
   userLocation: { latitude: number; longitude: number } | null;
   completedLegs?: Set<number>;
   followUser?: boolean;
+}
+
+function PulsingUserMarker() {
+  const pulseAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.timing(pulseAnim, {
+        toValue: 1,
+        duration: 2000,
+        useNativeDriver: true,
+      })
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [pulseAnim]);
+
+  const scale = pulseAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 3.5] });
+  const opacity = pulseAnim.interpolate({ inputRange: [0, 0.7, 1], outputRange: [0.55, 0.15, 0] });
+
+  return (
+    <View style={{ width: 40, height: 40, alignItems: "center", justifyContent: "center" }}>
+      <Animated.View
+        style={{
+          position: "absolute",
+          width: 20,
+          height: 20,
+          borderRadius: 10,
+          backgroundColor: "rgba(59, 130, 246, 0.4)",
+          transform: [{ scale }],
+          opacity,
+        }}
+      />
+      <View
+        style={{
+          width: 14,
+          height: 14,
+          borderRadius: 7,
+          backgroundColor: "#3b82f6",
+          borderWidth: 2.5,
+          borderColor: "white",
+          shadowColor: "#3b82f6",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.45,
+          shadowRadius: 6,
+          elevation: 4,
+        }}
+      />
+    </View>
+  );
 }
 
 function MapNativeImpl({ journey, userLocation, completedLegs, followUser }: MapProps) {
@@ -22,7 +72,7 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser }: Map
     <MapView
       style={{ flex: 1 }}
       initialRegion={initialRegion}
-      showsUserLocation
+      showsUserLocation={false}
       followsUserLocation={followUser ?? false}
     >
       {journey?.legs.map((leg, i) => {
@@ -79,6 +129,16 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser }: Map
           }
           return markers;
         })}
+
+      {userLocation && (
+        <Marker
+          coordinate={userLocation}
+          anchor={{ x: 0.5, y: 0.5 }}
+          tracksViewChanges
+        >
+          <PulsingUserMarker />
+        </Marker>
+      )}
     </MapView>
   );
 }
