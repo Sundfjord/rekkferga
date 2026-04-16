@@ -75,7 +75,11 @@ export default function Home() {
         base.legs.map(async (leg, index) => {
           if (leg.mode !== "water") return leg;
           const prevLeg = index > 0 ? base.legs[index - 1] : null;
-          const arrivalTimeAtQuay = prevLeg?.expectedEndTime ?? leg.expectedStartTime;
+          // Use Date.now() + drive duration rather than EnTur's expectedEndTime.
+          // EnTur engineers a tight connection so prevLeg.expectedEndTime == ferry
+          // departure time, producing margin = 0. The actual arrival is now + drive.
+          const driveDurationMs = (prevLeg?.duration ?? 0) * 1000;
+          const arrivalTimeAtQuay = new Date(Date.now() + driveDurationMs).toISOString();
           const departures = await fetchDeparturesForLeg(leg as FerryLeg, arrivalTimeAtQuay);
           return { ...leg, departures };
         })

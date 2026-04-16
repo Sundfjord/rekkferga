@@ -33,10 +33,9 @@ def get_departures_from_entur(quay, route=None):
     Returns:
         Dictionary of departures grouped by destination
     """
-    arrival_time_at_quay = (
-        route.get("expectedEndTime") if route else datetime.now().isoformat()
-    )
-    start_time = format_datetime_for_api(arrival_time_at_quay, subtract_minutes=10)
+    # Always start from now so the user sees all upcoming departures,
+    # including ones they'll miss (negative margin) and ones they can catch.
+    start_time = format_datetime_for_api(None)
     departures = get_departures_from_nsr_id(quay["id"], start_time)
     return process_departures(departures, route)
 
@@ -270,7 +269,7 @@ def process_departures(departure_data, route=None):
             ):
                 if destination not in first_reachable_departures and departure.get(
                     "expectedDepartureTime"
-                ) > route.get("expectedEndTime"):
+                ) >= route.get("expectedEndTime"):
                     first_reachable_departures[destination] = departure.get(
                         "expectedDepartureTime"
                     )
@@ -311,7 +310,7 @@ def process_departures(departure_data, route=None):
                     "realtime": departure.get("realtime", False),
                     "journey": journey,
                     "relevant": False,
-                    "isFirstReachableDeparture": is_first_reachable,
+                    "isFirstReachable": is_first_reachable,
                     "marginMinutes": margin_minutes,
                 }
             )

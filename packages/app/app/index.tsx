@@ -78,7 +78,8 @@ export default function HomeScreen() {
         base.legs.map(async (leg, index) => {
           if (leg.mode !== "water") return leg;
           const prevLeg = index > 0 ? base.legs[index - 1] : null;
-          const arrivalTimeAtQuay = prevLeg?.expectedEndTime ?? leg.expectedStartTime;
+          const driveDurationMs = (prevLeg?.duration ?? 0) * 1000;
+          const arrivalTimeAtQuay = new Date(Date.now() + driveDurationMs).toISOString();
           const departures = await fetchDeparturesForLeg(leg as FerryLeg, arrivalTimeAtQuay);
           return { ...leg, departures };
         })
