@@ -79,7 +79,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
                 className="px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
               >
                 <div className="font-medium text-gray-900">{r.name}</div>
-                {r.sub_name && <div className="text-sm text-gray-500">{r.sub_name}</div>}
+                {r.subName && <div className="text-sm text-gray-500">{r.subName}</div>}
               </div>
             ))}
           </div>

@@ -20,7 +20,7 @@ export interface SavedDestination {
 export interface SearchResult {
   id: string;
   name: string;
-  sub_name?: string;
+  subName?: string;
   latitude: number;
   longitude: number;
   type: 'location';
@@ -78,7 +78,7 @@ export interface LegPlace {
 export interface DepartureOption {
   expectedDepartureTime: string;
   realtime: boolean;
-  marginMinutes: number; // positive = can make it, negative = will miss it
+  marginMinutes: number | null; // positive = can make it, negative = will miss it; null = unavailable
   isFirstReachable: boolean;
   relevant: boolean;
   journey: JourneyCall[];

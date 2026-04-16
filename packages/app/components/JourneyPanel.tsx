@@ -1,23 +1,8 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import type { JourneyResult, FerryLeg, DepartureOption, SearchResult } from "@shared/types";
+import type { JourneyResult, FerryLeg, SearchResult } from "@shared/types";
+import { formatTime, formatDuration, firstReachable } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDuration(seconds: number): string {
-  const m = Math.round(seconds / 60);
-  if (m < 60) return `${m} min`;
-  const h = Math.floor(m / 60);
-  const rem = m % 60;
-  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
-}
-
-function firstReachable(deps: DepartureOption[] | undefined): DepartureOption | undefined {
-  return deps?.find((d) => d.isFirstReachable) ?? deps?.[0];
-}
 
 interface JourneyPanelProps {
   journey: JourneyResult;
@@ -56,7 +41,9 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
                   {dep ? (
                     <View style={styles.depRow}>
                       <Text style={styles.depTime}>Departs {formatTime(dep.expectedDepartureTime)}</Text>
-                      <MarginBadge marginMinutes={dep.marginMinutes} />
+                      {dep.marginMinutes !== null && (
+                        <MarginBadge marginMinutes={dep.marginMinutes} />
+                      )}
                     </View>
                   ) : (
                     <Text style={styles.noData}>No departure data</Text>

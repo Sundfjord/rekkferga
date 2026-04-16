@@ -1,20 +1,10 @@
 "use client";
 
 import type { JourneyResult, FerryLeg, DepartureOption, SearchResult } from "@shared/types";
+import { formatTime, formatDuration, firstReachable } from "@shared/utils";
 
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString("no-NO", { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDuration(seconds: number): string {
-  const m = Math.round(seconds / 60);
-  if (m < 60) return `${m} min`;
-  const h = Math.floor(m / 60);
-  const rem = m % 60;
-  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
-}
-
-function MarginBadge({ minutes }: { minutes: number }) {
+function MarginBadge({ minutes }: { minutes: number | null }) {
+  if (minutes === null) return null;
   const abs = Math.abs(minutes);
   const label = abs >= 60
     ? `${Math.floor(abs / 60)}h ${abs % 60}m`
@@ -28,10 +18,6 @@ function MarginBadge({ minutes }: { minutes: number }) {
       {minutes > 0 ? "+" : ""}{label}
     </span>
   );
-}
-
-function firstReachable(deps: DepartureOption[] | undefined): DepartureOption | undefined {
-  return deps?.find((d) => d.isFirstReachable) ?? deps?.[0];
 }
 
 interface JourneyPanelProps {

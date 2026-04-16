@@ -15,8 +15,8 @@ export default function SearchResultItem({ item, isLastItem, onSelect }: SearchR
       activeOpacity={0.7}
     >
       <Text className="font-medium text-base text-surface-on">{item.name}</Text>
-      {item.sub_name && (
-        <Text className="opacity-70 text-sm text-surface-on">{item.sub_name}</Text>
+      {item.subName && (
+        <Text className="opacity-70 text-sm text-surface-on">{item.subName}</Text>
       )}
     </TouchableOpacity>
   );

@@ -2,10 +2,11 @@ import React from "react";
 import { View, Text } from "react-native";
 
 interface MarginBadgeProps {
-  marginMinutes: number;
+  marginMinutes: number | null;
 }
 
 export default function MarginBadge({ marginMinutes }: MarginBadgeProps) {
+  if (marginMinutes === null) return null;
   const abs = Math.abs(marginMinutes);
   const label =
     abs >= 60

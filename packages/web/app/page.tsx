@@ -7,7 +7,7 @@ import Search from "@/components/Search";
 import JourneyPanel from "@/components/JourneyPanel";
 import type { SearchResult, JourneyResult, FerryLeg, DepartureOption } from "@shared/types";
 
-const MapWrapper = dynamic(() => import("@/components/MapWrapper"), { ssr: false });
+const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
 async function fetchJourney(
   fromLat: number,
@@ -137,7 +137,7 @@ export default function Home() {
         {journey && (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <div className="h-56">
-              <MapWrapper journey={journey} userLocation={userLocation} />
+              <Map journey={journey} userLocation={userLocation} />
             </div>
             <JourneyPanel
               journey={journey}
