@@ -7,6 +7,7 @@ from journey_planner import (
     get_journey_with_ferries,
     get_departures_from_entur,
     serialise_journey,
+    health_check,
 )
 from here_routing import enrich_journey
 from nominatim import get_locations_nominatim
@@ -23,6 +24,16 @@ CORS(app)
 @app.get("/")
 def home():
     return "Running"
+
+
+@app.get("/health")
+def health():
+    try:
+        entur_ok = health_check()
+        return {"status": "ok", "entur": entur_ok}
+    except Exception:
+        logger.exception("Health check failed")
+        return {"status": "degraded"}, 503
 
 
 @app.get("/journey")

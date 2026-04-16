@@ -1,24 +1,7 @@
 from flask import Response
 from datetime import datetime, timedelta
-import time
 import re
 import json
-
-
-def log(text):
-    f = open(f"./logs/{datetime.now().date()}.log", "a+")
-    f.write(f"{time.strftime('%H:%M:%S')}: {text}\n")
-    f.close()
-
-
-def strip_meta(row):
-    stripped = {}
-    for prop in row:
-        if prop[:1] == "_":
-            continue
-        stripped[prop] = row[prop]
-
-    return stripped
 
 
 def is_valid_nsr_id(input):

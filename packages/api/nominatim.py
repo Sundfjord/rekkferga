@@ -60,7 +60,7 @@ def get_locations_nominatim(query: str | None, size: int = 5):
                 {
                     "id": item.get("place_id", ""),
                     "name": name,
-                    "sub_name": sub_name,
+                    "subName": sub_name,
                     "latitude": float(item.get("lat", 0)),
                     "longitude": float(item.get("lon", 0)),
                     "type": "location",
