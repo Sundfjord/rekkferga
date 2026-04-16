@@ -78,7 +78,7 @@ export interface LegPlace {
 export interface DepartureOption {
   expectedDepartureTime: string;
   realtime: boolean;
-  marginMinutes: number | null; // positive = can make it, negative = will miss it; null = unavailable
+  marginMinutes: number | null; // positive = buffer (will make it), negative = will miss; null = unavailable
   isFirstReachable: boolean;
   relevant: boolean;
   journey: JourneyCall[];

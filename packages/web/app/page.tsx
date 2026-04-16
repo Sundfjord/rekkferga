@@ -143,7 +143,11 @@ export default function Home() {
               journey={journey}
               destination={destination}
               onClose={handleClose}
-              onStartTrip={() => router.push("/trip")}
+              onStartTrip={() => {
+                sessionStorage.setItem('trip_journey', JSON.stringify(journey));
+                sessionStorage.setItem('trip_destination', JSON.stringify(destination));
+                router.push('/trip');
+              }}
             />
           </div>
         )}

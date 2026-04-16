@@ -13,22 +13,19 @@ export default function MarginBadge({ marginMinutes }: MarginBadgeProps) {
       ? `${Math.floor(abs / 60)}h ${abs % 60}m`
       : `${abs}m`;
 
+  // positive = buffer (will make it); negative = will miss it
   let bgColor = "";
   let textColor = "";
   let prefix = "";
 
-  if (marginMinutes > 10) {
+  if (marginMinutes > 2) {
     bgColor = "bg-success";
     textColor = "text-success-on";
     prefix = "+";
-  } else if (marginMinutes >= 2) {
-    bgColor = "bg-warning";
-    textColor = "text-warning-on";
-    prefix = "+";
-  } else if (marginMinutes >= 0) {
+  } else if (marginMinutes >= -2) {
     bgColor = "bg-primary";
     textColor = "text-primary-on";
-    prefix = "";
+    prefix = marginMinutes > 0 ? "+" : marginMinutes < 0 ? "-" : "";
   } else {
     bgColor = "bg-error";
     textColor = "text-error-on";

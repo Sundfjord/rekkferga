@@ -17,13 +17,17 @@ L.Icon.Default.mergeOptions({
 interface MapProps {
   journey: JourneyResult | null;
   userLocation: [number, number] | null;
+  completedLegs?: Set<number>;
+  followUser?: boolean;
+  disableFitBounds?: boolean;
 }
 
-export default function Map({ journey, userLocation }: MapProps) {
+export default function Map({ journey, userLocation, completedLegs, followUser, disableFitBounds }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const routeLayersRef = useRef<L.Layer[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const fitBoundsDoneRef = useRef(false);
 
   // Init map once
   useEffect(() => {
@@ -44,6 +48,7 @@ export default function Map({ journey, userLocation }: MapProps) {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        fitBoundsDoneRef.current = false;
       }
     };
   }, []);
@@ -60,7 +65,8 @@ export default function Map({ journey, userLocation }: MapProps) {
 
     const allCoords: [number, number][] = [];
 
-    for (const leg of journey.legs) {
+    for (let idx = 0; idx < journey.legs.length; idx++) {
+      const leg = journey.legs[idx];
       const { fromPlace, toPlace, mode } = leg;
       if (!fromPlace.latitude || !fromPlace.longitude || !toPlace.latitude || !toPlace.longitude) continue;
 
@@ -68,6 +74,7 @@ export default function Map({ journey, userLocation }: MapProps) {
       const end: [number, number] = [toPlace.latitude, toPlace.longitude];
       allCoords.push(start, end);
 
+      const isCompleted = completedLegs?.has(idx) ?? false;
       const isFerry = mode === "water";
       const lineCoords: [number, number][] = (!isFerry && (leg as CarLeg).geometry)
         ? (leg as CarLeg).geometry!.map(([lat, lng]) => [lat, lng])
@@ -76,7 +83,7 @@ export default function Map({ journey, userLocation }: MapProps) {
         color: isFerry ? "#0ea5e9" : "#3b82f6",
         weight: isFerry ? 3 : 4,
         dashArray: isFerry ? "8 6" : undefined,
-        opacity: 0.9,
+        opacity: isCompleted ? 0.3 : 0.9,
       }).addTo(map);
       routeLayersRef.current.push(polyline);
 
@@ -85,6 +92,7 @@ export default function Map({ journey, userLocation }: MapProps) {
         const fromMarker = L.marker(start, {
           icon: createQuayWaypointMarker(ferryLeg.fromPlace.name),
           interactive: false,
+          opacity: isCompleted ? 0.3 : 1,
         }).addTo(map);
         const toMarker = L.marker(end, {
           icon: createQuayWaypointMarker(ferryLeg.toPlace.name),
@@ -94,13 +102,14 @@ export default function Map({ journey, userLocation }: MapProps) {
       }
     }
 
-    if (allCoords.length > 0) {
+    if (!disableFitBounds && !fitBoundsDoneRef.current && allCoords.length > 0) {
+      fitBoundsDoneRef.current = true;
       map.fitBounds(
         L.latLngBounds(allCoords.map((c) => L.latLng(c[0], c[1]))),
         { padding: [40, 40] }
       );
     }
-  }, [journey]);
+  }, [journey, completedLegs, disableFitBounds]);
 
   // Update user location dot
   useEffect(() => {
@@ -111,7 +120,10 @@ export default function Map({ journey, userLocation }: MapProps) {
     } else {
       userMarkerRef.current = L.marker(userLocation, { icon: createUserMarker() }).addTo(map);
     }
-  }, [userLocation]);
+    if (followUser) {
+      map.panTo(userLocation, { animate: true, duration: 0.5 });
+    }
+  }, [userLocation, followUser]);
 
   return <div ref={mapRef} className="w-full h-full" style={{ zIndex: 0 }} />;
 }

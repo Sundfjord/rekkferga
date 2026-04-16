@@ -33,9 +33,14 @@ def get_departures_from_entur(quay, route=None):
     Returns:
         Dictionary of departures grouped by destination
     """
-    # Always start from now so the user sees all upcoming departures,
-    # including ones they'll miss (negative margin) and ones they can catch.
-    start_time = format_datetime_for_api(None)
+    arrival_time = route.get("expectedEndTime") if route else None
+    if arrival_time:
+        # Start 15 min before estimated arrival so the user sees the departure
+        # just before theirs (negative margin) and several catchable ones after.
+        # format_datetime_for_api handles past timestamps gracefully.
+        start_time = format_datetime_for_api(arrival_time, subtract_minutes=15)
+    else:
+        start_time = format_datetime_for_api(None)
     departures = get_departures_from_nsr_id(quay["id"], start_time)
     return process_departures(departures, route)
 
@@ -197,7 +202,9 @@ def serialise_journey(pattern):
 
 
 def _compute_margin_minutes(departure_time_str, arrival_time_str):
-    """Signed margin in minutes: positive = will make it, negative = will miss it."""
+    """
+    Signed margin in minutes: positive = arrives before departure (buffer), negative = will miss.
+    """
     try:
         dep = datetime.fromisoformat(departure_time_str.replace("Z", "+00:00"))
         arr = datetime.fromisoformat(arrival_time_str.replace("Z", "+00:00"))

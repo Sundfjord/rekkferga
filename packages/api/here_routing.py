@@ -43,7 +43,7 @@ def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime
         "origin": f"{from_coords[0]},{from_coords[1]}",
         "destination": f"{to_coords[0]},{to_coords[1]}",
         "transportMode": "car",
-        "return": "summary,polyline",
+        "return": "travelSummary,polyline",
         "departureTime": dep_time.isoformat(),
         "alternatives": 2,
     }
@@ -62,9 +62,15 @@ def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime
         if not sections:
             continue
 
+        # Section-level travelSummary (return=travelSummary), fall back to route-level summary
         total_duration = sum(
             s.get("travelSummary", {}).get("duration", 0) for s in sections
         )
+        if total_duration == 0:
+            total_duration = route.get("summary", {}).get("duration", 0)
+        if total_duration == 0:
+            logger.warning("HERE returned 0 duration for %s → %s, skipping route", from_coords, to_coords)
+            continue
 
         coords = []
         for section in sections:

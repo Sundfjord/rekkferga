@@ -6,6 +6,7 @@ import {
   getCurrentPositionAsync,
 } from "expo-location";
 import type { SearchResult, JourneyResult, FerryLeg, DepartureOption } from "@shared/types";
+import { setTripData } from "@/store/tripStore";
 import Map from "@/components/Map";
 import Search from "@/components/Search";
 import JourneyPanel from "@/components/JourneyPanel";
@@ -140,7 +141,10 @@ export default function HomeScreen() {
             journey={journey}
             destination={destination}
             onClose={handleClose}
-            onStartTrip={() => router.push("/trip" as Href)}
+            onStartTrip={() => {
+                setTripData(journey, destination);
+                router.push("/trip" as Href);
+              }}
           />
         </>
       )}

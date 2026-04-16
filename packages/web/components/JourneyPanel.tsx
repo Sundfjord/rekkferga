@@ -9,13 +9,15 @@ function MarginBadge({ minutes }: { minutes: number | null }) {
   const label = abs >= 60
     ? `${Math.floor(abs / 60)}h ${abs % 60}m`
     : `${abs}m`;
+  // positive = buffer (will make it); negative = will miss it
   const colorClass =
-    minutes > 10 ? "bg-green-100 text-green-800" :
-    minutes >= 2 ? "bg-yellow-100 text-yellow-800" :
+    minutes > 2  ? "bg-green-100 text-green-800" :
+    minutes >= -2 ? "bg-yellow-100 text-yellow-800" :
     "bg-red-100 text-red-800";
+  const prefix = minutes > 0 ? "+" : minutes < 0 ? "-" : "";
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${colorClass}`}>
-      {minutes > 0 ? "+" : ""}{label}
+      {prefix}{label}
     </span>
   );
 }
