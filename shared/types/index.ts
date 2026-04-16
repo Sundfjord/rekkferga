@@ -36,6 +36,7 @@ export interface JourneyResult {
   duration: number; // seconds
   distance: number; // metres
   legs: JourneyLeg[];
+  trafficDataAvailable?: boolean;
 }
 
 export type JourneyLeg =
@@ -53,6 +54,8 @@ interface BaseLeg {
 
 export interface CarLeg extends BaseLeg {
   mode: 'car';
+  geometry?: [number, number][];                                    // road-snapped [[lat, lng], ...]
+  alternatives?: Array<{ geometry: [number, number][]; duration: number }>; // HERE alternatives
 }
 
 export interface FerryLeg extends BaseLeg {

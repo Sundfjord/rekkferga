@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Platform, Text } from "react-native";
-import type { JourneyResult, FerryLeg } from "@shared/types";
+import type { JourneyResult, CarLeg, FerryLeg } from "@shared/types";
 
 interface MapProps {
   journey: JourneyResult | null;
@@ -23,13 +23,17 @@ function MapNativeImpl({ journey, userLocation }: MapProps) {
         const to = leg.toPlace;
         if (!from.latitude || !from.longitude || !to.latitude || !to.longitude) return null;
         const isFerry = leg.mode === "water";
+        const roadGeometry = !isFerry ? (leg as CarLeg).geometry : undefined;
+        const coordinates = roadGeometry
+          ? roadGeometry.map(([lat, lng]) => ({ latitude: lat, longitude: lng }))
+          : [
+              { latitude: from.latitude, longitude: from.longitude },
+              { latitude: to.latitude, longitude: to.longitude },
+            ];
         return (
           <Polyline
             key={i}
-            coordinates={[
-              { latitude: from.latitude, longitude: from.longitude },
-              { latitude: to.latitude, longitude: to.longitude },
-            ]}
+            coordinates={coordinates}
             strokeColor={isFerry ? "#0ea5e9" : "#3b82f6"}
             strokeWidth={4}
             lineDashPattern={isFerry ? [8, 6] : undefined}

@@ -2,14 +2,14 @@ import logging
 from flask import Flask, request
 from flask_cors import CORS
 from dotenv import load_dotenv
-from util import is_valid_nsr_id
+from util import is_valid_nsr_id, cache
 from journey_planner import (
     get_journey_with_ferries,
     get_departures_from_entur,
     serialise_journey,
 )
+from here_routing import enrich_journey
 from nominatim import get_locations_nominatim
-from ors import get_locations_ors
 
 load_dotenv()
 
@@ -36,10 +36,10 @@ def get_journey():
     try:
         journey_patterns = get_journey_with_ferries(from_coords, to_coords)
         if not journey_patterns:
-            return []
+            return cache([], 60)
         journey_patterns.sort(key=lambda x: x["duration"])
-        return [serialise_journey(p) for p in journey_patterns]
-    except Exception as e:
+        return cache([enrich_journey(serialise_journey(p)) for p in journey_patterns], 300)
+    except Exception:
         logger.exception("Error in get_journey")
         return {"error": "Internal server error"}, 500
 
@@ -58,7 +58,7 @@ def get_quay_departures():
     try:
         departures = get_departures_from_entur(quay, route)
         return departures
-    except Exception as e:
+    except Exception:
         logger.exception("Error in get_quay_departures")
         return {"error": "Internal server error"}, 500
 
@@ -67,13 +67,4 @@ def get_quay_departures():
 def get_search_results():
     query = request.args.get("query")
     size = int(request.args.get("size", 30))
-
-    nominatim_results = get_locations_nominatim(query, size)
-    if nominatim_results:
-        return nominatim_results
-
-    ors_results = get_locations_ors(query, size)
-    if ors_results:
-        return ors_results
-
-    return []
+    return get_locations_nominatim(query, size) or []

@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import type { JourneyResult, FerryLeg } from "@shared/types";
+import type { JourneyResult, CarLeg, FerryLeg } from "@shared/types";
 import { createQuayWaypointMarker, createUserMarker } from "./MapElements";
 
 // Fix broken default marker URLs
@@ -30,9 +30,14 @@ export default function Map({ journey, userLocation }: MapProps) {
     if (mapRef.current && !mapInstanceRef.current) {
       const map = L.map(mapRef.current, { zoomControl: false }).setView([60.472, 8.468], 7);
       mapInstanceRef.current = map;
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
+      const hereKey = process.env.NEXT_PUBLIC_HERE_API_KEY;
+      const tileUrl = hereKey
+        ? `https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png?style=explore.day&apiKey=${hereKey}`
+        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+      const attribution = hereKey
+        ? '&copy; <a href="https://www.here.com">HERE Maps</a>'
+        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+      L.tileLayer(tileUrl, { attribution }).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
     }
     return () => {
@@ -64,7 +69,10 @@ export default function Map({ journey, userLocation }: MapProps) {
       allCoords.push(start, end);
 
       const isFerry = mode === "water";
-      const polyline = L.polyline([start, end], {
+      const lineCoords: [number, number][] = (!isFerry && (leg as CarLeg).geometry)
+        ? (leg as CarLeg).geometry!.map(([lat, lng]) => [lat, lng])
+        : [start, end];
+      const polyline = L.polyline(lineCoords, {
         color: isFerry ? "#0ea5e9" : "#3b82f6",
         weight: isFerry ? 3 : 4,
         dashArray: isFerry ? "8 6" : undefined,
