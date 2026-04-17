@@ -45,13 +45,13 @@ const lightColors: ThemeColors = {
   onPrimary: "#ffffff",
 
   // Background colors
-  background: "#bbdefb",
-  onBackground: "#000000",
+  background: "#42a5f5",
+  onBackground: "#171717",
 
   // Surface colors
   surface: "#ffffff",
-  surfaceVariant: "#eeeeee",
-  onSurface: "#000000",
+  surfaceVariant: "#f5f5f5",
+  onSurface: "#212121",
 
   // Border colors
   border: "#e0e0e0",
@@ -74,8 +74,8 @@ const darkColors: ThemeColors = {
   onPrimary: "#000000",
 
   // Background colors
-  background: "#000000",
-  onBackground: "#ffffff",
+  background: "#011638",
+  onBackground: "#ededed",
 
   // Surface colors
   surface: "#121212",
