@@ -25,7 +25,9 @@
     "test:all": "npm run test:api && npm run test:web && npm run test:app",
     "lint:all": "npm run lint:web && npm run lint:app",
     "lint:web": "cd packages/web && npm run lint",
-    "lint:app": "cd packages/app && npm run lint"
+    "lint:app": "cd packages/app && npm run lint",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -42,5 +44,10 @@
     "web-app"
   ],
   "author": "Your Name",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "expo": "~54.0.33",
+    "react": "19.1.0",
+    "react-native": "0.81.5"
+  }
 }
