@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { SearchResult } from "@shared/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export default function Search({ onSelect }: { onSelect: (result: SearchResult) => void }) {
+  const t = useTranslation();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -54,7 +56,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-          placeholder="Where are you going today?"
+          placeholder={t("searchPlaceholder")}
           className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none pr-12 text-gray-900 placeholder-gray-500"
         />
         <div className="absolute right-3 top-1/2 -translate-y-1/2">

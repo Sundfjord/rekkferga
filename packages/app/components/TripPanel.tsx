@@ -3,16 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { JourneyResult, FerryLeg, SearchResult } from "@shared/types";
 import { formatTime, formatDuration, firstReachable } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export type TripState = 'driving_to_quay' | 'at_quay' | 'crossing' | 'crossing_complete' | 'arrived';
-
-const STATE_LABELS: Record<TripState, string> = {
-  driving_to_quay: 'Driving to ferry',
-  at_quay: 'At ferry quay',
-  crossing: 'On the ferry',
-  crossing_complete: 'Ferry complete',
-  arrived: 'Arrived',
-};
 
 interface TripPanelProps {
   journey: JourneyResult;
@@ -31,6 +24,14 @@ export default function TripPanel({
   onExit,
   stalePosition,
 }: TripPanelProps) {
+  const { t } = useTranslation();
+  const STATE_LABELS: Record<TripState, string> = {
+    driving_to_quay: t("tripStateDrivingToQuay"),
+    at_quay: t("tripStateAtQuay"),
+    crossing: t("tripStateCrossing"),
+    crossing_complete: t("tripStateCrossingComplete"),
+    arrived: t("tripStateArrived"),
+  };
   const remainingLegs = journey.legs.slice(currentLegIndex);
 
   return (
@@ -42,20 +43,20 @@ export default function TripPanel({
           <Text style={styles.destinationName} numberOfLines={1}>{destination.name}</Text>
         </View>
         <TouchableOpacity onPress={onExit} style={styles.exitButton} hitSlop={8}>
-          <Text style={styles.exitButtonText}>Exit trip</Text>
+          <Text style={styles.exitButtonText}>{t("exitTrip")}</Text>
         </TouchableOpacity>
       </View>
 
       {stalePosition && (
         <View style={styles.staleBanner}>
-          <Text style={styles.staleText}>Position may be stale — tap to refresh</Text>
+          <Text style={styles.staleText}>{t("stalePosition")}</Text>
         </View>
       )}
 
       {/* Remaining legs */}
       <View style={styles.legs}>
         {tripState === 'arrived' ? (
-          <Text style={styles.arrivedText}>You have arrived at {destination.name}.</Text>
+          <Text style={styles.arrivedText}>{t("arrivedAt", { destination: destination.name })}</Text>
         ) : (
           remainingLegs.map((leg, i) => {
             const legIndex = currentLegIndex + i;
@@ -71,13 +72,13 @@ export default function TripPanel({
                     </Text>
                     {dep ? (
                       <View style={styles.depRow}>
-                        <Text style={styles.depTime}>Departs {formatTime(dep.expectedDepartureTime)}</Text>
+                        <Text style={styles.depTime}>{t("departures")} {formatTime(dep.expectedDepartureTime)}</Text>
                         {dep.marginMinutes !== null && (
                           <MarginBadge marginMinutes={dep.marginMinutes} />
                         )}
                       </View>
                     ) : (
-                      <Text style={styles.noData}>No departure data</Text>
+                      <Text style={styles.noData}>{t("unavailable")}</Text>
                     )}
                   </View>
                 </View>
@@ -87,7 +88,7 @@ export default function TripPanel({
               <View key={legIndex} style={styles.legRow}>
                 <Text style={styles.legIcon}>🚗</Text>
                 <Text style={styles.legTitle}>
-                  Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
+                  {t("car")} {formatDuration(leg.duration)} → {leg.toPlace.name}
                 </Text>
               </View>
             );

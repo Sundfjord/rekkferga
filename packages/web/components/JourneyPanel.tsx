@@ -2,6 +2,7 @@
 
 import type { JourneyResult, FerryLeg, DepartureOption, SearchResult } from "@shared/types";
 import { formatTime, formatDuration, firstReachable } from "@shared/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function MarginBadge({ minutes }: { minutes: number | null }) {
   if (minutes === null) return null;
@@ -30,6 +31,7 @@ interface JourneyPanelProps {
 }
 
 export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
+  const t = useTranslation();
   const msUntilArrival = new Date(journey.expectedEndTime).getTime() - Date.now();
   const durationToShow = msUntilArrival > 0 ? msUntilArrival / 1000 : journey.duration;
 
@@ -39,7 +41,7 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
       <div className="flex items-start justify-between p-4 border-b border-gray-100">
         <div>
           <div className="font-semibold text-gray-900">{destination.name}</div>
-          <div className="text-sm text-gray-500">{formatDuration(durationToShow)} total</div>
+          <div className="text-sm text-gray-500">{formatDuration(durationToShow)} {t("duration").toLowerCase()}</div>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 -mr-1 -mt-1 flex-shrink-0" aria-label="Close">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,11 +66,11 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
                 </div>
                 {dep ? (
                   <div className="flex items-center gap-2 pl-7">
-                    <span className="text-sm text-gray-600">Departs {formatTime(dep.expectedDepartureTime)}</span>
+                    <span className="text-sm text-gray-600">{t("departures")} {formatTime(dep.expectedDepartureTime)}</span>
                     <MarginBadge minutes={dep.marginMinutes} />
                   </div>
                 ) : (
-                  <div className="pl-7 text-sm text-gray-400">No departure data</div>
+                  <div className="pl-7 text-sm text-gray-400">{t("unavailable")}</div>
                 )}
               </div>
             );
@@ -77,7 +79,7 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
             <div key={i} className="px-4 py-3 flex items-center gap-2">
               <span className="text-lg">🚗</span>
               <span className="text-sm text-gray-700">
-                Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
+                {t("car")} {formatDuration(leg.duration)} → {leg.toPlace.name}
               </span>
             </div>
           );
@@ -87,14 +89,13 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
       {/* Footer */}
       <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          Arrive around{" "}
-          <span className="font-medium text-gray-900">{formatTime(journey.expectedEndTime)}</span>
+          {t("arriveAt", { place: formatTime(journey.expectedEndTime) })}
         </div>
         <button
           onClick={onStartTrip}
           className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Start trip →
+          {t("directions")} →
         </button>
       </div>
     </div>

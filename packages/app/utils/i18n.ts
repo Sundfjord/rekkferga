@@ -1,17 +1,17 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Option } from "../components/Dropdown";
+import type { Language } from "@shared/utils";
+import en from "@shared/locales/en.json";
+import no from "@shared/locales/no.json";
+import nn from "@shared/locales/nn.json";
 
-export type Language = "en" | "no" | "nn";
+export type { Language };
 
 interface Translations {
   [key: string]: string;
 }
 
-const translations: Record<Language, Translations> = {
-  en: require("../locales/en.json"),
-  no: require("../locales/no.json"),
-  nn: require("../locales/nn.json"),
-};
+const translations: Record<Language, Translations> = { en, no, nn };
 
 class I18n {
   private currentLanguage: Language = "no"; // Default to Norwegian (Bokmål)

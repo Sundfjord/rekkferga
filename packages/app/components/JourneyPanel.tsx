@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import type { JourneyResult, FerryLeg, SearchResult } from "@shared/types";
 import { formatTime, formatDuration, firstReachable } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface JourneyPanelProps {
   journey: JourneyResult;
@@ -12,6 +13,7 @@ interface JourneyPanelProps {
 }
 
 export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
+  const { t } = useTranslation();
   const msUntilArrival = new Date(journey.expectedEndTime).getTime() - Date.now();
   const durationToShow = msUntilArrival > 0 ? msUntilArrival / 1000 : journey.duration;
 
@@ -43,13 +45,13 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
                   </Text>
                   {dep ? (
                     <View style={styles.depRow}>
-                      <Text style={styles.depTime}>Departs {formatTime(dep.expectedDepartureTime)}</Text>
+                      <Text style={styles.depTime}>{t("departures")} {formatTime(dep.expectedDepartureTime)}</Text>
                       {dep.marginMinutes !== null && (
                         <MarginBadge marginMinutes={dep.marginMinutes} />
                       )}
                     </View>
                   ) : (
-                    <Text style={styles.noData}>No departure data</Text>
+                    <Text style={styles.noData}>{t("unavailable")}</Text>
                   )}
                 </View>
               </View>
@@ -59,7 +61,7 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
             <View key={i} style={styles.legRow}>
               <Text style={styles.legIcon}>🚗</Text>
               <Text style={styles.legTitle}>
-                Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
+                {t("car")} {formatDuration(leg.duration)} → {leg.toPlace.name}
               </Text>
             </View>
           );
@@ -69,11 +71,10 @@ export default function JourneyPanel({ journey, destination, onClose, onStartTri
       {/* Footer */}
       <View style={styles.footer}>
         <Text style={styles.arrivalText}>
-          Arrive around{" "}
-          <Text style={styles.arrivalTime}>{formatTime(journey.expectedEndTime)}</Text>
+          {t("arriveAt", { place: formatTime(journey.expectedEndTime) })}
         </Text>
         <TouchableOpacity onPress={onStartTrip} style={styles.startButton}>
-          <Text style={styles.startButtonText}>Start trip →</Text>
+          <Text style={styles.startButtonText}>{t("directions")} →</Text>
         </TouchableOpacity>
       </View>
     </View>

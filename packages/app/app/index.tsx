@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, ActivityIndicator, ScrollView } from "react-native";
 import { useRouter, type Href } from "expo-router";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   requestForegroundPermissionsAsync,
   getCurrentPositionAsync,
@@ -40,6 +41,7 @@ async function fetchDeparturesForLeg(
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [journey, setJourney] = useState<JourneyResult | null>(null);
   const [destination, setDestination] = useState<SearchResult | null>(null);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -54,7 +56,7 @@ export default function HomeScreen() {
 
     const { status } = await requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      setError("Location access denied. Please enable location services.");
+      setError(t("unavailable"));
       setIsLoading(false);
       return;
     }
@@ -70,7 +72,7 @@ export default function HomeScreen() {
         result.longitude
       );
       if (!journeys.length) {
-        setError("No route found to this destination.");
+        setError(t("noRouteQuays"));
         return;
       }
 
@@ -88,11 +90,11 @@ export default function HomeScreen() {
 
       setJourney({ ...base, legs: hydratedLegs });
     } catch {
-      setError("Failed to calculate route. Please try again.");
+      setError(t("error"));
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleClose = () => {
     setJourney(null);
@@ -121,7 +123,7 @@ export default function HomeScreen() {
         <View className="flex-row items-center mx-4 mt-3 px-4 py-3 bg-surface rounded-xl"
           style={{ gap: 10 }}>
           <ActivityIndicator size="small" />
-          <Text className="text-surface-on text-sm">Calculating route...</Text>
+          <Text className="text-surface-on text-sm">{t("searchingForQuays")}</Text>
         </View>
       )}
 

@@ -2,6 +2,7 @@
 
 import type { JourneyResult, FerryLeg, SearchResult } from "@shared/types";
 import { formatTime, formatDuration, firstReachable } from "@shared/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export type TripState = 'driving_to_quay' | 'at_quay' | 'crossing' | 'crossing_complete' | 'arrived';
 
@@ -22,13 +23,7 @@ function MarginBadge({ minutes }: { minutes: number | null }) {
   );
 }
 
-const STATE_LABELS: Record<TripState, string> = {
-  driving_to_quay: 'Driving to ferry',
-  at_quay: 'At ferry quay',
-  crossing: 'On the ferry',
-  crossing_complete: 'Ferry complete',
-  arrived: 'Arrived',
-};
+// State labels are translated inline via t() since hooks can't be called outside components
 
 interface TripPanelProps {
   journey: JourneyResult;
@@ -47,7 +42,16 @@ export default function TripPanel({
   onExit,
   stalePosition,
 }: TripPanelProps) {
+  const t = useTranslation();
   const remainingLegs = journey.legs.slice(currentLegIndex);
+
+  const STATE_LABELS: Record<TripState, string> = {
+    driving_to_quay: t("driveFrom", { place: t("quay") }),
+    at_quay: t("selectedQuay"),
+    crossing: t("ferry"),
+    crossing_complete: t("ferry"),
+    arrived: t("arriveAt", { place: destination.name }),
+  };
 
   return (
     <div className="absolute bottom-0 left-0 right-0 z-10 bg-white shadow-2xl rounded-t-2xl max-h-[55vh] overflow-y-auto">
@@ -63,13 +67,13 @@ export default function TripPanel({
           onClick={onExit}
           className="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 flex-shrink-0"
         >
-          Exit trip
+          {t("back")}
         </button>
       </div>
 
       {stalePosition && (
         <div className="mx-4 mt-3 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
-          Position may be stale — tap to refresh
+          {t("realtime")} — {t("loading")}
         </div>
       )}
 
@@ -77,7 +81,7 @@ export default function TripPanel({
       <div className="divide-y divide-gray-50">
         {tripState === 'arrived' ? (
           <div className="px-4 py-4 text-sm text-gray-500 text-center">
-            You have arrived at {destination.name}.
+            {t("arriveAt", { place: destination.name })}
           </div>
         ) : (
           remainingLegs.map((leg, i) => {
@@ -95,11 +99,11 @@ export default function TripPanel({
                   </div>
                   {dep ? (
                     <div className="flex items-center gap-2 pl-6">
-                      <span className="text-sm text-gray-600">Departs {formatTime(dep.expectedDepartureTime)}</span>
+                      <span className="text-sm text-gray-600">{t("departures")} {formatTime(dep.expectedDepartureTime)}</span>
                       <MarginBadge minutes={dep.marginMinutes} />
                     </div>
                   ) : (
-                    <div className="pl-6 text-sm text-gray-400">No departure data</div>
+                    <div className="pl-6 text-sm text-gray-400">{t("unavailable")}</div>
                   )}
                 </div>
               );
@@ -108,7 +112,7 @@ export default function TripPanel({
               <div key={legIndex} className="px-4 py-3 flex items-center gap-2">
                 <span className="text-base">🚗</span>
                 <span className="text-sm text-gray-700">
-                  Drive {formatDuration(leg.duration)} → {leg.toPlace.name}
+                  {t("car")} {formatDuration(leg.duration)} → {leg.toPlace.name}
                 </span>
               </div>
             );

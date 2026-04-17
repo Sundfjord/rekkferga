@@ -8,12 +8,14 @@ import {
 } from "react-native";
 import type { SearchResult } from "@shared/types";
 import SearchResultItem from "./SearchResultItem";
+import { useTranslation } from "@/hooks/useTranslation";
 
 interface SearchProps {
   onSelect: (result: SearchResult) => void;
 }
 
 export default function Search({ onSelect }: SearchProps) {
+  const { t } = useTranslation();
   const [searchPhrase, setSearchPhrase] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -69,7 +71,7 @@ export default function Search({ onSelect }: SearchProps) {
           className={`bg-surface text-surface-on px-4 py-3 text-base border border-border shadow-sm ${
             showDropdown && searchResults.length > 0 ? "rounded-t-xl" : "rounded-xl"
           }`}
-          placeholder="Where are you going today?"
+          placeholder={t("searchPlaceholder")}
           placeholderTextColor="#bdbdbd"
           value={searchPhrase}
           onChangeText={setSearchPhrase}

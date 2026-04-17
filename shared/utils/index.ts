@@ -2,6 +2,29 @@
 
 import type { DepartureOption } from '../types';
 
+export type Language = "en" | "no" | "nn";
+
+export function translate(
+  translations: Record<string, Record<string, string>>,
+  language: Language,
+  key: string,
+  variables?: Record<string, string | number>
+): string {
+  let str = translations[language]?.[key];
+  if (!str) {
+    str = language === "nn"
+      ? (translations["no"]?.[key] ?? translations["en"]?.[key])
+      : translations["en"]?.[key];
+  }
+  if (!str) return key;
+  if (variables) {
+    for (const [k, v] of Object.entries(variables)) {
+      str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
+    }
+  }
+  return str;
+}
+
 export const formatDuration = (seconds: number): string => {
   const m = Math.round(seconds / 60);
   if (m < 60) return `${m} min`;

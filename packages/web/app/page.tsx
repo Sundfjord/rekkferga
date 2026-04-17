@@ -6,6 +6,7 @@ import dynamic from "next/dynamic";
 import Search from "@/components/Search";
 import JourneyPanel from "@/components/JourneyPanel";
 import type { SearchResult, JourneyResult, FerryLeg, DepartureOption } from "@shared/types";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Map = dynamic(() => import("@/components/Map"), { ssr: false });
 
@@ -39,6 +40,7 @@ async function fetchDeparturesForLeg(
 }
 
 export default function Home() {
+  const t = useTranslation();
   const router = useRouter();
   const [journey, setJourney] = useState<JourneyResult | null>(null);
   const [destination, setDestination] = useState<SearchResult | null>(null);
@@ -66,7 +68,7 @@ export default function Home() {
 
       const journeys = await fetchJourney(userLat, userLng, result.latitude, result.longitude);
       if (!journeys.length) {
-        setError("No route found to this destination.");
+        setError(t("noRouteQuays"));
         return;
       }
 
@@ -88,9 +90,9 @@ export default function Home() {
       setJourney({ ...base, legs: hydratedLegs });
     } catch (err) {
       if (err instanceof GeolocationPositionError) {
-        setError("Location access denied. Please enable location services.");
+        setError(t("unavailable"));
       } else {
-        setError("Failed to calculate route. Please try again.");
+        setError(t("error"));
       }
     } finally {
       setIsLoading(false);
@@ -108,7 +110,7 @@ export default function Home() {
   if (!destination) {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4">
-        <div className="w-full max-w-lg">
+        <div className="w-full max-w-lg sm:max-w-xl">
           <Search onSelect={handleDestinationSelect} />
         </div>
       </div>
@@ -118,13 +120,13 @@ export default function Home() {
   // Result state: top-aligned scrollable column
   return (
     <div className="flex flex-col items-center overflow-y-auto h-full px-4 py-8">
-      <div className="w-full max-w-lg flex flex-col gap-4">
+      <div className="w-full max-w-lg sm:max-w-xl flex flex-col gap-4">
         <Search onSelect={handleDestinationSelect} />
 
         {isLoading && (
           <div className="px-4 py-3 bg-white rounded-xl shadow-sm text-sm text-gray-600 flex items-center gap-2">
             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500 flex-shrink-0" />
-            Calculating route...
+            {t("searchingForQuays")}
           </div>
         )}
 
@@ -136,7 +138,7 @@ export default function Home() {
 
         {journey && (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div className="h-56">
+            <div className="h-56 sm:h-72 md:h-80">
               <Map journey={journey} userLocation={userLocation} />
             </div>
             <JourneyPanel
