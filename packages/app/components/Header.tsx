@@ -5,8 +5,8 @@ import { useTheme, useThemeColors, ThemeMode } from "../contexts/ThemeContext";
 import { useLanguage } from "../contexts/LanguageContext";
 import { i18n, Language } from "../utils/i18n";
 
-const ICON_COLOR = "#9ca3af"; // muted gray — matches web's text-gray-400
-const ICON_COLOR_ACTIVE = "#2196f3";
+const ICON_COLOR = "rgba(255,255,255,0.70)";
+const ICON_COLOR_ACTIVE = "#ffffff";
 
 type Section = "lang" | "theme" | null;
 
@@ -30,7 +30,7 @@ export default function Header() {
     setOpen((prev) => (prev === section ? null : section));
 
   return (
-    <View style={[styles.card, { backgroundColor: surface, borderColor: border }]}>
+    <View style={styles.card}>
       {/* Main row */}
       <View style={styles.row}>
         <Image
@@ -125,14 +125,6 @@ export default function Header() {
 
 const styles = StyleSheet.create({
   card: {
-    margin: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 10,
     zIndex: 50,
   },
   row: {
@@ -155,6 +147,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
   },
   flag: {
     fontSize: 17,
@@ -164,6 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     letterSpacing: 0.3,
+    color: "rgba(255,255,255,0.80)",
   },
   dividerV: {
     width: 1,

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { View, Platform, Text, Animated } from "react-native";
+import { View, Platform, Text, Animated, Image } from "react-native";
 import type { JourneyResult, CarLeg, FerryLeg } from "@shared/types";
 
 interface MapProps {
@@ -7,6 +7,36 @@ interface MapProps {
   userLocation: { latitude: number; longitude: number } | null;
   completedLegs?: Set<number>;
   followUser?: boolean;
+}
+
+function QuayMarker() {
+  return (
+    <View
+      style={{
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: "white",
+        borderWidth: 2.5,
+        borderColor: "#2569A3",
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.30,
+        shadowRadius: 5,
+        elevation: 5,
+        overflow: "hidden",
+        padding: 2,
+      }}
+    >
+      <Image
+        source={require("../assets/images/Logo.png")}
+        style={{ width: 26, height: 26, borderRadius: 13 }}
+        resizeMode="cover"
+      />
+    </View>
+  );
 }
 
 function PulsingUserMarker() {
@@ -113,8 +143,11 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser }: Map
                 key={`from-${i}`}
                 coordinate={{ latitude: from.latitude, longitude: from.longitude }}
                 title={from.name}
-                pinColor="#0ea5e9"
-              />
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+              >
+                <QuayMarker />
+              </Marker>
             );
           }
           if (to.latitude && to.longitude) {
@@ -123,8 +156,11 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser }: Map
                 key={`to-${i}`}
                 coordinate={{ latitude: to.latitude, longitude: to.longitude }}
                 title={to.name}
-                pinColor="#0ea5e9"
-              />
+                anchor={{ x: 0.5, y: 0.5 }}
+                tracksViewChanges={false}
+              >
+                <QuayMarker />
+              </Marker>
             );
           }
           return markers;

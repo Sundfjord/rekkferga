@@ -75,12 +75,22 @@ export default function TripPage() {
   const [stalePosition, setStalePosition] = useState(false);
   const [completedLegs, setCompletedLegs] = useState<Set<number>>(new Set());
   const [journeyLoaded, setJourneyLoaded] = useState(false);
+  const [isSidebar, setIsSidebar] = useState(false);
 
   const journeyRef = useRef<JourneyResult | null>(null);
   const currentLegIndexRef = useRef(0);
   const tripStateRef = useRef<TripState>('driving_to_quay');
   const lastPositionTimeRef = useRef(Date.now());
   const watchIdRef = useRef<number | null>(null);
+
+  // Sidebar breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)');
+    setIsSidebar(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsSidebar(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   // Keep refs in sync with state
   useEffect(() => { journeyRef.current = journey; }, [journey]);
@@ -264,6 +274,33 @@ export default function TripPage() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-gray-400 text-sm">Loading trip...</div>
+      </div>
+    );
+  }
+
+  if (isSidebar) {
+    return (
+      <div className="flex h-full overflow-hidden">
+        <div className="w-96 flex-shrink-0 h-full">
+          <TripPanel
+            journey={journey}
+            destination={destination}
+            currentLegIndex={currentLegIndex}
+            tripState={tripState}
+            onExit={handleExit}
+            stalePosition={stalePosition}
+            sidebar
+          />
+        </div>
+        <div className="flex-1 relative h-full overflow-hidden">
+          <Map
+            journey={journey}
+            userLocation={userLocation}
+            completedLegs={completedLegs}
+            followUser
+            disableFitBounds={false}
+          />
+        </div>
       </div>
     );
   }

@@ -4,15 +4,22 @@ export const createQuayWaypointMarker = (_name: string) => {
   return L.divIcon({
     className: "quay-waypoint-marker",
     html: `<div style="
-        background-color: white;
-        border: 3px solid #0ea5e9;
+        background-color: #42a5f5;
+        border: 2.5px solid #011683;
         border-radius: 50%;
-        width: 14px;
-        height: 14px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      "></div>`,
-    iconSize: [14, 14],
-    iconAnchor: [7, 7],
+        width: 32px;
+        height: 32px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.30);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        padding: 2px;
+      ">
+        <img src="/ferge.svg" style="width: 20px; height: 20px; border-radius: 50%; display: block;" />
+      </div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
   });
 };
 

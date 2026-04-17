@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
+import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeWrapper } from "../components/ThemeWrapper";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import Header from "../components/Header";
+
+const syne = Syne({
+  subsets: ["latin"],
+  weight: ["400", "600", "700", "800"],
+  variable: "--font-syne",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-dm-sans",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["500", "700"],
+  variable: "--font-jetbrains-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Rekkferga - Finn din kai. Rekk ferga.",
@@ -16,7 +38,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="no" suppressHydrationWarning>
+    <html
+      lang="no"
+      suppressHydrationWarning
+      className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+    >
       <body className="antialiased">
         <ThemeProvider>
           <ThemeWrapper>

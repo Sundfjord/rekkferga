@@ -1,6 +1,6 @@
 import React from "react";
 import { View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Slot } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "../global.css";
@@ -15,19 +15,31 @@ SystemUI.setBackgroundColorAsync("transparent");
 
 function AppShell() {
   const { background } = useThemeColors();
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView className="h-full" style={{ backgroundColor: background }}>
-      <View className="w-full max-w-2xl h-full" style={{ backgroundColor: background }}>
+    <View style={{ flex: 1, backgroundColor: background, paddingTop: insets.top }}>
+      <View style={{ flex: 1, width: "100%", maxWidth: 672, backgroundColor: background }}>
         <Header />
-        <Slot />
+        <View style={{ flex: 1 }}>
+          <Slot />
+        </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 export default function Layout() {
   useFonts({
+    // Design system fonts
+    "Syne-SemiBold": require("@expo-google-fonts/syne/600SemiBold/Syne_600SemiBold.ttf"),
+    "Syne-Bold": require("@expo-google-fonts/syne/700Bold/Syne_700Bold.ttf"),
+    "DMSans-Regular": require("@expo-google-fonts/dm-sans/400Regular/DMSans_400Regular.ttf"),
+    "DMSans-Medium": require("@expo-google-fonts/dm-sans/500Medium/DMSans_500Medium.ttf"),
+    "DMSans-SemiBold": require("@expo-google-fonts/dm-sans/600SemiBold/DMSans_600SemiBold.ttf"),
+    "JetBrainsMono-Medium": require("@expo-google-fonts/jetbrains-mono/500Medium/JetBrainsMono_500Medium.ttf"),
+    "JetBrainsMono-Bold": require("@expo-google-fonts/jetbrains-mono/700Bold/JetBrainsMono_700Bold.ttf"),
+    // Legacy fonts kept in case referenced elsewhere
     "Montserrat-Regular": require("../assets/fonts/Montserrat-Regular.ttf"),
     "Montserrat-Bold": require("../assets/fonts/Montserrat-Bold.ttf"),
     "Oswald-Regular": require("../assets/fonts/Oswald-Regular.ttf"),

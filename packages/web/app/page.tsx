@@ -111,6 +111,15 @@ export default function Home() {
     return (
       <div className="flex flex-col items-center justify-center h-full px-4">
         <div className="w-full max-w-lg sm:max-w-xl">
+          <p
+            className="text-xs font-semibold tracking-widest uppercase mb-2 pl-1"
+            style={{
+              color: "var(--text-on-water-muted)",
+              fontFamily: "var(--font-syne, 'Syne', sans-serif)",
+            }}
+          >
+            {t("searchTagline")}
+          </p>
           <Search onSelect={handleDestinationSelect} />
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, Text, ActivityIndicator, ScrollView } from "react-native";
+import { View, Text, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import { useRouter, type Href } from "expo-router";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
@@ -106,9 +106,14 @@ export default function HomeScreen() {
   // Landing state
   if (!destination) {
     return (
-      <View className="flex-1 px-4 pt-4">
-        <Search onSelect={handleDestinationSelect} />
-      </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={{ flex: 1, paddingHorizontal: 16, paddingTop: 32 }}>
+          <Search onSelect={handleDestinationSelect} showTagline />
+        </View>
+      </KeyboardAvoidingView>
     );
   }
 

@@ -40,7 +40,7 @@ const ChevronIcon = ({ className }: { className?: string }) => (
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
-const ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px] text-gray-400 dark:text-gray-500";
+const ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px] text-white/70";
 
 const THEME_OPTIONS = [
   { value: "light",  label: "Light",  icon: <SunIcon className={ICON_CLS} /> },
@@ -73,7 +73,8 @@ function DropdownShell({
     <div className="relative">
       <button
         onClick={() => (open ? onClose() : onOpen())}
-        className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors"
+        style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
       >
         {trigger}
         <ChevronIcon className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
@@ -133,68 +134,63 @@ export default function Header() {
     : null;
 
   return (
-    <div className="mx-3 mt-3 sm:mx-4 sm:mt-4 md:mx-5 md:mt-5">
-      <div className="flex items-center justify-between px-4 sm:px-5 py-2.5 sm:py-3 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm">
-        {/* Logo */}
-        <Image
-          src="/logo-revised.png"
-          alt="Rekkferga"
-          width={140}
-          height={50}
-          priority
-          className="h-9 sm:h-11 md:h-12 w-auto object-contain"
-        />
+    <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4">
+      {/* Logo — sits directly on water background */}
+      <Image
+        src="/logo-revised.png"
+        alt="Rekkferga"
+        width={140}
+        height={50}
+        priority
+        className="h-8 sm:h-10 w-auto object-contain"
+      />
 
-        {/* Controls */}
-        {mounted && (
-          <div className="flex items-center gap-1">
-            {/* Language */}
-            <DropdownShell
-              trigger={
-                <span className="text-xs sm:text-sm font-semibold text-gray-400 dark:text-gray-500 tracking-wide">
-                  {currentLang.code}
-                </span>
-              }
-              open={open === "lang"}
-              onOpen={() => setOpen("lang")}
-              onClose={() => setOpen(null)}
-            >
-              {LANG_OPTIONS.map((opt) => (
-                <DropdownItem
-                  key={opt.value}
-                  active={language === opt.value}
-                  onClick={() => { setLanguage(opt.value); setOpen(null); }}
-                >
-                  <span className="text-base leading-none">{opt.flag}</span>
-                  <span className="flex-1">{opt.label}</span>
-                </DropdownItem>
-              ))}
-            </DropdownShell>
+      {/* Controls — each in its own pill */}
+      {mounted && (
+        <div className="flex items-center gap-2">
+          {/* Language */}
+          <DropdownShell
+            trigger={
+              <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/80">
+                {currentLang.code}
+              </span>
+            }
+            open={open === "lang"}
+            onOpen={() => setOpen("lang")}
+            onClose={() => setOpen(null)}
+          >
+            {LANG_OPTIONS.map((opt) => (
+              <DropdownItem
+                key={opt.value}
+                active={language === opt.value}
+                onClick={() => { setLanguage(opt.value); setOpen(null); }}
+              >
+                <span className="text-base leading-none">{opt.flag}</span>
+                <span className="flex-1">{opt.label}</span>
+              </DropdownItem>
+            ))}
+          </DropdownShell>
 
-            {/* Divider */}
-            <div className="w-px h-4 sm:h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-            {/* Theme */}
-            <DropdownShell
-              trigger={currentThemeIcon}
-              open={open === "theme"}
-              onOpen={() => setOpen("theme")}
-              onClose={() => setOpen(null)}
-            >
-              {THEME_OPTIONS.map((opt) => (
-                <DropdownItem
-                  key={opt.value}
-                  active={theme === opt.value}
-                  onClick={() => { setTheme(opt.value); setOpen(null); }}
-                >
-                  {opt.icon}
-                  <span className="flex-1">{opt.label}</span>
-                </DropdownItem>
-              ))}
-            </DropdownShell>
-          </div>
-        )}
-      </div>
+          {/* Theme */}
+          <DropdownShell
+            trigger={currentThemeIcon}
+            open={open === "theme"}
+            onOpen={() => setOpen("theme")}
+            onClose={() => setOpen(null)}
+          >
+            {THEME_OPTIONS.map((opt) => (
+              <DropdownItem
+                key={opt.value}
+                active={theme === opt.value}
+                onClick={() => { setTheme(opt.value); setOpen(null); }}
+              >
+                {opt.icon}
+                <span className="flex-1">{opt.label}</span>
+              </DropdownItem>
+            ))}
+          </DropdownShell>
+        </div>
+      )}
     </div>
   );
 }

@@ -35,23 +35,28 @@ interface ThemeColors {
   onError: string;
   success: string;
   onSuccess: string;
+
+  // Semantic margin tiers
+  marginSafe: { bg: string; text: string; accent: string };
+  marginTight: { bg: string; text: string; accent: string };
+  marginMissed: { bg: string; text: string; accent: string };
 }
 
 const lightColors: ThemeColors = {
   // Primary colors
-  primary: "#2196f3",
-  primaryLight: "#bbdefb",
-  primaryDark: "#1565c0",
+  primary: "#2569A3",
+  primaryLight: "#3A85C2",
+  primaryDark: "#1A4F80",
   onPrimary: "#ffffff",
 
   // Background colors
-  background: "#42a5f5",
-  onBackground: "#171717",
+  background: "#2569A3",
+  onBackground: "#ffffff",
 
   // Surface colors
   surface: "#ffffff",
-  surfaceVariant: "#f5f5f5",
-  onSurface: "#212121",
+  surfaceVariant: "#E8F2FB",
+  onSurface: "#0D1B2A",
 
   // Border colors
   border: "#e0e0e0",
@@ -64,23 +69,28 @@ const lightColors: ThemeColors = {
   // Success colors
   success: "#388e3c",
   onSuccess: "#ffffff",
+
+  // Margin tiers
+  marginSafe:   { bg: "#DCFCE7", text: "#14532D", accent: "#16A34A" },
+  marginTight:  { bg: "#FEF3C7", text: "#78350F", accent: "#D97706" },
+  marginMissed: { bg: "#FEE2E2", text: "#7F1D1D", accent: "#DC2626" },
 };
 
 const darkColors: ThemeColors = {
   // Primary colors
-  primary: "#90caf9",
-  primaryLight: "#e3f2fd",
-  primaryDark: "#42a5f5",
-  onPrimary: "#000000",
+  primary: "#3A85C2",
+  primaryLight: "#5BA3D9",
+  primaryDark: "#2569A3",
+  onPrimary: "#ffffff",
 
   // Background colors
   background: "#011638",
-  onBackground: "#ededed",
+  onBackground: "#E8F0F8",
 
   // Surface colors
-  surface: "#121212",
-  surfaceVariant: "#1e1e1e",
-  onSurface: "#ffffff",
+  surface: "#111B27",
+  surfaceVariant: "#1A2740",
+  onSurface: "#E8F0F8",
 
   // Border colors
   border: "#424242",
@@ -93,6 +103,11 @@ const darkColors: ThemeColors = {
   // Success colors
   success: "#66bb6a",
   onSuccess: "#000000",
+
+  // Margin tiers (dark mode)
+  marginSafe:   { bg: "#14532D", text: "#86EFAC", accent: "#4ADE80" },
+  marginTight:  { bg: "#78350F", text: "#FCD34D", accent: "#FBBF24" },
+  marginMissed: { bg: "#7F1D1D", text: "#FCA5A5", accent: "#F87171" },
 };
 
 // Legacy theme context for Settings.tsx compatibility
