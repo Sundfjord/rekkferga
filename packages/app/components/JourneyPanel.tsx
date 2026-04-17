@@ -12,13 +12,16 @@ interface JourneyPanelProps {
 }
 
 export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
+  const msUntilArrival = new Date(journey.expectedEndTime).getTime() - Date.now();
+  const durationToShow = msUntilArrival > 0 ? msUntilArrival / 1000 : journey.duration;
+
   return (
     <View style={styles.card}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerText}>
           <Text style={styles.destinationName} numberOfLines={1}>{destination.name}</Text>
-          <Text style={styles.totalDuration}>{formatDuration(journey.duration)} total</Text>
+          <Text style={styles.totalDuration}>{formatDuration(durationToShow)} total</Text>
         </View>
         <TouchableOpacity onPress={onClose} style={styles.closeButton} hitSlop={8}>
           <Text style={styles.closeIcon}>✕</Text>

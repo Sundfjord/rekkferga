@@ -30,13 +30,16 @@ interface JourneyPanelProps {
 }
 
 export default function JourneyPanel({ journey, destination, onClose, onStartTrip }: JourneyPanelProps) {
+  const msUntilArrival = new Date(journey.expectedEndTime).getTime() - Date.now();
+  const durationToShow = msUntilArrival > 0 ? msUntilArrival / 1000 : journey.duration;
+
   return (
     <div className="flex flex-col">
       {/* Header */}
       <div className="flex items-start justify-between p-4 border-b border-gray-100">
         <div>
           <div className="font-semibold text-gray-900">{destination.name}</div>
-          <div className="text-sm text-gray-500">{formatDuration(journey.duration)} total</div>
+          <div className="text-sm text-gray-500">{formatDuration(durationToShow)} total</div>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1 -mr-1 -mt-1 flex-shrink-0" aria-label="Close">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

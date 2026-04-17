@@ -35,10 +35,10 @@ def get_departures_from_entur(quay, route=None):
     """
     arrival_time = route.get("expectedEndTime") if route else None
     if arrival_time:
-        # Start 15 min before estimated arrival so the user sees the departure
-        # just before theirs (negative margin) and several catchable ones after.
-        # format_datetime_for_api handles past timestamps gracefully.
-        start_time = format_datetime_for_api(arrival_time, subtract_minutes=15)
+        # Start 5 min before estimated arrival so departures just before
+        # the arrival window are included. format_datetime_for_api handles
+        # past timestamps gracefully.
+        start_time = format_datetime_for_api(arrival_time, subtract_minutes=5)
     else:
         start_time = format_datetime_for_api(None)
     departures = get_departures_from_nsr_id(quay["id"], start_time)
