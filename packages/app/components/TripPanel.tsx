@@ -15,6 +15,7 @@ interface TripPanelProps {
   tripState: TripState;
   onExit: () => void;
   stalePosition?: boolean;
+  onRefreshPosition?: () => void;
 }
 
 export default function TripPanel({
@@ -24,6 +25,7 @@ export default function TripPanel({
   tripState,
   onExit,
   stalePosition,
+  onRefreshPosition,
 }: TripPanelProps) {
   const { t } = useTranslation();
   const colors = useThemeColors();
@@ -41,13 +43,17 @@ export default function TripPanel({
 
   return (
     <View style={[styles.panel, { backgroundColor: colors.surface }]}>
-      {/* Stale banner */}
+      {/* Stale banner — tappable to refresh position */}
       {stalePosition && (
-        <View style={styles.staleBanner}>
+        <TouchableOpacity
+          style={styles.staleBanner}
+          onPress={onRefreshPosition}
+          activeOpacity={0.7}
+        >
           <Text style={[styles.staleText, { fontFamily: "DMSans-Regular" }]}>
             ⚠ {t("stalePosition")}
           </Text>
-        </View>
+        </TouchableOpacity>
       )}
 
         {/* Header */}

@@ -102,7 +102,10 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
     };
   }, [query]);
 
+  const justSelectedRef = useRef(false);
+
   const handleSelect = (result: SearchResult) => {
+    justSelectedRef.current = true;
     onSelect(result);
     setQuery(result.name);
     setIsOpen(false);
@@ -114,9 +117,13 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
     handleSelect(result);
   };
 
-  const hasResults = results.length > 0;
+  // Exclude search results that match any favorite (not just filtered ones)
+  const allFavoriteIds = new Set(favorites.map((f) => f.destination.id));
+  const dedupedResults = results.filter((r) => !allFavoriteIds.has(r.id));
+
+  const hasResults = dedupedResults.length > 0;
   const hasFavorites = filteredFavorites.length > 0;
-  const showDropdown = isOpen && (hasResults || hasFavorites);
+  const showDropdown = isOpen && !justSelectedRef.current && (hasResults || hasFavorites);
 
   return (
     <div className="relative">
@@ -126,9 +133,9 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         <input
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setIsOpen(true)}
-          onBlur={() => setTimeout(() => setIsOpen(false), 200)}
+          onChange={(e) => { setQuery(e.target.value); justSelectedRef.current = false; }}
+          onFocus={() => { setIsOpen(true); justSelectedRef.current = false; }}
+          onBlur={() => setTimeout(() => setIsOpen(false), 300)}
           placeholder={t("searchPlaceholder")}
           className="flex-1 outline-none bg-transparent text-lg"
           style={{
@@ -201,7 +208,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
             )}
 
             {/* Search results */}
-            {results.map((r, i) => (
+            {dedupedResults.map((r, i) => (
               <div
                 key={`${r.id}-${i}`}
                 onClick={() => handleSelect(r)}

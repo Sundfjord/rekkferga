@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, ActivityIndicator, KeyboardAvoidingView, Platform, AppState, type AppStateStatus } from "react-native";
+import { View, Text, ActivityIndicator, KeyboardAvoidingView, Platform, AppState, ScrollView, Dimensions, type AppStateStatus } from "react-native";
 import {
   requestForegroundPermissionsAsync,
   watchPositionAsync,
@@ -159,16 +159,30 @@ export default function HomeScreen() {
       }
 
       const base = journeys[0];
-      const hydratedLegs = await Promise.all(
-        base.legs.map(async (leg, index) => {
-          if (leg.mode !== "water") return leg;
-          const prevLeg = index > 0 ? base.legs[index - 1] : null;
-          const driveDurationMs = (prevLeg?.duration ?? 0) * 1000;
-          const arrivalTime = new Date(Date.now() + driveDurationMs).toISOString();
-          const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
-          return { ...leg, departures };
-        })
-      );
+      // Hydrate ferry legs sequentially — each needs the cumulative travel time
+      // from all preceding legs to compute a correct arrival estimate.
+      const hydratedLegs: typeof base.legs = [];
+      let cumulativeMs = 0;
+      for (let index = 0; index < base.legs.length; index++) {
+        const leg = base.legs[index];
+        if (leg.mode !== "water") {
+          cumulativeMs += leg.duration * 1000;
+          hydratedLegs.push(leg);
+          continue;
+        }
+        const arrivalTime = new Date(Date.now() + cumulativeMs).toISOString();
+        const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
+        const dep = departures.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? departures[0];
+        if (dep) {
+          const arriveAtQuayMs = Date.now() + cumulativeMs;
+          const depTimeMs = new Date(dep.expectedDepartureTime).getTime();
+          const waitMs = Math.max(0, depTimeMs - arriveAtQuayMs);
+          cumulativeMs += waitMs + leg.duration * 1000;
+        } else {
+          cumulativeMs += leg.duration * 1000;
+        }
+        hydratedLegs.push({ ...leg, departures });
+      }
 
       const hydratedJourney = { ...base, legs: hydratedLegs };
       journeyRef.current = hydratedJourney;
@@ -180,6 +194,13 @@ export default function HomeScreen() {
       setIsLoading(false);
     }
   }, [t]);
+
+  const refreshPosition = useCallback(async () => {
+    try {
+      const { coords } = await getCurrentPositionAsync({});
+      processPosition(coords.latitude, coords.longitude);
+    } catch {}
+  }, [processPosition]);
 
   const handleExit = useCallback(() => {
     locationSubscriptionRef.current?.remove();
@@ -231,7 +252,11 @@ export default function HomeScreen() {
         )}
 
         {journey && destination ? (
-          <>
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ paddingBottom: 12 }}
+            showsVerticalScrollIndicator={false}
+          >
             <View style={{ paddingHorizontal: 12, paddingBottom: 8 }}>
               <TripPanel
                 journey={journey}
@@ -240,9 +265,20 @@ export default function HomeScreen() {
                 tripState={tripState}
                 onExit={handleExit}
                 stalePosition={stalePosition}
+                onRefreshPosition={refreshPosition}
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={{
+              marginHorizontal: 12,
+              borderRadius: 18,
+              overflow: "hidden",
+              height: Math.round(Dimensions.get("window").height * 0.45),
+              shadowColor: "#01163A",
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: 0.18,
+              shadowRadius: 16,
+              elevation: 8,
+            }}>
               <Map
                 journey={journey}
                 userLocation={userLocation}
@@ -251,7 +287,7 @@ export default function HomeScreen() {
                 fitBoundsSignal={fitBoundsSignal}
               />
             </View>
-          </>
+          </ScrollView>
         ) : null}
       </View>
     </KeyboardAvoidingView>

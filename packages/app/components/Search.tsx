@@ -11,7 +11,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import type { SearchResult } from "@shared/types";
 import type { SavedDestination } from "@shared/types";
-import SearchResultItem from "./SearchResultItem";
 import { useThemeColors } from "../contexts/ThemeContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -72,7 +71,10 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
         }
       } else {
         setSearchResults([]);
-        setShowDropdown(debouncedPhrase.length === 0 && isFocused);
+        // Keep dropdown open for favorites when input is empty and focused
+        if (debouncedPhrase.length === 0 && isFocused) {
+          setShowDropdown(true);
+        }
       }
     };
     doSearch();
@@ -92,7 +94,11 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
     handleSelect(result);
   };
 
-  const hasResults = searchResults.length > 0;
+  // Exclude search results that match any favorite (not just filtered ones)
+  const allFavoriteIds = new Set(favorites.map((f) => f.destination.id));
+  const dedupedResults = searchResults.filter((r) => !allFavoriteIds.has(r.id));
+
+  const hasResults = dedupedResults.length > 0;
   const hasFavorites = filteredFavorites.length > 0;
   const hasDropdown = showDropdown && (hasResults || hasFavorites);
 
@@ -112,7 +118,6 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
           hasDropdown && styles.inputCardOpen,
         ]}
       >
-        <PinIcon color={colors.primaryLight} />
         <TextInput
           style={[styles.input, { color: colors.onSurface, fontFamily: "DMSans-Regular" }]}
           placeholder={t("searchPlaceholder")}
@@ -120,7 +125,6 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
           value={searchPhrase}
           onChangeText={setSearchPhrase}
           onFocus={() => { setIsFocused(true); setShowDropdown(true); }}
-          onBlur={() => { setIsFocused(false); }}
           autoCorrect={false}
           autoCapitalize="none"
           clearButtonMode="while-editing"
@@ -146,11 +150,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
                   <TouchableOpacity
                     key={`fav-${fav.destination.id}-${index}`}
                     onPress={() => handleFavoriteSelect(fav)}
-                    style={[
-                      styles.favoriteRow,
-                      { borderBottomColor: colors.border },
-                      index < filteredFavorites.length - 1 || hasResults ? styles.border : undefined,
-                    ]}
+                    style={styles.favoriteRow}
                     activeOpacity={0.7}
                   >
                     <Ionicons name="heart" size={16} color="#ef4444" />
@@ -170,21 +170,29 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
             )}
 
             {/* Search results */}
-            {searchResults.map((item, index) => (
-              <View key={`${item.id}-${index}`} style={styles.resultRow}>
+            {dedupedResults.map((item, index) => (
+              <TouchableOpacity
+                key={`${item.id}-${index}`}
+                onPress={() => handleSelect(item)}
+                style={[styles.favoriteRow]}
+                activeOpacity={0.7}
+              >
                 {isFavorite(item.id) ? (
-                  <Ionicons name="heart" size={16} color="#ef4444" style={styles.heartIcon} />
+                  <Ionicons name="heart" size={16} color="#ef4444" />
                 ) : (
-                  <View style={styles.heartPlaceholder} />
+                  <Ionicons name="location-sharp" size={16} color={colors.onSurface + "55"} />
                 )}
-                <View style={styles.resultContent}>
-                  <SearchResultItem
-                    item={item}
-                    isLastItem={index === searchResults.length - 1}
-                    onSelect={handleSelect}
-                  />
+                <View style={styles.favoriteText}>
+                  <Text style={[styles.favoriteName, { color: colors.onSurface }]} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  {item.subName && (
+                    <Text style={[styles.favoriteSubName, { color: colors.onSurface }]} numberOfLines={1}>
+                      {item.subName}
+                    </Text>
+                  )}
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
         </View>
@@ -250,9 +258,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  border: {
-    borderBottomWidth: 1,
-  },
   favoriteText: {
     flex: 1,
   },
@@ -265,19 +270,5 @@ const styles = StyleSheet.create({
     opacity: 0.7,
     marginTop: 1,
     fontFamily: "DMSans-Regular",
-  },
-  resultRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  heartIcon: {
-    marginLeft: 16,
-  },
-  heartPlaceholder: {
-    width: 16,
-    marginLeft: 16,
-  },
-  resultContent: {
-    flex: 1,
   },
 });

@@ -53,9 +53,6 @@ export default function Header() {
             />
           </Pressable>
 
-          {/* Divider */}
-          <View style={[styles.dividerV, { backgroundColor: border }]} />
-
           {/* Theme selector */}
           <Pressable onPress={() => toggle("theme")} style={styles.selectorButton} hitSlop={8}>
             <FontAwesome6
@@ -161,11 +158,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     letterSpacing: 0.3,
     color: "rgba(255,255,255,0.80)",
-  },
-  dividerV: {
-    width: 1,
-    height: 18,
-    opacity: 0.5,
   },
   dropdown: {
     borderTopWidth: 1,

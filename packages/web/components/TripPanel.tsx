@@ -45,6 +45,7 @@ interface TripPanelProps {
   tripState: TripState;
   onExit: () => void;
   stalePosition?: boolean;
+  onRefreshPosition?: () => void;
   sidebar?: boolean;
 }
 
@@ -55,6 +56,7 @@ export default function TripPanel({
   tripState,
   onExit,
   stalePosition,
+  onRefreshPosition,
   sidebar = false,
 }: TripPanelProps) {
   const t = useTranslation();
@@ -64,8 +66,9 @@ export default function TripPanel({
 
   const staleBanner = stalePosition && (
     <div
-      className="px-5 py-2.5 text-sm flex items-center gap-2 flex-shrink-0"
+      className="px-5 py-2.5 text-sm flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
       style={{ backgroundColor: "#FFFBEB", borderBottom: "1px solid #FDE68A", color: "#92400E" }}
+      onClick={onRefreshPosition}
     >
       <span>⚠</span>
       <span style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}>{t("stalePosition")}</span>

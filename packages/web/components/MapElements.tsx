@@ -33,19 +33,26 @@ export const createUserMarker = () => {
       <div style="position:relative;width:40px;height:40px;">
         <div style="
           position:absolute;
-          top:50%;left:50%;
-          width:20px;height:20px;
+          top:50%;
+          left:50%;
+          width:20px;
+          height:20px;
           border-radius:50%;
-          background:rgba(66,165,245,0.35);
+          background:rgba(59,130,246,0.4);
           animation:user-location-pulse 2s ease-out infinite;
         "></div>
-        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);">
-          ${markerShell(`
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-            </svg>
-          `)}
-        </div>
+        <div style="
+          position:absolute;
+          top:50%;
+          left:50%;
+          transform:translate(-50%,-50%);
+          width:14px;
+          height:14px;
+          background:#3b82f6;
+          border:2.5px solid white;
+          border-radius:50%;
+          box-shadow:0 2px 10px rgba(59,130,246,0.45);
+        "></div>
       </div>
     `,
     iconSize: [40, 40],

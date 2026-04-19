@@ -155,16 +155,32 @@ export default function Home() {
       }
 
       const base = journeys[0];
-      const hydratedLegs = await Promise.all(
-        base.legs.map(async (leg, index) => {
-          if (leg.mode !== "water") return leg;
-          const prevLeg = index > 0 ? base.legs[index - 1] : null;
-          const driveDurationMs = (prevLeg?.duration ?? 0) * 1000;
-          const arrivalTime = new Date(Date.now() + driveDurationMs).toISOString();
-          const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
-          return { ...leg, departures };
-        })
-      );
+      // Hydrate ferry legs sequentially — each needs the cumulative travel time
+      // from all preceding legs to compute a correct arrival estimate.
+      const hydratedLegs: typeof base.legs = [];
+      let cumulativeMs = 0;
+      for (let index = 0; index < base.legs.length; index++) {
+        const leg = base.legs[index];
+        if (leg.mode !== "water") {
+          cumulativeMs += leg.duration * 1000;
+          hydratedLegs.push(leg);
+          continue;
+        }
+        const arrivalTime = new Date(Date.now() + cumulativeMs).toISOString();
+        const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
+        // After fetching departures, add the ferry crossing duration + any wait time
+        const dep = departures.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? departures[0];
+        if (dep) {
+          // Wait = time from arrival at quay until departure
+          const arriveAtQuayMs = Date.now() + cumulativeMs;
+          const depTimeMs = new Date(dep.expectedDepartureTime).getTime();
+          const waitMs = Math.max(0, depTimeMs - arriveAtQuayMs);
+          cumulativeMs += waitMs + leg.duration * 1000;
+        } else {
+          cumulativeMs += leg.duration * 1000;
+        }
+        hydratedLegs.push({ ...leg, departures });
+      }
 
       const hydratedJourney = { ...base, legs: hydratedLegs };
       journeyRef.current = hydratedJourney;
@@ -181,6 +197,10 @@ export default function Home() {
       setIsLoading(false);
     }
   }, [t]);
+
+  const refreshPosition = useCallback(() => {
+    navigator.geolocation.getCurrentPosition(handlePosition, () => {});
+  }, [handlePosition]);
 
   const handleExit = useCallback(() => {
     if (watchIdRef.current !== null) {
@@ -214,7 +234,7 @@ export default function Home() {
           {isLoading && (
             <div
               className="mt-2 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
-              style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}
+              style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
             >
               <div
                 className="animate-spin rounded-full h-4 w-4 border-2 flex-shrink-0"
@@ -245,6 +265,7 @@ export default function Home() {
                 tripState={tripState}
                 onExit={handleExit}
                 stalePosition={stalePosition}
+                onRefreshPosition={refreshPosition}
                 sidebar
               />
             </div>

@@ -11,32 +11,60 @@ interface MapProps {
   fitBoundsSignal?: number;
 }
 
+// Shared marker shell — matches web MapElements style
+// No shadows — react-native-maps clips custom marker views tightly
+const markerShell = {
+  width: 32,
+  height: 32,
+  borderRadius: 16,
+  backgroundColor: "#42a5f5",
+  borderWidth: 2.5,
+  borderColor: "#011683",
+  alignItems: "center" as const,
+  justifyContent: "center" as const,
+  overflow: "hidden" as const,
+};
+
 function QuayMarker() {
   return (
-    <View
-      style={{
-        width: 34,
-        height: 34,
-        borderRadius: 17,
-        backgroundColor: "white",
-        borderWidth: 2.5,
-        borderColor: "#2569A3",
-        alignItems: "center",
-        justifyContent: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.30,
-        shadowRadius: 5,
-        elevation: 5,
-        overflow: "hidden",
-        padding: 2,
-      }}
-    >
-      <Image
-        source={require("../assets/images/Logo.png")}
-        style={{ width: 26, height: 26, borderRadius: 13 }}
-        resizeMode="cover"
-      />
+    <View style={{ width: 32, height: 32 }}>
+      <View style={markerShell}>
+        <Image
+          source={require("../assets/images/fergo.png")}
+          style={{ width: 25, height: 10, borderRadius: 10 }}
+          resizeMode="cover"
+        />
+      </View>
+    </View>
+  );
+}
+
+function DestinationMarker() {
+  const size = 8;
+  const dark = "#011638";
+  const light = "#ffffff";
+  const rows = [0, 1, 2, 3];
+  const cols = [0, 1, 2, 3];
+  return (
+    <View style={{ width: 32, height: 32 }}>
+      <View style={markerShell}>
+        <View style={{ width: 32, height: 32 }}>
+          {rows.map((r) => (
+            <View key={r} style={{ flexDirection: "row" }}>
+              {cols.map((c) => (
+                <View
+                  key={c}
+                  style={{
+                    width: size,
+                    height: size,
+                    backgroundColor: (r + c) % 2 === 0 ? dark : light,
+                  }}
+                />
+              ))}
+            </View>
+          ))}
+        </View>
+      </View>
     </View>
   );
 }
@@ -144,7 +172,7 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser, fitBo
           if (fromPlace.latitude && fromPlace.longitude) {
             markers.push(
               <Marker key={`from-${i}`} coordinate={{ latitude: fromPlace.latitude, longitude: fromPlace.longitude }}
-                title={fromPlace.name} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+                title={fromPlace.name} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={true}>
                 <QuayMarker />
               </Marker>
             );
@@ -152,13 +180,28 @@ function MapNativeImpl({ journey, userLocation, completedLegs, followUser, fitBo
           if (toPlace.latitude && toPlace.longitude) {
             markers.push(
               <Marker key={`to-${i}`} coordinate={{ latitude: toPlace.latitude, longitude: toPlace.longitude }}
-                title={toPlace.name} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={false}>
+                title={toPlace.name} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges={true}>
                 <QuayMarker />
               </Marker>
             );
           }
           return markers;
         })}
+
+      {/* Destination marker at end of route */}
+      {journey && (() => {
+        const lastLeg = journey.legs[journey.legs.length - 1];
+        if (!lastLeg?.toPlace.latitude || !lastLeg?.toPlace.longitude) return null;
+        return (
+          <Marker
+            coordinate={{ latitude: lastLeg.toPlace.latitude, longitude: lastLeg.toPlace.longitude }}
+            anchor={{ x: 0.5, y: 0.5 }}
+            tracksViewChanges={true}
+          >
+            <DestinationMarker />
+          </Marker>
+        );
+      })()}
 
       {userLocation && (
         <Marker coordinate={userLocation} anchor={{ x: 0.5, y: 0.5 }} tracksViewChanges>
