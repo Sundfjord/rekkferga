@@ -1,12 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
-import type { JourneyResult, FerryLeg, SearchResult } from "@shared/types";
-import { formatTime, formatDuration, firstReachable } from "@shared/utils";
+import type { JourneyResult, FerryLeg, SearchResult, TripState } from "@shared/types";
+import { formatTime, formatDuration, nextReachable } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
 import { useThemeColors } from "../contexts/ThemeContext";
 import { useTranslation } from "@/hooks/useTranslation";
-
-export type TripState = 'driving_to_quay' | 'at_quay' | 'crossing' | 'crossing_complete' | 'arrived';
 
 interface TripPanelProps {
   journey: JourneyResult;
@@ -38,8 +36,8 @@ export default function TripPanel({
   };
 
   return (
-    <View style={styles.outerWrapper}>
-      {/* Stale banner — sits above panel */}
+    <View style={[styles.panel, { backgroundColor: colors.surface }]}>
+      {/* Stale banner */}
       {stalePosition && (
         <View style={styles.staleBanner}>
           <Text style={[styles.staleText, { fontFamily: "DMSans-Regular" }]}>
@@ -48,30 +46,16 @@ export default function TripPanel({
         </View>
       )}
 
-      {/* Main bottom sheet */}
-      <View style={[styles.panel, { backgroundColor: colors.surface }]}>
-        {/* Drag handle */}
-        <View style={[styles.handle, { backgroundColor: colors.border }]} />
-
         {/* Header */}
         <View style={styles.headerRow}>
           <View style={{ flex: 1, marginRight: 12 }}>
-            <Text style={[styles.stateLabel, { color: colors.primary, fontFamily: "Syne-SemiBold" }]}>
-              {STATE_LABELS[tripState].toUpperCase()}
-            </Text>
             <Text style={[styles.destinationName, { color: colors.onSurface, fontFamily: "Syne-Bold" }]} numberOfLines={1}>
               {destination.name}
             </Text>
-          </View>
-          <TouchableOpacity
-            onPress={onExit}
-            style={[styles.exitButton, { borderColor: colors.border }]}
-            hitSlop={8}
-          >
-            <Text style={[styles.exitButtonText, { color: colors.onSurface, fontFamily: "DMSans-Regular" }]}>
-              {t("exitTrip")}
+            <Text style={[styles.arrivalTime, { color: colors.onSurface, fontFamily: "JetBrainsMono-Medium" }]}>
+              {formatTime(journey.expectedEndTime)}
             </Text>
-          </TouchableOpacity>
+          </View>
         </View>
 
         {/* Legs — scrollable, all remaining steps shown */}
@@ -93,7 +77,7 @@ export default function TripPanel({
 
               if (leg.mode === "water") {
                 const ferryLeg = leg as FerryLeg;
-                const dep = firstReachable(ferryLeg.departures);
+                const dep = nextReachable(ferryLeg.departures);
                 return (
                   <View
                     key={legGlobalIndex}
@@ -160,74 +144,49 @@ export default function TripPanel({
             })}
           </ScrollView>
         )}
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  outerWrapper: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
   staleBanner: {
     backgroundColor: "#FFFBEB",
-    borderTopWidth: 1,
-    borderTopColor: "#FDE68A",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FDE68A",
     paddingHorizontal: 16,
     paddingVertical: 10,
+    borderTopLeftRadius: 18,
+    borderTopRightRadius: 18,
   },
   staleText: {
     fontSize: 13,
     color: "#92400E",
   },
   panel: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.12,
+    borderRadius: 18,
+    shadowColor: "#01163A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
     shadowRadius: 16,
-    elevation: 16,
-    maxHeight: "60%",
-  },
-  handle: {
-    width: 32,
-    height: 4,
-    borderRadius: 2,
-    alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 4,
-    opacity: 0.3,
+    elevation: 8,
+    overflow: "hidden",
   },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingTop: 10,
+    paddingTop: 14,
     paddingBottom: 14,
-  },
-  stateLabel: {
-    fontSize: 10,
-    letterSpacing: 1.2,
-    marginBottom: 2,
   },
   destinationName: {
     fontSize: 16,
     lineHeight: 20,
   },
-  exitButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 7,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  exitButtonText: {
+  arrivalTime: {
     fontSize: 13,
-    opacity: 0.6,
+    marginTop: 2,
+    opacity: 0.65,
   },
   legsScroll: {
     flexGrow: 0,

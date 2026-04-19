@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text } from "react-native";
+import { marginTier, formatMarginLabel } from "@shared/utils";
 import { useThemeColors } from "../contexts/ThemeContext";
 
 interface MarginBadgeProps {
@@ -11,14 +12,10 @@ export default function MarginBadge({ marginMinutes }: MarginBadgeProps) {
 
   if (marginMinutes === null) return null;
 
-  const abs = Math.abs(marginMinutes);
-  const label = abs >= 60 ? `${Math.floor(abs / 60)}h ${abs % 60}m` : `${abs}m`;
-  const prefix = marginMinutes > 0 ? "+" : marginMinutes < 0 ? "−" : "";
-
-  const tier =
-    marginMinutes > 10 ? colors.marginSafe :
-    marginMinutes >= 0 ? colors.marginTight :
-    colors.marginMissed;
+  const { prefix, label } = formatMarginLabel(marginMinutes);
+  const tierName = marginTier(marginMinutes);
+  const tierColors = { safe: colors.marginSafe, tight: colors.marginTight, missed: colors.marginMissed };
+  const tier = tierColors[tierName];
 
   return (
     <View

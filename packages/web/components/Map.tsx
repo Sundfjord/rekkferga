@@ -14,20 +14,20 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-interface MapProps {
+export interface MapProps {
   journey: JourneyResult | null;
   userLocation: [number, number] | null;
   completedLegs?: Set<number>;
   followUser?: boolean;
-  disableFitBounds?: boolean;
+  /** Increment to trigger a fitBounds to the full route. */
+  fitBoundsSignal?: number;
 }
 
-export default function Map({ journey, userLocation, completedLegs, followUser, disableFitBounds }: MapProps) {
+export default function Map({ journey, userLocation, completedLegs, followUser, fitBoundsSignal }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const routeLayersRef = useRef<L.Layer[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
-  const fitBoundsDoneRef = useRef(false);
 
   // Init map once
   useEffect(() => {
@@ -48,14 +48,13 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
-        fitBoundsDoneRef.current = false;
       }
       routeLayersRef.current = [];
       userMarkerRef.current = null;
     };
   }, []);
 
-  // Draw journey route
+  // Draw journey route whenever it changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -65,8 +64,6 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
 
     if (!journey) return;
 
-    const allCoords: [number, number][] = [];
-
     for (let idx = 0; idx < journey.legs.length; idx++) {
       const leg = journey.legs[idx];
       const { fromPlace, toPlace, mode } = leg;
@@ -74,13 +71,12 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
 
       const start: [number, number] = [fromPlace.latitude, fromPlace.longitude];
       const end: [number, number] = [toPlace.latitude, toPlace.longitude];
-      allCoords.push(start, end);
-
       const isCompleted = completedLegs?.has(idx) ?? false;
       const isFerry = mode === "water";
       const lineCoords: [number, number][] = (!isFerry && (leg as CarLeg).geometry)
         ? (leg as CarLeg).geometry!.map(([lat, lng]) => [lat, lng])
         : [start, end];
+
       const polyline = L.polyline(lineCoords, {
         color: isFerry ? "#0ea5e9" : "#3b82f6",
         weight: isFerry ? 3 : 4,
@@ -103,15 +99,28 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
         routeLayersRef.current.push(fromMarker, toMarker);
       }
     }
+  }, [journey, completedLegs]);
 
-    if (!disableFitBounds && !fitBoundsDoneRef.current && allCoords.length > 0) {
-      fitBoundsDoneRef.current = true;
+  // Fit to full route whenever signal fires
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !journey || !fitBoundsSignal) return;
+
+    const allCoords: [number, number][] = [];
+    for (const leg of journey.legs) {
+      const { fromPlace, toPlace } = leg;
+      if (fromPlace.latitude && fromPlace.longitude) allCoords.push([fromPlace.latitude, fromPlace.longitude]);
+      if (toPlace.latitude && toPlace.longitude) allCoords.push([toPlace.latitude, toPlace.longitude]);
+    }
+    if (allCoords.length > 0) {
       map.fitBounds(
         L.latLngBounds(allCoords.map((c) => L.latLng(c[0], c[1]))),
-        { padding: [40, 40] }
+        { padding: [64, 64] }
       );
     }
-  }, [journey, completedLegs, disableFitBounds]);
+    // journey intentionally not in deps — only refit when signal fires, not on departure refreshes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitBoundsSignal]);
 
   // Update user location dot
   useEffect(() => {

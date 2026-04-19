@@ -1,6 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Option } from "../components/Dropdown";
 import type { Language } from "@shared/utils";
+
+interface Option {
+  value: string;
+  name: string;
+  icon: string;
+}
 import en from "@shared/locales/en.json";
 import no from "@shared/locales/no.json";
 import nn from "@shared/locales/nn.json";

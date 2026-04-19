@@ -72,8 +72,8 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
   return (
     <div className="relative">
       <div
-        className="flex items-center gap-3 bg-white px-5 py-4 rounded-2xl"
-        style={{ boxShadow: "var(--shadow-search)" }}
+        className="flex items-center gap-3 px-5 py-4 rounded-2xl"
+        style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-search)" }}
       >
         <PinIcon />
         <input
@@ -83,8 +83,11 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
           onFocus={() => results.length > 0 && setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder={t("searchPlaceholder")}
-          className="flex-1 outline-none bg-transparent text-lg text-gray-900 placeholder-gray-400"
-          style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+          className="flex-1 outline-none bg-transparent text-lg"
+          style={{
+            color: "var(--text-primary)",
+            fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
+          }}
         />
         <div className="flex-shrink-0">
           {isSearching ? (
@@ -102,8 +105,8 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
           <div
-            className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl overflow-hidden z-20"
-            style={{ boxShadow: "var(--shadow-elevated)" }}
+            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-20"
+            style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-elevated)" }}
           >
             {results.map((r, i) => (
               <div

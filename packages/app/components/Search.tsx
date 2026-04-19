@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -30,13 +30,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
   const [loading, setLoading] = useState(false);
   const [debouncedPhrase, setDebouncedPhrase] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-
-  useEffect(() => {
-    if (searchPhrase) {
-      setSearchResults([]);
-      setShowDropdown(false);
-    }
-  }, [searchPhrase]);
+  const justSelectedRef = useRef(false);
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedPhrase(searchPhrase), 300);
@@ -45,6 +39,11 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
 
   useEffect(() => {
     const doSearch = async () => {
+      // Don't re-search immediately after a selection
+      if (justSelectedRef.current) {
+        justSelectedRef.current = false;
+        return;
+      }
       if (debouncedPhrase.length > 2) {
         setLoading(true);
         try {
@@ -67,6 +66,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
   }, [debouncedPhrase]);
 
   const handleSelect = (result: SearchResult) => {
+    justSelectedRef.current = true;
     setSearchPhrase(result.name);
     setShowDropdown(false);
     setSearchResults([]);

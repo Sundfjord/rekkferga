@@ -37,10 +37,6 @@ export const formatTime = (iso: string): string => {
   return new Date(iso).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
 };
 
-export const firstReachable = (deps: DepartureOption[] | undefined): DepartureOption | undefined => {
-  return deps?.find((d) => d.isFirstReachable) ?? deps?.[0];
-};
-
 export const calculateDistance = (
   lat1: number,
   lon1: number,
@@ -60,18 +56,28 @@ export const calculateDistance = (
   return R * c;
 };
 
-export const isValidNsrId = (input: string): boolean => {
-  const pattern = /^NSR:StopPlace:\d+$/;
-  return pattern.test(input);
-};
+// ---------------------------------------------------------------------------
+// Trip utilities
+// ---------------------------------------------------------------------------
 
-export const debounce = <T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): ((...args: Parameters<T>) => void) => {
-  let timeout: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-};
+export const QUAY_PROXIMITY_KM = 0.2;
+export const DESTINATION_PROXIMITY_KM = 0.2;
+export const STALE_THRESHOLD_MS = 5 * 60 * 1000;
+
+export function nextReachable(deps: DepartureOption[] | undefined): DepartureOption | undefined {
+  if (!deps?.length) return undefined;
+  return deps.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? deps[0];
+}
+
+export function marginTier(minutes: number): "safe" | "tight" | "missed" {
+  if (minutes > 10) return "safe";
+  if (minutes >= 0) return "tight";
+  return "missed";
+}
+
+export function formatMarginLabel(minutes: number): { prefix: string; label: string } {
+  const abs = Math.abs(minutes);
+  const label = abs >= 60 ? `${Math.floor(abs / 60)}h ${abs % 60}m` : `${abs}m`;
+  const prefix = minutes > 0 ? "+" : minutes < 0 ? "−" : "";
+  return { prefix, label };
+}

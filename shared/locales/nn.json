@@ -1,11 +1,12 @@
 {
   "settings": "Innstillingar",
   "searchPlaceholder": "Kvar skal du i dag?",
+  "searchTagline": "Kvar skal du?",
   "selectedDestination": "Valt destinasjon",
   "selectedDock": "Valt kai",
   "nearbyDocks": "Nær deg",
   "favorites": "Favorittar",
-  "departures": "Avgangar",
+  "departures": "Avgang",
   "arrivals": "Ankomstar",
   "noResults": "Ingen resultat funne",
   "loading": "Lastar...",

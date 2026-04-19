@@ -66,6 +66,14 @@ def get_departures_from_nsr_id(nsr_id, start_time=None):
                                 }
                             }
                         }
+                        passingTimes {
+                            quay {
+                                stopPlace {
+                                    name
+                                    id
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -251,11 +259,46 @@ def process_departures(departure_data, route=None):
 
     first_reachable_departures = {}
     for i, departure in enumerate(estimated_calls):
-        service_journey_calls = departure.get("serviceJourney", {}).get(
-            "estimatedCalls", []
-        )
+        service_journey = departure.get("serviceJourney") or {}
+        service_journey_calls = service_journey.get("estimatedCalls", [])
+        passing_times = service_journey.get("passingTimes", [])
 
+        # When estimatedCalls is empty (e.g. no realtime data for next-day trips),
+        # fall back to passingTimes (scheduled, always present) to determine destinations.
         if not service_journey_calls:
+            if not passing_times:
+                continue
+            arrival_time = route.get("expectedEndTime") if route else None
+            margin_minutes = (
+                _compute_margin_minutes(departure.get("expectedDepartureTime"), arrival_time)
+                if arrival_time
+                else None
+            )
+            dep_time = departure.get("expectedDepartureTime")
+            # Skip first stop (origin) — remaining stops are potential destinations
+            for pt in passing_times[1:]:
+                destination = (pt.get("quay") or {}).get("stopPlace", {}).get("name")
+                if not destination:
+                    continue
+                if len(departures_by_destination.get(destination, [])) >= 10:
+                    continue
+                is_first_reachable = False
+                if route and arrival_time and dep_time:
+                    if destination not in first_reachable_departures and dep_time >= arrival_time:
+                        first_reachable_departures[destination] = dep_time
+                        is_first_reachable = True
+                    elif destination in first_reachable_departures:
+                        is_first_reachable = (dep_time == first_reachable_departures[destination])
+                if destination not in departures_by_destination:
+                    departures_by_destination[destination] = []
+                departures_by_destination[destination].append({
+                    "expectedDepartureTime": dep_time,
+                    "realtime": False,
+                    "journey": [],
+                    "relevant": False,
+                    "isFirstReachable": is_first_reachable,
+                    "marginMinutes": margin_minutes,
+                })
             continue
 
         for n, call in enumerate(service_journey_calls):
