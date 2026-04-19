@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeWrapper } from "../components/ThemeWrapper";
 import { LanguageProvider } from "../contexts/LanguageContext";
+import { FavoritesProvider } from "../contexts/FavoritesContext";
 import Header from "../components/Header";
 
 const syne = Syne({
@@ -47,14 +48,16 @@ export default function RootLayout({
         <ThemeProvider>
           <ThemeWrapper>
             <LanguageProvider>
+            <FavoritesProvider>
               {/* Full-viewport background */}
               <div className="h-screen bg-background flex justify-center">
                 {/* Constrained column — app-like on desktop, full-width on mobile */}
-                <div className="container flex flex-col h-full border-x border-gray-100 dark:border-gray-800">
+                <div className="container flex flex-col h-full">
                   <Header />
                   <main className="flex-1 overflow-hidden">{children}</main>
                 </div>
               </div>
+            </FavoritesProvider>
             </LanguageProvider>
           </ThemeWrapper>
         </ThemeProvider>

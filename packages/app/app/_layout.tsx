@@ -8,6 +8,7 @@ import * as SystemUI from "expo-system-ui";
 import { useFonts } from "expo-font";
 import Header from "../components/Header";
 import { LanguageProvider } from "../contexts/LanguageContext";
+import { FavoritesProvider } from "../contexts/FavoritesContext";
 import { ThemeProvider, useThemeColors } from "../contexts/ThemeContext";
 import { ThemeWrapper } from "../components/ThemeWrapper";
 
@@ -51,10 +52,12 @@ export default function Layout() {
     <ThemeProvider>
       <ThemeWrapper>
         <LanguageProvider>
-          <>
-            <StatusBar style="auto" translucent />
-            <AppShell />
-          </>
+          <FavoritesProvider>
+            <>
+              <StatusBar style="auto" translucent />
+              <AppShell />
+            </>
+          </FavoritesProvider>
         </LanguageProvider>
       </ThemeWrapper>
     </ThemeProvider>

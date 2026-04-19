@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import type { SearchResult } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 const PinIcon = () => (
   <svg
@@ -26,19 +27,59 @@ const SearchIcon = () => (
   </svg>
 );
 
+const LocationIcon = () => (
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden
+    style={{ color: "var(--text-secondary)", opacity: 0.5 }}
+  >
+    <path
+      fillRule="evenodd"
+      d="M11.54 22.351l.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-2.003 3.5-4.567 3.5-7.327a6.79 6.79 0 0 0-6.79-6.79 6.79 6.79 0 0 0-6.79 6.79c0 2.76 1.556 5.323 3.5 7.327a19.579 19.579 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
+const HeartIcon = ({ filled }: { filled: boolean }) => (
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    viewBox="0 0 24 24"
+    fill={filled ? "#ef4444" : "none"}
+    stroke={filled ? "#ef4444" : "currentColor"}
+    strokeWidth={2}
+    aria-hidden
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
+    />
+  </svg>
+);
+
 export default function Search({ onSelect }: { onSelect: (result: SearchResult) => void }) {
   const t = useTranslation();
+  const { favorites, isFavorite } = useFavorites();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Compute filtered favorites based on query
+  const filteredFavorites = query.trim()
+    ? favorites.filter((f) =>
+        f.destination.name.toLowerCase().includes(query.trim().toLowerCase())
+      )
+    : favorites;
+
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (!query.trim()) {
       setResults([]);
-      setIsOpen(false);
       return;
     }
     timeoutRef.current = setTimeout(async () => {
@@ -49,7 +90,6 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         if (res.ok) {
           const data: SearchResult[] = await res.json();
           setResults(data);
-          setIsOpen(true);
         }
       } catch {
         setResults([]);
@@ -69,18 +109,25 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
     setResults([]);
   };
 
+  const handleFavoriteSelect = (fav: (typeof favorites)[number]) => {
+    const result: SearchResult = { ...fav.destination, type: "location" };
+    handleSelect(result);
+  };
+
+  const hasResults = results.length > 0;
+  const hasFavorites = filteredFavorites.length > 0;
+  const showDropdown = isOpen && (hasResults || hasFavorites);
+
   return (
     <div className="relative">
       <div
-        className="flex items-center gap-3 px-5 py-4 rounded-2xl"
-        style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-search)" }}
+        className="flex items-center gap-3 p-1 rounded-2xl"
       >
-        <PinIcon />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => results.length > 0 && setIsOpen(true)}
+          onFocus={() => setIsOpen(true)}
           onBlur={() => setTimeout(() => setIsOpen(false), 200)}
           placeholder={t("searchPlaceholder")}
           className="flex-1 outline-none bg-transparent text-lg"
@@ -101,34 +148,86 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         </div>
       </div>
 
-      {isOpen && results.length > 0 && (
+      {showDropdown && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
           <div
-            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-20"
+            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-20 max-h-80 overflow-y-auto"
             style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-elevated)" }}
           >
+            {/* Favorites section */}
+            {hasFavorites && (
+              <>
+                {!hasResults && !query.trim() && (
+                  <div
+                    className="px-5 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {t("favorites")}
+                  </div>
+                )}
+                {filteredFavorites.map((fav, i) => (
+                  <div
+                    key={`fav-${fav.destination.id}-${i}`}
+                    onClick={() => handleFavoriteSelect(fav)}
+                    className="px-5 py-3.5 hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
+                  >
+                    <HeartIcon filled />
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="font-medium text-base truncate"
+                        style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                      >
+                        {fav.destination.name}
+                      </div>
+                      {fav.destination.subName && (
+                        <div
+                          className="text-sm mt-0.5 truncate"
+                          style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                        >
+                          {fav.destination.subName}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {hasResults && (
+                  <div
+                    className="h-px mx-4"
+                    style={{ backgroundColor: "var(--border)" }}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Search results */}
             {results.map((r, i) => (
               <div
                 key={`${r.id}-${i}`}
                 onClick={() => handleSelect(r)}
-                className="px-5 py-3.5 hover:bg-[--surface-tint] cursor-pointer border-b last:border-b-0 transition-colors"
-                style={{ borderColor: "var(--border)" }}
+                className="px-5 py-3.5 hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
               >
-                <div
-                  className="font-medium text-base"
-                  style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                >
-                  {r.name}
-                </div>
-                {r.subName && (
-                  <div
-                    className="text-sm mt-0.5"
-                    style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                  >
-                    {r.subName}
-                  </div>
+                {isFavorite(r.id) ? (
+                  <HeartIcon filled />
+                ) : (
+                  <LocationIcon />
                 )}
+                <div className="flex-1 min-w-0">
+                  <div
+                    className="font-medium text-base truncate"
+                    style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                  >
+                    {r.name}
+                  </div>
+                  {r.subName && (
+                    <div
+                      className="text-sm mt-0.5 truncate"
+                      style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                    >
+                      {r.subName}
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
           </div>

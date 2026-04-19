@@ -16,6 +16,8 @@
   "nearbyQuays": "Nær deg",
   "toQuay": "Til {quay}",
   "favorites": "Favoritter",
+  "addFavorite": "Legg til i favoritter",
+  "removeFavorite": "Fjern fra favoritter",
   "departures": "Avgang",
   "arrivals": "Ankomster",
   "noResults": "Ingen resultater funnet",

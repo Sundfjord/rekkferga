@@ -204,34 +204,33 @@ export default function Home() {
         {/* Left column — search + trip details, separated cards */}
         <div className="w-96 flex-shrink-0 flex flex-col gap-3 overflow-hidden">
           {/* Search card */}
-          <div
-            className="flex-shrink-0 rounded-2xl overflow-hidden"
-            style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}
-          >
-            <div className="px-4 pt-4 pb-4">
+          <div className="flex-shrink-0 relative z-20">
+            <div className="px-4 pt-4 pb-4 rounded-2xl"
+              style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}
+            >
               <Search onSelect={handleDestinationSelect} />
             </div>
-            {isLoading && (
-              <div
-                className="mx-4 mb-4 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
-                style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}
-              >
-                <div
-                  className="animate-spin rounded-full h-4 w-4 border-2 flex-shrink-0"
-                  style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
-                />
-                {t("searchingForQuays")}
-              </div>
-            )}
-            {error && (
-              <div
-                className="mx-4 mb-4 px-4 py-3 rounded-xl text-sm"
-                style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
-              >
-                {error}
-              </div>
-            )}
           </div>
+          {isLoading && (
+            <div
+              className="mt-2 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
+              style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}
+            >
+              <div
+                className="animate-spin rounded-full h-4 w-4 border-2 flex-shrink-0"
+                style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
+              />
+              {t("searchingForQuays")}
+            </div>
+          )}
+          {error && (
+            <div
+              className="mt-2 px-4 py-3 rounded-xl text-sm"
+              style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
+            >
+              {error}
+            </div>
+          )}
 
           {/* Trip details card */}
           {journey && destination && (
@@ -305,7 +304,7 @@ export default function Home() {
               stalePosition={stalePosition}
             />
           </div>
-          <div className="flex-1 relative overflow-hidden">
+          <div className="flex-1 relative overflow-hidden mx-3 mb-3 rounded-2xl" style={{ boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}>
             <Map
               journey={journey}
               userLocation={userLocation}

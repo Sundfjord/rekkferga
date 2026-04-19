@@ -1,9 +1,11 @@
 import React from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import type { JourneyResult, FerryLeg, SearchResult, TripState } from "@shared/types";
 import { formatTime, formatDuration, nextReachable } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
 import { useThemeColors } from "../contexts/ThemeContext";
+import { useFavorites } from "../contexts/FavoritesContext";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface TripPanelProps {
@@ -25,6 +27,8 @@ export default function TripPanel({
 }: TripPanelProps) {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const isFav = isFavorite(destination.id);
   const remainingLegs = journey.legs.slice(currentLegIndex);
 
   const STATE_LABELS: Record<TripState, string> = {
@@ -56,6 +60,17 @@ export default function TripPanel({
               {formatTime(journey.expectedEndTime)}
             </Text>
           </View>
+          <TouchableOpacity
+            onPress={() => toggleFavorite(destination)}
+            accessibilityLabel={isFav ? t("removeFavorite") : t("addFavorite")}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={isFav ? "heart" : "heart-outline"}
+              size={24}
+              color={isFav ? "#ef4444" : colors.onSurface}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Legs — scrollable, all remaining steps shown */}

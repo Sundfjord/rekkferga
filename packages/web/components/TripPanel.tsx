@@ -3,6 +3,7 @@
 import type { JourneyResult, FerryLeg, SearchResult, TripState } from "@shared/types";
 import { formatTime, formatDuration, nextReachable, marginTier, formatMarginLabel } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 function MarginBadge({ minutes }: { minutes: number | null }) {
   if (minutes === null) return null;
@@ -57,6 +58,8 @@ export default function TripPanel({
   sidebar = false,
 }: TripPanelProps) {
   const t = useTranslation();
+  const { toggleFavorite, isFavorite } = useFavorites();
+  const isFav = isFavorite(destination.id);
   const remainingLegs = journey.legs.slice(currentLegIndex);
 
   const staleBanner = stalePosition && (
@@ -79,12 +82,27 @@ export default function TripPanel({
           {destination.name}
         </div>
         <div
-          className="text-sm mt-0.5"
-          style={{ color: "var(--text-secondary)", fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
+          className="text-sm mt-0.5 flex items-center gap-1.5"
+          style={{ color: "var(--text-secondary)" }}
         >
-          {formatTime(journey.expectedEndTime)}
+          <span style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}>
+            {t("arrivalTime")}
+          </span>
+          <span style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}>
+            {formatTime(journey.expectedEndTime)}
+          </span>
         </div>
       </div>
+      <button
+        onClick={() => toggleFavorite(destination)}
+        aria-label={isFav ? t("removeFavorite") : t("addFavorite")}
+        className="flex-shrink-0 p-1 transition-colors"
+        style={{ color: isFav ? "#ef4444" : "var(--text-secondary)" }}
+      >
+        <svg className="w-6 h-6" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isFav ? 0 : 1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        </svg>
+      </button>
     </div>
   );
 

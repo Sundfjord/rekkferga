@@ -5,12 +5,16 @@ import {
   TextInput,
   ActivityIndicator,
   ScrollView,
+  TouchableOpacity,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import type { SearchResult } from "@shared/types";
+import type { SavedDestination } from "@shared/types";
 import SearchResultItem from "./SearchResultItem";
 import { useThemeColors } from "../contexts/ThemeContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 // Simple filled location pin
 const PinIcon = ({ color }: { color: string }) => (
@@ -25,12 +29,21 @@ interface SearchProps {
 export default function Search({ onSelect, showTagline = false }: SearchProps) {
   const { t } = useTranslation();
   const colors = useThemeColors();
+  const { favorites, isFavorite } = useFavorites();
   const [searchPhrase, setSearchPhrase] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedPhrase, setDebouncedPhrase] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const justSelectedRef = useRef(false);
+
+  // Filtered favorites based on current query
+  const filteredFavorites = searchPhrase.trim()
+    ? favorites.filter((f) =>
+        f.destination.name.toLowerCase().includes(searchPhrase.trim().toLowerCase())
+      )
+    : favorites;
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedPhrase(searchPhrase), 300);
@@ -59,21 +72,29 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
         }
       } else {
         setSearchResults([]);
-        setShowDropdown(false);
+        setShowDropdown(debouncedPhrase.length === 0 && isFocused);
       }
     };
     doSearch();
-  }, [debouncedPhrase]);
+  }, [debouncedPhrase, isFocused]);
 
   const handleSelect = (result: SearchResult) => {
     justSelectedRef.current = true;
     setSearchPhrase(result.name);
     setShowDropdown(false);
     setSearchResults([]);
+    setIsFocused(false);
     onSelect(result);
   };
 
-  const hasDropdown = showDropdown && searchResults.length > 0;
+  const handleFavoriteSelect = (fav: SavedDestination) => {
+    const result: SearchResult = { ...fav.destination, type: "location" };
+    handleSelect(result);
+  };
+
+  const hasResults = searchResults.length > 0;
+  const hasFavorites = filteredFavorites.length > 0;
+  const hasDropdown = showDropdown && (hasResults || hasFavorites);
 
   return (
     <View>
@@ -98,6 +119,8 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
           placeholderTextColor={colors.onSurface + "55"}
           value={searchPhrase}
           onChangeText={setSearchPhrase}
+          onFocus={() => { setIsFocused(true); setShowDropdown(true); }}
+          onBlur={() => { setIsFocused(false); }}
           autoCorrect={false}
           autoCapitalize="none"
           clearButtonMode="while-editing"
@@ -110,14 +133,58 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
       {/* Dropdown */}
       {hasDropdown && (
         <View style={[styles.dropdown, { backgroundColor: colors.surface }]}>
-          <ScrollView style={{ maxHeight: 240 }} showsVerticalScrollIndicator={false}>
+          <ScrollView style={{ maxHeight: 280 }} showsVerticalScrollIndicator={false}>
+            {/* Favorites section */}
+            {hasFavorites && (
+              <>
+                {!hasResults && !searchPhrase.trim() && (
+                  <Text style={[styles.sectionLabel, { color: colors.onSurface + "88" }]}>
+                    {t("favorites").toUpperCase()}
+                  </Text>
+                )}
+                {filteredFavorites.map((fav, index) => (
+                  <TouchableOpacity
+                    key={`fav-${fav.destination.id}-${index}`}
+                    onPress={() => handleFavoriteSelect(fav)}
+                    style={[
+                      styles.favoriteRow,
+                      { borderBottomColor: colors.border },
+                      index < filteredFavorites.length - 1 || hasResults ? styles.border : undefined,
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="heart" size={16} color="#ef4444" />
+                    <View style={styles.favoriteText}>
+                      <Text style={[styles.favoriteName, { color: colors.onSurface }]} numberOfLines={1}>
+                        {fav.destination.name}
+                      </Text>
+                      {fav.destination.subName && (
+                        <Text style={[styles.favoriteSubName, { color: colors.onSurface }]} numberOfLines={1}>
+                          {fav.destination.subName}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            {/* Search results */}
             {searchResults.map((item, index) => (
-              <SearchResultItem
-                key={`${item.id}-${index}`}
-                item={item}
-                isLastItem={index === searchResults.length - 1}
-                onSelect={handleSelect}
-              />
+              <View key={`${item.id}-${index}`} style={styles.resultRow}>
+                {isFavorite(item.id) ? (
+                  <Ionicons name="heart" size={16} color="#ef4444" style={styles.heartIcon} />
+                ) : (
+                  <View style={styles.heartPlaceholder} />
+                )}
+                <View style={styles.resultContent}>
+                  <SearchResultItem
+                    item={item}
+                    isLastItem={index === searchResults.length - 1}
+                    onSelect={handleSelect}
+                  />
+                </View>
+              </View>
             ))}
           </ScrollView>
         </View>
@@ -167,5 +234,50 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
     overflow: "hidden",
+  },
+  sectionLabel: {
+    fontSize: 11,
+    letterSpacing: 1.5,
+    fontFamily: "DMSans-Medium",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 4,
+  },
+  favoriteRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  border: {
+    borderBottomWidth: 1,
+  },
+  favoriteText: {
+    flex: 1,
+  },
+  favoriteName: {
+    fontSize: 16,
+    fontFamily: "DMSans-Medium",
+  },
+  favoriteSubName: {
+    fontSize: 14,
+    opacity: 0.7,
+    marginTop: 1,
+    fontFamily: "DMSans-Regular",
+  },
+  resultRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  heartIcon: {
+    marginLeft: 16,
+  },
+  heartPlaceholder: {
+    width: 16,
+    marginLeft: 16,
+  },
+  resultContent: {
+    flex: 1,
   },
 });

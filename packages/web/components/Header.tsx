@@ -139,10 +139,10 @@ export default function Header() {
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"
-        width={140}
-        height={50}
+        width={125}
+        height={100}
         priority
-        className="h-8 sm:h-10 w-auto object-contain"
+        className="object-contain"
       />
 
       {/* Controls — each in its own pill */}

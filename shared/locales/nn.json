@@ -6,6 +6,8 @@
   "selectedDock": "Valt kai",
   "nearbyDocks": "Nær deg",
   "favorites": "Favorittar",
+  "addFavorite": "Legg til i favorittar",
+  "removeFavorite": "Fjern frå favorittar",
   "departures": "Avgang",
   "arrivals": "Ankomstar",
   "noResults": "Ingen resultat funne",

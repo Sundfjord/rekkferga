@@ -1,18 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useTheme } from "next-themes";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { JourneyResult, CarLeg, FerryLeg } from "@shared/types";
-import { createQuayWaypointMarker, createUserMarker } from "./MapElements";
+import { createQuayWaypointMarker, createUserMarker, createDestinationMarker } from "./MapElements";
 
-// Fix broken default marker URLs
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
 
 export interface MapProps {
   journey: JourneyResult | null;
@@ -26,22 +20,17 @@ export interface MapProps {
 export default function Map({ journey, userLocation, completedLegs, followUser, fitBoundsSignal }: MapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const routeLayersRef = useRef<L.Layer[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const prevJourneyRef = useRef<JourneyResult | null>(null);
+  const { resolvedTheme } = useTheme();
 
   // Init map once
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
       const map = L.map(mapRef.current, { zoomControl: false }).setView([60.472, 8.468], 7);
       mapInstanceRef.current = map;
-      const hereKey = process.env.NEXT_PUBLIC_HERE_API_KEY;
-      const tileUrl = hereKey
-        ? `https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png?style=explore.day&apiKey=${hereKey}`
-        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-      const attribution = hereKey
-        ? '&copy; <a href="https://www.here.com">HERE Maps</a>'
-        : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
-      L.tileLayer(tileUrl, { attribution }).addTo(map);
       L.control.zoom({ position: "bottomright" }).addTo(map);
     }
     return () => {
@@ -49,10 +38,33 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
+      tileLayerRef.current = null;
       routeLayersRef.current = [];
       userMarkerRef.current = null;
     };
   }, []);
+
+  // Swap tile layer when theme changes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (tileLayerRef.current) {
+      tileLayerRef.current.remove();
+    }
+
+    const isDark = resolvedTheme === "dark";
+    const hereKey = process.env.NEXT_PUBLIC_HERE_API_KEY;
+    const style = isDark ? "explore.night" : "explore.day";
+    const tileUrl = hereKey
+      ? `https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png?style=${style}&apiKey=${hereKey}`
+      : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const attribution = hereKey
+      ? '&copy; <a href="https://www.here.com">HERE Maps</a>'
+      : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+    tileLayerRef.current = L.tileLayer(tileUrl, { attribution }).addTo(map);
+  }, [resolvedTheme]);
 
   // Draw journey route whenever it changes
   useEffect(() => {
@@ -99,7 +111,38 @@ export default function Map({ journey, userLocation, completedLegs, followUser, 
         routeLayersRef.current.push(fromMarker, toMarker);
       }
     }
-  }, [journey, completedLegs]);
+
+    // Destination marker at the end of the route
+    const lastLeg = journey.legs[journey.legs.length - 1];
+    if (lastLeg?.toPlace.latitude && lastLeg?.toPlace.longitude) {
+      const destMarker = L.marker(
+        [lastLeg.toPlace.latitude, lastLeg.toPlace.longitude],
+        { icon: createDestinationMarker(), interactive: false }
+      ).addTo(map);
+      routeLayersRef.current.push(destMarker);
+    }
+
+    // Auto-fit bounds when a new journey loads (not on departure refreshes)
+    if (journey !== prevJourneyRef.current) {
+      prevJourneyRef.current = journey;
+      const allCoords: [number, number][] = [];
+      if (userLocation) allCoords.push(userLocation);
+      for (const leg of journey.legs) {
+        const { fromPlace, toPlace } = leg;
+        if (fromPlace.latitude && fromPlace.longitude) allCoords.push([fromPlace.latitude, fromPlace.longitude]);
+        if (toPlace.latitude && toPlace.longitude) allCoords.push([toPlace.latitude, toPlace.longitude]);
+        if (leg.mode !== "water" && (leg as CarLeg).geometry) {
+          for (const pt of (leg as CarLeg).geometry!) allCoords.push([pt[0], pt[1]]);
+        }
+      }
+      if (allCoords.length > 1) {
+        map.fitBounds(
+          L.latLngBounds(allCoords.map((c) => L.latLng(c[0], c[1]))),
+          { padding: [48, 48], animate: true }
+        );
+      }
+    }
+  }, [journey, completedLegs, userLocation]);
 
   // Fit to full route whenever signal fires
   useEffect(() => {

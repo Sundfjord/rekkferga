@@ -81,3 +81,9 @@ export function formatMarginLabel(minutes: number): { prefix: string; label: str
   const prefix = minutes > 0 ? "+" : minutes < 0 ? "−" : "";
   return { prefix, label };
 }
+
+// ---------------------------------------------------------------------------
+// Favorites
+// ---------------------------------------------------------------------------
+
+export * from './favorites';

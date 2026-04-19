@@ -17,6 +17,8 @@
   "nearbyQuays": "Nearby",
   "toQuay": "To {quay}",
   "favorites": "Favorites",
+  "addFavorite": "Add to favorites",
+  "removeFavorite": "Remove from favorites",
   "departures": "Departures",
   "arrivals": "Arrivals",
   "noResults": "No results found",
