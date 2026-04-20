@@ -136,14 +136,48 @@ _Can run in parallel with Phase 3._
 
 ---
 
-## Phase 6 — Visual Consistency & Branding
+## Phase 6 — UI Polish & Visual Design System
 
-_After Phase 3 is stable. Use the frontend skill before starting._
+_After Phase 3 is stable._
 
-- Single design token set: Tailwind CSS v4 variables (web) + ThemeContext (app).
-- Dark mode parity, consistent margin badge colors, map UI polish.
-- Remove remaining debug artifacts.
-- Branding consistency (no "fergo"/"ferga" remnants).
+### Phase 6a — Design Research ✓
+
+_Complete. See `docs/design-brief.md` for all token values, layout patterns, and rationale._
+
+Key decisions:
+- **Aesthetic:** Nordic Coastal Utility — restraint and precision, not decoration
+- **Fonts:** Syne (display/labels) + DM Sans (body) + JetBrains Mono (margin numbers & times)
+- **Background:** `#2569A3` light / `#011638` dark (deepened from current `#42a5f5`)
+- **Search:** larger (`py-4 px-5 text-lg`), pin icon left, no border/shadow-only, uppercase tagline above
+- **MarginBadge:** large pill with own row, mono font, semantic CSS variable tokens
+- **Margin thresholds:** >10 safe / 0–10 tight / <0 missed (replaces current >2/≥-2)
+- **Journey panel:** left-rail timeline, larger ferry node, badge below ferry row
+- **Trip panel:** fixed bottom sheet, 2 forward steps only, frosted glass, stale-position amber bar
+
+### Phase 6b — Implementation
+
+_Only after the design brief from 6a is complete._
+
+**Search (Landing state)**
+- Large, visually dominant search input: bigger font, prominent border/shadow, descriptive placeholder.
+- Supporting label or tagline above the input.
+- Consistent on web (Tailwind) and app (NativeWind + StyleSheet).
+
+**Journey summary card (Minimal result)**
+- Timeline layout: vertical left rail with icons at each step node; step label left-aligned, duration right-aligned.
+- `MarginBadge` enlarged and colour-coded by urgency tier (safe / tight / missed); rendered prominently under the ferry leg, not inline with text.
+- Arrival time displayed as the footer anchor ("Arrives at HH:MM"), not computed duration.
+
+**Trip view**
+- Bottom panel shows only the active step + next step; completed steps are dropped.
+- Live margin badge updates visually (no full re-layout) as GPS recalculates.
+- Stale position banner styled distinctly from normal UI (amber, full-width).
+
+**Design system**
+- Single token set: Tailwind v4 CSS variables (web) + `ThemeContext` hex values (app).
+- Semantic margin colours defined as tokens (`--color-margin-safe`, `--color-margin-tight`, `--color-margin-missed`) shared across both platforms.
+- Dark mode parity across all new components.
+- Remove remaining debug artifacts and branding inconsistencies.
 
 ---
 
@@ -157,5 +191,6 @@ Phase 2b — Search-First Layout     ✓ complete
 Phase 5 — Routing API              ✓ complete
 Phase 3 — Trip View Page           ✓ complete
 Phase 4 — Recents & Favorites      ← next
-Phase 6 — Visual Consistency       (after Phase 3 stable)
+Phase 6a — Design Research         ✓ complete (see docs/design-brief.md)
+Phase 6b — UI Polish & Design Sys  (after 6a brief is done)
 ```
