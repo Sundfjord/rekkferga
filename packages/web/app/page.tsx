@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
+import ContentPanel from "@/components/ContentPanel";
 import Search from "@/components/Search";
 import type { SearchHandle } from "@/components/Search";
 import TripPanel from "@/components/TripPanel";
-import type { SearchResult, JourneyResult, FerryLeg, TripState } from "@shared/types";
+import type { JourneyResult, FerryLeg, TripState, ResultItem } from "@shared/types";
 import { STALE_THRESHOLD_MS } from "@shared/utils";
 import { fetchJourney, fetchDeparturesForLeg } from "@shared/services/journey";
 import { processPosition as processPositionShared, refreshDepartures, type TripStateCallbacks } from "@shared/services/tripStateMachine";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useFavorites } from "@/contexts/FavoritesContext";
 
 const Map = dynamic<{
   journey: JourneyResult | null;
@@ -25,7 +27,7 @@ export default function Home() {
   const t = useTranslation();
 
   const [journey, setJourney] = useState<JourneyResult | null>(null);
-  const [destination, setDestination] = useState<SearchResult | null>(null);
+  const [destination, setDestination] = useState<ResultItem | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +36,9 @@ export default function Home() {
   const [stalePosition, setStalePosition] = useState(false);
   const [completedLegs, setCompletedLegs] = useState<Set<number>>(new Set());
   const [fitBoundsSignal, setFitBoundsSignal] = useState(0);
-  const [isSidebar, setIsSidebar] = useState(false);
   const [journeyLoaded, setJourneyLoaded] = useState(false);
+
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const searchRef = useRef<SearchHandle>(null);
   const journeyRef = useRef<JourneyResult | null>(null);
@@ -43,15 +46,6 @@ export default function Home() {
   const tripStateRef = useRef<TripState>("driving_to_quay");
   const lastPositionTimeRef = useRef(Date.now());
   const watchIdRef = useRef<number | null>(null);
-
-  // Sidebar breakpoint
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1280px)");
-    setIsSidebar(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setIsSidebar(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
-  }, []);
 
   // Keep refs in sync
   useEffect(() => { journeyRef.current = journey; }, [journey]);
@@ -120,7 +114,7 @@ export default function Home() {
     };
   }, [journeyLoaded, handlePosition]);
 
-  const handleDestinationSelect = useCallback(async (result: SearchResult) => {
+  const handleDestinationSelect = useCallback(async (result: ResultItem) => {
     // Tear down any existing GPS watch before starting fresh
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -204,8 +198,6 @@ export default function Home() {
     navigator.geolocation.getCurrentPosition(handlePosition, () => {});
   }, [handlePosition]);
 
-  const searchHidden = !!(journey && destination);
-
   const handleExit = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -219,49 +211,60 @@ export default function Home() {
     setCompletedLegs(new Set());
     setStalePosition(false);
     setError(null);
-    // Focus search input after React flushes and transition begins
-    setTimeout(() => searchRef.current?.focus(), 50);
   }, []);
 
-  // ── Sidebar layout (≥1280px) ──────────────────────────────────────────────
-  if (isSidebar) {
-    return (
-      <div className="flex h-full gap-4 p-4 overflow-hidden">
-        {/* Left column — search + trip details, separated cards */}
-        <div className="w-96 flex-shrink-0 flex flex-col gap-3 overflow-hidden">
-          {/* Search card */}
-          <div className={`flex-shrink-0 relative z-20 search-animate${searchHidden ? " is-hidden" : ""}`}>
-            <div className="px-4 pt-4 pb-4 rounded-2xl"
-              style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}
-            >
-              <Search ref={searchRef} onSelect={handleDestinationSelect} />
-            </div>
-          </div>
-          {isLoading && (
-            <div
-              className="mt-2 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
-              style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
-            >
-              <div
-                className="animate-spin rounded-full h-4 w-4 border-2 flex-shrink-0"
-                style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
-              />
-              {t("searchingForQuays")}
-            </div>
-          )}
-          {error && (
-            <div
-              className="mt-2 px-4 py-3 rounded-xl text-sm"
-              style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
-            >
-              {error}
-            </div>
-          )}
+  const hasDestination = !!(destination);
 
-          {/* Trip details card */}
-          {journey && destination && (
+  if (!hasDestination) {
+    return (
+      <Search
+        ref={searchRef}
+        onSelect={handleDestinationSelect}
+      />
+    )
+  }
+
+  const isFav = isFavorite(destination.id);
+  return (
+    <ContentPanel>
+      <ContentPanel.Header>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex-1 min-w-0 text-lg font-bold truncate"
+            style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+          >
+            {destination.name}
+          </div>
+          {destination && (
+            <button
+              onClick={() => toggleFavorite(destination)}
+              aria-label={isFav ? t("removeFavorite") : t("addFavorite")}
+              className="flex-shrink-0 p-1 transition-colors cursor-pointer"
+              style={{ color: isFav ? "#ef4444" : "var(--text-secondary)" }}
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth={isFav ? 0 : 1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={handleExit}
+            aria-label={t("close") ?? "Close"}
+            className="flex-shrink-0 p-1 transition-colors cursor-pointer"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </ContentPanel.Header>
+
+      <ContentPanel.Body fullHeight>
+        {!!journey && (
+          <div className="flex flex-col xl:flex-row flex-1 min-h-0 rounded-b-2xl">
             <div
-              className="flex-1 min-h-0 rounded-2xl overflow-hidden"
+              className="flex-shrink-0 xl:w-96 xl:flex-shrink-0 overflow-hidden"
               style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}
             >
               <TripPanel
@@ -269,79 +272,22 @@ export default function Home() {
                 destination={destination}
                 currentLegIndex={currentLegIndex}
                 tripState={tripState}
-                onExit={handleExit}
                 stalePosition={stalePosition}
                 onRefreshPosition={refreshPosition}
-                sidebar
               />
             </div>
-          )}
-        </div>
-
-        {/* Map card */}
-        <div className="flex-1 rounded-2xl overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}>
-          <Map
-            journey={journey}
-            userLocation={userLocation}
-            completedLegs={completedLegs}
-            followUser={!!journey}
-            fitBoundsSignal={fitBoundsSignal}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  // ── Mobile / narrow layout ─────────────────────────────────────────────────
-  return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Search bar — hides when journey is loaded */}
-      <div className={`flex-shrink-0 px-3 pt-3 pb-2 search-animate${searchHidden ? " is-hidden" : ""}`}>
-        <Search ref={searchRef} onSelect={handleDestinationSelect} />
-      </div>
-
-      {isLoading && (
-        <div className="flex-shrink-0 mx-3 mb-2 px-4 py-3 rounded-xl text-sm flex items-center gap-2"
-          style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
-        >
-          <div
-            className="animate-spin rounded-full h-4 w-4 border-2 flex-shrink-0"
-            style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
-          />
-          {t("searchingForQuays")}
-        </div>
-      )}
-      {error && (
-        <div className="flex-shrink-0 mx-3 mb-2 px-4 py-3 rounded-xl text-sm"
-          style={{ backgroundColor: "#fef2f2", border: "1px solid #fecaca", color: "#dc2626" }}
-        >
-          {error}
-        </div>
-      )}
-
-      {journey && destination ? (
-        <>
-          <div className="flex-shrink-0 px-3 pb-2">
-            <TripPanel
-              journey={journey}
-              destination={destination}
-              currentLegIndex={currentLegIndex}
-              tripState={tripState}
-              onExit={handleExit}
-              stalePosition={stalePosition}
-            />
-          </div>
-          <div className="flex-1 relative overflow-hidden mx-3 mb-3 rounded-2xl" style={{ boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}>
-            <Map
-              journey={journey}
-              userLocation={userLocation}
-              completedLegs={completedLegs}
-              followUser
-              fitBoundsSignal={fitBoundsSignal}
-            />
-          </div>
-        </>
-      ) : null}
-    </div>
+            <div className="flex-1 min-h-0 overflow-hidden" style={{ boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}>
+              <Map
+                journey={journey}
+                userLocation={userLocation}
+                completedLegs={completedLegs}
+                followUser
+                fitBoundsSignal={fitBoundsSignal}
+              />
+            </div>
+          </div> 
+        )}
+      </ContentPanel.Body>
+    </ContentPanel>
   );
 }

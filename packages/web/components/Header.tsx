@@ -73,17 +73,17 @@ function DropdownShell({
     <div className="relative">
       <button
         onClick={() => (open ? onClose() : onOpen())}
-        className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-colors"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors"
         style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
       >
         {trigger}
-        <ChevronIcon className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronIcon className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={onClose} />
-          <div className="absolute right-0 top-full mt-1.5 z-20 min-w-[140px] sm:min-w-[160px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg overflow-hidden">
+          <div className="absolute right-0 top-full mt-1.5 z-20 min-w-[160px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 z-30 rounded-xl shadow-lg overflow-hidden">
             {children}
           </div>
         </>
@@ -104,7 +104,7 @@ function DropdownItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-2.5 px-3 py-2.5 sm:px-4 sm:py-3 text-sm sm:text-base text-left transition-colors
+      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm sm:text-base text-left transition-colors
         ${active
           ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-medium"
           : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -134,8 +134,7 @@ export default function Header() {
     : null;
 
   return (
-    <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4">
-      {/* Logo — sits directly on water background */}
+    <div className="flex items-center justify-between px-4 py-3">
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"
@@ -145,13 +144,11 @@ export default function Header() {
         className="object-contain"
       />
 
-      {/* Controls — each in its own pill */}
       {mounted && (
         <div className="flex items-center gap-2">
-          {/* Language */}
           <DropdownShell
             trigger={
-              <span className="text-xs sm:text-sm font-semibold tracking-wide text-white/80">
+              <span className="text-sm font-semibold tracking-wide text-white/80">
                 {currentLang.code}
               </span>
             }
@@ -171,7 +168,6 @@ export default function Header() {
             ))}
           </DropdownShell>
 
-          {/* Theme */}
           <DropdownShell
             trigger={currentThemeIcon}
             open={open === "theme"}

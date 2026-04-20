@@ -1,29 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import type { SearchResult } from "@shared/types";
+import type { SearchResult, ResultItem } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import ContentPanel from "@/components/ContentPanel";
 
 export interface SearchHandle {
   focus: () => void;
+  clear: () => void;
 }
-
-const PinIcon = () => (
-  <svg
-    className="w-5 h-5 flex-shrink-0"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-    aria-hidden
-    style={{ color: "var(--water-light)" }}
-  >
-    <path
-      fillRule="evenodd"
-      d="M11.54 22.351l.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-2.003 3.5-4.567 3.5-7.327a6.79 6.79 0 0 0-6.79-6.79 6.79 6.79 0 0 0-6.79 6.79c0 2.76 1.556 5.323 3.5 7.327a19.579 19.579 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
 
 const SearchIcon = () => (
   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden>
@@ -64,32 +50,37 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-const Search = forwardRef<SearchHandle, { onSelect: (result: SearchResult) => void }>(
+interface SearchProps {
+  onSelect: (result: ResultItem) => void;
+}
+
+const Search = forwardRef<SearchHandle, SearchProps>(
   function Search({ onSelect }, ref) {
   const t = useTranslation();
-  const { favorites, isFavorite } = useFavorites();
+  const { favorites } = useFavorites();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [isOpen, setIsOpen] = useState(false);
+  const [results, setResults] = useState<ResultItem[]>(favorites);
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => inputRef.current?.focus(),
+    clear: () => { setQuery(""); setResults([]); },
   }));
 
   // Compute filtered favorites based on query
   const filteredFavorites = query.trim()
     ? favorites.filter((f) =>
-        f.destination.name.toLowerCase().includes(query.trim().toLowerCase())
+        f.name.toLowerCase().includes(query.trim().toLowerCase())
       )
     : favorites;
+  const allFavoriteIds = new Set(favorites.map((f) => f.id));
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (!query.trim()) {
-      setResults([]);
+      setResults(favorites);
       return;
     }
     timeoutRef.current = setTimeout(async () => {
@@ -99,10 +90,11 @@ const Search = forwardRef<SearchHandle, { onSelect: (result: SearchResult) => vo
         const res = await fetch(`${url}/search?query=${encodeURIComponent(query)}`);
         if (res.ok) {
           const data: SearchResult[] = await res.json();
-          setResults(data);
+          setResults([...filteredFavorites, ...data.filter((r) => !allFavoriteIds.has(r.id))]);
+          
         }
       } catch {
-        setResults([]);
+        setResults(favorites);
       } finally {
         setIsSearching(false);
       }
@@ -114,144 +106,84 @@ const Search = forwardRef<SearchHandle, { onSelect: (result: SearchResult) => vo
 
   const justSelectedRef = useRef(false);
 
-  const handleSelect = (result: SearchResult) => {
+  const handleSelect = (result: ResultItem) => {
     justSelectedRef.current = true;
     onSelect(result);
     setQuery(result.name);
-    setIsOpen(false);
-    setResults([]);
+    setResults(favorites);
   };
-
-  const handleFavoriteSelect = (fav: (typeof favorites)[number]) => {
-    const result: SearchResult = { ...fav.destination, type: "location" };
-    handleSelect(result);
-  };
-
-  // Exclude search results that match any favorite (not just filtered ones)
-  const allFavoriteIds = new Set(favorites.map((f) => f.destination.id));
-  const dedupedResults = results.filter((r) => !allFavoriteIds.has(r.id));
-
-  const hasResults = dedupedResults.length > 0;
-  const hasFavorites = filteredFavorites.length > 0;
-  const showDropdown = isOpen && !justSelectedRef.current && (hasResults || hasFavorites);
 
   return (
-    <div className="relative">
-      <div
-        className="flex items-center gap-3 p-1 rounded-2xl"
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); justSelectedRef.current = false; }}
-          onFocus={() => { setIsOpen(true); justSelectedRef.current = false; }}
-          onBlur={() => setTimeout(() => setIsOpen(false), 300)}
-          placeholder={t("searchPlaceholder")}
-          className="flex-1 outline-none bg-transparent text-lg"
-          style={{
-            color: "var(--text-primary)",
-            fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
-          }}
-        />
-        <div className="flex-shrink-0">
-          {isSearching ? (
-            <div
-              className="h-5 w-5 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
-            />
-          ) : (
-            <SearchIcon />
-          )}
-        </div>
-      </div>
-
-      {showDropdown && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+    <ContentPanel>
+      <ContentPanel.Header>
+        <div className="flex items-center gap-3">
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); justSelectedRef.current = false; }}
+            placeholder={t("searchPlaceholder")}
+            className="flex-1 outline-none bg-transparent text-lg"
+            style={{
+              color: "var(--text-primary)",
+              fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
+            }}
+          />
+          <div className="flex-shrink-0">
+            {isSearching ? (
+              <div
+                className="h-5 w-5 rounded-full border-2 border-t-transparent animate-spin"
+                style={{ borderColor: "var(--water-light)", borderTopColor: "transparent" }}
+              />
+            ) : (
+              <SearchIcon />
+            )}
+          </div>
+        </div>    
+      </ContentPanel.Header>
+      <ContentPanel.Body>
+        {results.length > 0 && (
           <div
-            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-20 max-h-80 overflow-y-auto"
+            className="overflow-hidden z-20 w-full overflow-y-auto px-4"
             style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-elevated)" }}
           >
-            {/* Favorites section */}
-            {hasFavorites && (
-              <>
-                {!hasResults && !query.trim() && (
-                  <div
-                    className="px-5 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider"
-                    style={{ color: "var(--text-secondary)" }}
-                  >
-                    {t("favorites")}
-                  </div>
-                )}
-                {filteredFavorites.map((fav, i) => (
-                  <div
-                    key={`fav-${fav.destination.id}-${i}`}
-                    onClick={() => handleFavoriteSelect(fav)}
-                    className="px-5 py-3.5 hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
-                  >
-                    <HeartIcon filled />
-                    <div className="flex-1 min-w-0">
-                      <div
-                        className="font-medium text-base truncate"
-                        style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                      >
-                        {fav.destination.name}
-                      </div>
-                      {fav.destination.subName && (
-                        <div
-                          className="text-sm mt-0.5 truncate"
-                          style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                        >
-                          {fav.destination.subName}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {hasResults && (
-                  <div
-                    className="h-px mx-4"
-                    style={{ backgroundColor: "var(--border)" }}
-                  />
-                )}
-              </>
-            )}
+            <div className="flex flex-col flex-1 gap-4 pb-4">
 
-            {/* Search results */}
-            {dedupedResults.map((r, i) => (
-              <div
-                key={`${r.id}-${i}`}
-                onClick={() => handleSelect(r)}
-                className="px-5 py-3.5 hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
-              >
-                {isFavorite(r.id) ? (
-                  <HeartIcon filled />
-                ) : (
-                  <LocationIcon />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div
-                    className="font-medium text-base truncate"
-                    style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                  >
-                    {r.name}
-                  </div>
-                  {r.subName && (
-                    <div
-                      className="text-sm mt-0.5 truncate"
-                      style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                    >
-                      {r.subName}
-                    </div>
+              {results.map((r, i) => (
+                <div
+                  key={`${r.id}-${i}`}
+                  onClick={() => handleSelect(r)}
+                  className="w-full hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
+                >
+                  {r.type === 'favorite' ? (
+                    <HeartIcon filled />
+                  ) : (
+                    <LocationIcon />
                   )}
+                  <div className="flex-1 min-w-0">
+                    <div
+                      className="font-medium text-base truncate"
+                      style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                    >
+                      {r.name}
+                    </div>
+                    {r.subName && (
+                      <div
+                        className="text-sm mt-0.5 truncate"
+                        style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                      >
+                        {r.subName}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </ContentPanel.Body>
+      
+    </ContentPanel>
   );
 });
 

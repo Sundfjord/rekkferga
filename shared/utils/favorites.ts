@@ -1,9 +1,9 @@
-import type { Destination, SavedDestination, SearchResult } from '../types';
+import type { Destination, SavedDestination, ResultItem } from '../types';
 
 export const MAX_FAVORITES = 20;
 export const FAVORITES_STORAGE_KEY = 'rekkferga-favorites';
 
-export function toDestination(result: SearchResult): Destination {
+export function toDestination(result: ResultItem): Destination {
   return {
     id: result.id,
     name: result.name,
@@ -14,13 +14,18 @@ export function toDestination(result: SearchResult): Destination {
 }
 
 export function isFavorite(favorites: SavedDestination[], id: string): boolean {
-  return favorites.some(f => f.destination.id === id);
+  return favorites.some(f => f.id === id);
 }
 
 export function addFavorite(favorites: SavedDestination[], destination: Destination): SavedDestination[] {
   if (isFavorite(favorites, destination.id)) return favorites;
   const entry: SavedDestination = {
-    destination,
+    id: destination.id,
+    name: destination.name,
+    subName: destination.subName,
+    latitude: destination.latitude,
+    longitude: destination.longitude,
+    type: 'favorite',
     savedAt: new Date().toISOString(),
   };
   const updated = [entry, ...favorites];
@@ -28,7 +33,7 @@ export function addFavorite(favorites: SavedDestination[], destination: Destinat
 }
 
 export function removeFavorite(favorites: SavedDestination[], id: string): SavedDestination[] {
-  return favorites.filter(f => f.destination.id !== id);
+  return favorites.filter(f => f.id !== id);
 }
 
 export function toggleFavorite(favorites: SavedDestination[], destination: Destination): SavedDestination[] {

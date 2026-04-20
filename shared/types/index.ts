@@ -12,9 +12,9 @@ export interface Destination {
   longitude: number;
 }
 
-export interface SavedDestination {
-  destination: Destination;
+export interface SavedDestination extends Destination {
   savedAt: string; // ISO timestamp
+  type: 'favorite';
 }
 
 export interface SearchResult {
@@ -25,6 +25,8 @@ export interface SearchResult {
   longitude: number;
   type: 'location';
 }
+
+export type ResultItem = SearchResult | SavedDestination;
 
 // ---------------------------------------------------------------------------
 // Journey & legs
