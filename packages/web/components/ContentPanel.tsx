@@ -19,8 +19,8 @@ export interface ContentPanelHeaderProps {
 const ContentPanelHeader = ({ children }: ContentPanelHeaderProps) => {
   return (
     <div
-      className="flex-shrink-0 relative z-20 p-4 rounded-t-2xl"
-      style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)"}}
+      className="flex-shrink-0 relative z-20 p-4 rounded-t-2xl last:rounded-b-2xl"
+      style={{ backgroundColor: "var(--surface)"}}
     >
       {children}
     </div>

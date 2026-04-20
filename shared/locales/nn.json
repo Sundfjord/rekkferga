@@ -45,5 +45,6 @@
   "tripStateArrived": "Ankomme",
   "exitTrip": "Avslutt tur",
   "arrivedAt": "Du har ankomme {destination}.",
-  "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere"
+  "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",
+  "nextDeparture": "Neste:"
 }

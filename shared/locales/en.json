@@ -85,5 +85,6 @@
   "tripStateArrived": "Arrived",
   "exitTrip": "Exit trip",
   "arrivedAt": "You have arrived at {destination}.",
-  "stalePosition": "Position may be stale — tap to refresh"
+  "stalePosition": "Position may be stale — tap to refresh",
+  "nextDeparture": "Next:"
 }

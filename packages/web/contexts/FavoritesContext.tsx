@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import type { SavedDestination, SearchResult } from "@shared/types";
+import type { SavedDestination, ResultItem } from "@shared/types";
 import {
   FAVORITES_STORAGE_KEY,
   parseFavorites,
@@ -12,7 +12,7 @@ import {
 
 interface FavoritesContextType {
   favorites: SavedDestination[];
-  toggleFavorite: (result: SearchResult) => void;
+  toggleFavorite: (result: ResultItem) => void;
   isFavorite: (id: string) => boolean;
 }
 
@@ -30,7 +30,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     setFavorites(parseFavorites(saved));
   }, []);
 
-  const handleToggle = (result: SearchResult) => {
+  const handleToggle = (result: ResultItem) => {
     const updated = toggle(favorites, toDestination(result));
     setFavorites(updated);
     localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updated));

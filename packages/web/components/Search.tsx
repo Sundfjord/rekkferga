@@ -33,6 +33,16 @@ const LocationIcon = () => (
   </svg>
 );
 
+const HighlightMatch = ({ text, query }: { text: string; query: string }) => {
+  if (!query.trim()) return <>{text}</>;
+  const idx = text.toLowerCase().indexOf(query.trim().toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  const before = text.slice(0, idx);
+  const match = text.slice(idx, idx + query.trim().length);
+  const after = text.slice(idx + query.trim().length);
+  return <>{before}<strong>{match}</strong>{after}</>;
+};
+
 const HeartIcon = ({ filled }: { filled: boolean }) => (
   <svg
     className="w-4 h-4 flex-shrink-0"
@@ -59,14 +69,15 @@ const Search = forwardRef<SearchHandle, SearchProps>(
   const t = useTranslation();
   const { favorites } = useFavorites();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<ResultItem[]>(favorites);
+  const [searchResults, setSearchResults] = useState<ResultItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useImperativeHandle(ref, () => ({
     focus: () => inputRef.current?.focus(),
-    clear: () => { setQuery(""); setResults([]); },
+    clear: () => { setQuery(""); setSearchResults([]); },
   }));
 
   // Compute filtered favorites based on query
@@ -80,7 +91,7 @@ const Search = forwardRef<SearchHandle, SearchProps>(
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     if (!query.trim()) {
-      setResults(favorites);
+      setSearchResults([]);
       return;
     }
     timeoutRef.current = setTimeout(async () => {
@@ -90,11 +101,10 @@ const Search = forwardRef<SearchHandle, SearchProps>(
         const res = await fetch(`${url}/search?query=${encodeURIComponent(query)}`);
         if (res.ok) {
           const data: SearchResult[] = await res.json();
-          setResults([...filteredFavorites, ...data.filter((r) => !allFavoriteIds.has(r.id))]);
-          
+          setSearchResults(data.filter((r) => !allFavoriteIds.has(r.id)));
         }
       } catch {
-        setResults(favorites);
+        setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
@@ -110,8 +120,12 @@ const Search = forwardRef<SearchHandle, SearchProps>(
     justSelectedRef.current = true;
     onSelect(result);
     setQuery(result.name);
-    setResults(favorites);
+    setSearchResults([]);
+    inputRef.current?.blur();
   };
+
+  // Derive visible results: filtered favorites first, then search results
+  const results = [...filteredFavorites, ...searchResults];
 
   return (
     <ContentPanel>
@@ -122,6 +136,8 @@ const Search = forwardRef<SearchHandle, SearchProps>(
             type="text"
             value={query}
             onChange={(e) => { setQuery(e.target.value); justSelectedRef.current = false; }}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             placeholder={t("searchPlaceholder")}
             className="flex-1 outline-none bg-transparent text-lg"
             style={{
@@ -141,14 +157,13 @@ const Search = forwardRef<SearchHandle, SearchProps>(
           </div>
         </div>    
       </ContentPanel.Header>
-      <ContentPanel.Body>
-        {results.length > 0 && (
+      {isFocused && results.length > 0 && (
+        <ContentPanel.Body>
           <div
             className="overflow-hidden z-20 w-full overflow-y-auto px-4"
             style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-elevated)" }}
           >
             <div className="flex flex-col flex-1 gap-4 pb-4">
-
               {results.map((r, i) => (
                 <div
                   key={`${r.id}-${i}`}
@@ -162,10 +177,10 @@ const Search = forwardRef<SearchHandle, SearchProps>(
                   )}
                   <div className="flex-1 min-w-0">
                     <div
-                      className="font-medium text-base truncate"
+                      className="text-base truncate"
                       style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
                     >
-                      {r.name}
+                      <HighlightMatch text={r.name} query={query} />
                     </div>
                     {r.subName && (
                       <div
@@ -180,8 +195,8 @@ const Search = forwardRef<SearchHandle, SearchProps>(
               ))}
             </div>
           </div>
-        )}
-      </ContentPanel.Body>
+        </ContentPanel.Body>
+      )}
       
     </ContentPanel>
   );
