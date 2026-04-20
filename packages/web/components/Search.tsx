@@ -1,9 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import type { SearchResult } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
+
+export interface SearchHandle {
+  focus: () => void;
+}
 
 const PinIcon = () => (
   <svg
@@ -60,7 +64,8 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-export default function Search({ onSelect }: { onSelect: (result: SearchResult) => void }) {
+const Search = forwardRef<SearchHandle, { onSelect: (result: SearchResult) => void }>(
+  function Search({ onSelect }, ref) {
   const t = useTranslation();
   const { favorites, isFavorite } = useFavorites();
   const [query, setQuery] = useState("");
@@ -68,6 +73,11 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
   const [isOpen, setIsOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   // Compute filtered favorites based on query
   const filteredFavorites = query.trim()
@@ -131,6 +141,7 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
         className="flex items-center gap-3 p-1 rounded-2xl"
       >
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => { setQuery(e.target.value); justSelectedRef.current = false; }}
@@ -242,4 +253,6 @@ export default function Search({ onSelect }: { onSelect: (result: SearchResult) 
       )}
     </div>
   );
-}
+});
+
+export default Search;

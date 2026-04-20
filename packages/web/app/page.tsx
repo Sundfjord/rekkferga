@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
 import Search from "@/components/Search";
+import type { SearchHandle } from "@/components/Search";
 import TripPanel from "@/components/TripPanel";
 import type { SearchResult, JourneyResult, FerryLeg, TripState } from "@shared/types";
 import { STALE_THRESHOLD_MS } from "@shared/utils";
@@ -36,6 +37,7 @@ export default function Home() {
   const [isSidebar, setIsSidebar] = useState(false);
   const [journeyLoaded, setJourneyLoaded] = useState(false);
 
+  const searchRef = useRef<SearchHandle>(null);
   const journeyRef = useRef<JourneyResult | null>(null);
   const currentLegIndexRef = useRef(0);
   const tripStateRef = useRef<TripState>("driving_to_quay");
@@ -202,6 +204,8 @@ export default function Home() {
     navigator.geolocation.getCurrentPosition(handlePosition, () => {});
   }, [handlePosition]);
 
+  const searchHidden = !!(journey && destination);
+
   const handleExit = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
@@ -215,6 +219,8 @@ export default function Home() {
     setCompletedLegs(new Set());
     setStalePosition(false);
     setError(null);
+    // Focus search input after React flushes and transition begins
+    setTimeout(() => searchRef.current?.focus(), 50);
   }, []);
 
   // ── Sidebar layout (≥1280px) ──────────────────────────────────────────────
@@ -224,11 +230,11 @@ export default function Home() {
         {/* Left column — search + trip details, separated cards */}
         <div className="w-96 flex-shrink-0 flex flex-col gap-3 overflow-hidden">
           {/* Search card */}
-          <div className="flex-shrink-0 relative z-20">
+          <div className={`flex-shrink-0 relative z-20 search-animate${searchHidden ? " is-hidden" : ""}`}>
             <div className="px-4 pt-4 pb-4 rounded-2xl"
               style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)" }}
             >
-              <Search onSelect={handleDestinationSelect} />
+              <Search ref={searchRef} onSelect={handleDestinationSelect} />
             </div>
           </div>
           {isLoading && (
@@ -289,9 +295,9 @@ export default function Home() {
   // ── Mobile / narrow layout ─────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Search bar — always at top */}
-      <div className="flex-shrink-0 px-3 pt-3 pb-2">
-        <Search onSelect={handleDestinationSelect} />
+      {/* Search bar — hides when journey is loaded */}
+      <div className={`flex-shrink-0 px-3 pt-3 pb-2 search-animate${searchHidden ? " is-hidden" : ""}`}>
+        <Search ref={searchRef} onSelect={handleDestinationSelect} />
       </div>
 
       {isLoading && (

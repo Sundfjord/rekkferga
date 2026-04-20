@@ -123,3 +123,26 @@ body {
   0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.55; }
   100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0;    }
 }
+
+/* Search show/hide transition (R2.1) ──────────────────────────────────────── */
+
+.search-animate {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 280ms ease-out,
+              transform 280ms ease-out,
+              display 280ms allow-discrete;
+}
+
+@starting-style {
+  .search-animate {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.search-animate.is-hidden {
+  display: none;
+  opacity: 0;
+  transform: translateY(-12px);
+}
