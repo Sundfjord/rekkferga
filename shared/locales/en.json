@@ -84,7 +84,11 @@
   "tripStateCrossingComplete": "Ferry complete",
   "tripStateArrived": "Arrived",
   "exitTrip": "Exit trip",
+  "driveStep": "Drive",
+  "ferryTripStep": "Ferry trip",
+  "totalTravelTime": "Total travel",
   "arrivedAt": "You have arrived at {destination}.",
   "stalePosition": "Position may be stale — tap to refresh",
-  "nextDeparture": "Next:"
+  "nextDeparture": "Next:",
+  "yourLocation": "Your location"
 }

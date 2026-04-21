@@ -44,7 +44,11 @@
   "tripStateCrossingComplete": "Ferje fullført",
   "tripStateArrived": "Ankomme",
   "exitTrip": "Avslutt tur",
+  "driveStep": "Køyring",
+  "ferryTripStep": "Ferjetur",
+  "totalTravelTime": "Total reisetid",
   "arrivedAt": "Du har ankomme {destination}.",
   "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",
-  "nextDeparture": "Neste:"
+  "nextDeparture": "Neste:",
+  "yourLocation": "Di plassering"
 }
