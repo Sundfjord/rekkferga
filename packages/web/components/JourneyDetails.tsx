@@ -1,6 +1,5 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import type { JourneyResult, FerryLeg, DepartureOption, ResultItem, TripState, JourneyLeg } from "@shared/types";
 import { formatTime, formatDuration, marginTier, formatMarginLabel } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -41,25 +40,132 @@ function MarginBadge({ minutes, departureTime }: { minutes: number | null; depar
 }
 
 type TimelineStep =
-  | { kind: "label"; text: string; emphasis?: "ferry" | "default"; isActive: boolean }
-  | { kind: "duration"; label: string; durationSeconds: number; emphasis?: "ferry" | "default"; isActive: boolean }
-  | { kind: "ferryQuay"; quayName: string; departures: DepartureOption[]; isActive: boolean };
+  | { kind: "label"; text: string; markerTone?: "default" | "water" }
+  | { kind: "duration"; label: string; durationSeconds: number }
+  | { kind: "ferryQuay"; quayName: string; departures: DepartureOption[]; markerTone: "water" };
+
+type TimelineMarker = "dot" | "arrow" | "start" | "finish";
+
+function ArrowMarker() {
+  return (
+    <svg
+      className="absolute left-[1px] top-[3px] z-10 w-6 h-6"
+      viewBox="0 0 16 16"
+      aria-hidden
+      style={{ color: "var(--border)" }}
+    >
+      <path
+        d="M4.5 6.5L8 10l3.5-3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function StartMarker() {
+  return (
+    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+      <div
+        className="absolute left-1/2 top-1/2 rounded-full"
+        style={{
+          width: "10px",
+          height: "10px",
+          background: "rgba(59,130,246,0.4)",
+          animation: "user-location-pulse 2s ease-out infinite",
+        }}
+      />
+      <div
+        className="absolute left-[1px] rounded-full"
+        style={{
+          transform: "translate(-50%, -50%)",
+          width: "14px",
+          height: "14px",
+          background: "#3b82f6",
+          border: "2px solid white",
+          boxShadow: "0 2px 10px rgba(59,130,246,0.45)",
+        }}
+      />
+    </div>
+  );
+}
+
+function FinishMarker() {
+  return (
+    <div
+      className="absolute left-[14px] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden"
+      style={{
+        width: "22px",
+        height: "22px",
+        border: "1.5px solid #011683",
+        boxShadow: "0 1px 6px rgba(0,0,0,0.25)",
+        backgroundColor: "#42a5f5",
+      }}
+    >
+      <svg
+        width="22"
+        height="22"
+        viewBox="0 0 6 6"
+        aria-hidden
+        style={{ display: "block", marginLeft: "-2px", marginTop: "-2px" }}
+      >
+        <rect width="6" height="6" fill="white" />
+        <rect width="1" height="1" x="0" y="0" fill="#011638" />
+        <rect width="1" height="1" x="2" y="0" fill="#011638" />
+        <rect width="1" height="1" x="4" y="0" fill="#011638" />
+        <rect width="1" height="1" x="1" y="1" fill="#011638" />
+        <rect width="1" height="1" x="3" y="1" fill="#011638" />
+        <rect width="1" height="1" x="5" y="1" fill="#011638" />
+        <rect width="1" height="1" x="0" y="2" fill="#011638" />
+        <rect width="1" height="1" x="2" y="2" fill="#011638" />
+        <rect width="1" height="1" x="4" y="2" fill="#011638" />
+        <rect width="1" height="1" x="1" y="3" fill="#011638" />
+        <rect width="1" height="1" x="3" y="3" fill="#011638" />
+        <rect width="1" height="1" x="5" y="3" fill="#011638" />
+        <rect width="1" height="1" x="0" y="4" fill="#011638" />
+        <rect width="1" height="1" x="2" y="4" fill="#011638" />
+        <rect width="1" height="1" x="4" y="4" fill="#011638" />
+        <rect width="1" height="1" x="1" y="5" fill="#011638" />
+        <rect width="1" height="1" x="3" y="5" fill="#011638" />
+        <rect width="1" height="1" x="5" y="5" fill="#011638" />
+      </svg>
+    </div>
+  );
+}
+
+function DotMarker({ tone = "default" }: { tone?: "default" | "water" }) {
+  const style = tone === "water"
+    ? { backgroundColor: "var(--water)", border: "2px solid var(--water)" }
+    : { backgroundColor: "var(--surface)", border: "2px solid var(--border)" };
+
+  return (
+    <div
+      className="absolute left-[12.5px] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full w-4 h-4"
+      style={style}
+    />
+  );
+}
 
 function TimelineRail({
-  emphasis,
   marker,
+  markerTone,
   isFirst,
   isLast,
 }: {
-  emphasis?: "ferry" | "default";
-  marker?: "dot" | "arrow" | "start" | "finish";
+  marker?: TimelineMarker;
+  markerTone?: "default" | "water";
   isFirst?: boolean;
   isLast?: boolean;
 }) {
-  const dotStyle: CSSProperties = emphasis === "ferry"
-    ? { backgroundColor: "var(--water)" }
-    : { backgroundColor: "var(--surface)", border: "2px solid var(--border)" };
-  const dotClass = emphasis === "ferry" ? "w-3 h-3" : "w-2 h-2";
+  const renderMarker = () => {
+    if (marker === "arrow") return <ArrowMarker />;
+    if (marker === "start") return <StartMarker />;
+    if (marker === "finish") return <FinishMarker />;
+    return <DotMarker tone={markerTone} />;
+  };
 
   return (
     <div className="relative w-6 flex-shrink-0">
@@ -75,104 +181,101 @@ function TimelineRail({
           style={{ backgroundColor: "var(--surface)" }}
         />
       )}
-      {marker === "arrow" ? (
-        <svg
-          className="absolute left-[1px] top-[3px] z-10 w-6 h-6"
-          viewBox="0 0 16 16"
-          aria-hidden
-          style={{ color: "var(--border)" }}
-        >
-          <path
-            d="M4.5 6.5L8 10l3.5-3.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ) : marker === "start" ? (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div
-            className="absolute left-1/2 top-1/2 rounded-full"
-            style={{
-              width: "10px",
-              height: "10px",
-              background: "rgba(59,130,246,0.4)",
-              animation: "user-location-pulse 2s ease-out infinite",
-            }}
-          />
-          <div
-            className="absolute left-[1px] rounded-full"
-            style={{
-              transform: "translate(-50%, -50%)",
-              width: "14px",
-              height: "14px",
-              background: "#3b82f6",
-              border: "2px solid white",
-              boxShadow: "0 2px 10px rgba(59,130,246,0.45)",
-            }}
-          />
-        </div>
-      ) : marker === "finish" ? (
-        <div
-          className="absolute left-[14px] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full overflow-hidden"
-          style={{
-            width: "22px",
-            height: "22px",
-            border: "1.5px solid #011683",
-            boxShadow: "0 1px 6px rgba(0,0,0,0.25)",
-            backgroundColor: "#42a5f5",
-          }}
-        >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 6 6"
-            aria-hidden
-            style={{ display: "block", marginLeft: "-2px", marginTop: "-2px" }}
-          >
-            <rect width="6" height="6" fill="white" />
-            <rect width="1" height="1" x="0" y="0" fill="#011638" />
-            <rect width="1" height="1" x="2" y="0" fill="#011638" />
-            <rect width="1" height="1" x="4" y="0" fill="#011638" />
-            <rect width="1" height="1" x="1" y="1" fill="#011638" />
-            <rect width="1" height="1" x="3" y="1" fill="#011638" />
-            <rect width="1" height="1" x="5" y="1" fill="#011638" />
-            <rect width="1" height="1" x="0" y="2" fill="#011638" />
-            <rect width="1" height="1" x="2" y="2" fill="#011638" />
-            <rect width="1" height="1" x="4" y="2" fill="#011638" />
-            <rect width="1" height="1" x="1" y="3" fill="#011638" />
-            <rect width="1" height="1" x="3" y="3" fill="#011638" />
-            <rect width="1" height="1" x="5" y="3" fill="#011638" />
-            <rect width="1" height="1" x="0" y="4" fill="#011638" />
-            <rect width="1" height="1" x="2" y="4" fill="#011638" />
-            <rect width="1" height="1" x="4" y="4" fill="#011638" />
-            <rect width="1" height="1" x="1" y="5" fill="#011638" />
-            <rect width="1" height="1" x="3" y="5" fill="#011638" />
-            <rect width="1" height="1" x="5" y="5" fill="#011638" />
-          </svg>
-        </div>
-      ) : (
-        <div
-          className={`absolute left-[12.5px] top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full ${dotClass}`}
-          style={dotStyle}
-        />
-      )}
+      {renderMarker()}
     </div>
   );
 }
 
+function FerryQuayStepContent({ step, t }: { step: Extract<TimelineStep, { kind: "ferryQuay" }>; t: (key: string) => string }) {
+  return (
+    <div className="flex-1 min-w-0 py-1">
+      <div className="rounded-lg px-3 py-3" style={{ backgroundColor: "var(--surface-variant)" }}>
+        <div
+          className="text-base font-semibold truncate"
+          style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+        >
+          {step.quayName}
+        </div>
+        {step.departures.length > 0 ? (
+          <div className="mt-2 flex flex-col items-start gap-2">
+            {step.departures.map((departure, index) => (
+              <MarginBadge
+                key={`${departure.expectedDepartureTime}-${index}`}
+                minutes={departure.marginMinutes}
+                departureTime={departure.expectedDepartureTime}
+              />
+            ))}
+          </div>
+        ) : (
+          <div
+            className="mt-2 text-sm"
+            style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+          >
+            {t("unavailable")}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DurationStepContent({ step }: { step: Extract<TimelineStep, { kind: "duration" }> }) {
+  return (
+    <div className="flex min-w-0 flex-1 py-1">
+      <div className="flex w-full items-baseline justify-between gap-3">
+        <span
+          className="text-xs"
+          style={{
+            color: "var(--text-secondary)",
+            fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
+          }}
+        >
+          {step.label}
+        </span>
+        <span
+          className="text-sm flex-shrink-0"
+          style={{
+            color: "var(--text-secondary)",
+            fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)",
+          }}
+        >
+          {formatDuration(step.durationSeconds)}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function LabelStepContent({ step }: { step: Extract<TimelineStep, { kind: "label" }> }) {
+  return (
+    <div className="flex min-w-0 flex-1 py-1">
+      <span
+        className="text-base font-semibold truncate"
+        style={{
+          color: "var(--text-primary)",
+          fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
+        }}
+      >
+        {step.text}
+      </span>
+    </div>
+  );
+}
+
+function StepContent({ step, t }: { step: TimelineStep; t: (key: string) => string }) {
+  if (step.kind === "ferryQuay") return <FerryQuayStepContent step={step} t={t} />;
+  if (step.kind === "duration") return <DurationStepContent step={step} />;
+  return <LabelStepContent step={step} />;
+}
+
 function TimelineStepRow({
   step,
-  isActive,
   iconType,
   isFirst,
   isLast,
   t,
 }: {
   step: TimelineStep;
-  isActive: boolean;
   iconType?: "start" | "finish";
   isFirst: boolean;
   isLast: boolean;
@@ -181,76 +284,12 @@ function TimelineStepRow({
   return (
     <div className={`px-5 ${isFirst ? "pb-2" : isLast ? "pt-2" : ""} ${!isFirst && !isLast ? "py-2" : ""} flex gap-3`}>
       <TimelineRail
-        emphasis={step.kind === "ferryQuay" ? "ferry" : step.emphasis}
         marker={step.kind === "duration" ? "arrow" : iconType ?? "dot"}
+        markerTone={step.kind === "duration" ? "default" : step.markerTone ?? "default"}
         isFirst={isFirst}
         isLast={isLast}
       />
-      {step.kind === "ferryQuay" ? (
-        <div className="flex-1 min-w-0 py-1">
-          <div className="rounded-lg px-3 py-3" style={{ backgroundColor: "var(--surface-variant)" }}>
-            <div
-              className="text-base font-semibold truncate"
-              style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-            >
-              {step.quayName}
-            </div>
-            {step.departures.length > 0 ? (
-              <div className="mt-2 flex flex-col items-start gap-2">
-                {step.departures.map((departure, index) => (
-                  <MarginBadge
-                    key={`${departure.expectedDepartureTime}-${index}`}
-                    minutes={departure.marginMinutes}
-                    departureTime={departure.expectedDepartureTime}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div
-                className="mt-2 text-sm"
-                style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-              >
-                {t("unavailable")}
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="flex min-w-0 flex-1 py-1">
-          {step.kind === "duration" ? (
-            <div className="flex w-full items-baseline justify-between gap-3">
-              <span
-                className="text-xs"
-                style={{
-                  color: "var(--text-secondary)",
-                  fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
-                }}
-              >
-                {step.label}
-              </span>
-              <span
-                className="text-sm flex-shrink-0"
-                style={{
-                  color: "var(--text-secondary)",
-                  fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)",
-                }}
-              >
-                {formatDuration(step.durationSeconds)}
-              </span>
-            </div>
-          ) : (
-            <span
-              className="text-base font-semibold truncate"
-              style={{
-                color: "var(--text-primary)",
-                fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
-              }}
-            >
-              {step.text}
-            </span>
-          )}
-        </div>
-      )}
+      <StepContent step={step} t={t} />
     </div>
   );
 }
@@ -261,7 +300,7 @@ function normalizeLocationName(name: string, t: (key: string) => string): string
 
 function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key: string) => string): TimelineStep[] {
   const steps: TimelineStep[] = [];
-  const pushLabelStep = (text: string, emphasis: "ferry" | "default" = "default", force = false) => {
+  const pushLabelStep = (text: string, force = false, markerTone: "default" | "water" = "default") => {
     const normalizedText = normalizeLocationName(text, t);
     const previousStep = steps[steps.length - 1];
     if (
@@ -273,13 +312,13 @@ function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key
       return;
     }
 
-    steps.push({ kind: "label", text: normalizedText, emphasis, isActive: false });
+    steps.push({ kind: "label", text: normalizedText, markerTone });
   };
 
   for (const leg of legs) {
     if (leg.mode === "car") {
       pushLabelStep(leg.fromPlace.name);
-      steps.push({ kind: "duration", label: t("driveStep"), durationSeconds: leg.duration, isActive: false });
+      steps.push({ kind: "duration", label: t("driveStep"), durationSeconds: leg.duration });
       continue;
     }
 
@@ -292,13 +331,13 @@ function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key
       kind: "ferryQuay",
       quayName: normalizeLocationName(ferryLeg.fromPlace.name, t),
       departures,
-      isActive: false,
+      markerTone: "water",
     });
-    steps.push({ kind: "duration", label: t("ferryTripStep"), durationSeconds: ferryLeg.duration, emphasis: "ferry", isActive: false });
-    pushLabelStep(ferryLeg.toPlace.name, "ferry");
+    steps.push({ kind: "duration", label: t("ferryTripStep"), durationSeconds: ferryLeg.duration });
+    pushLabelStep(ferryLeg.toPlace.name, false, "water");
   }
 
-  pushLabelStep(destinationName, "default", true);
+  pushLabelStep(destinationName, true);
 
   return steps;
 }
@@ -322,10 +361,7 @@ export default function JourneyDetails({
 }: JourneyDetailsProps) {
   const t = useTranslation();
   const remainingLegs = journey.legs.slice(currentLegIndex);
-  const timelineSteps = buildTimelineSteps(remainingLegs, destination.name, t).map((step, index) => ({
-    ...step,
-    isActive: index <= 1,
-  }));
+  const timelineSteps = buildTimelineSteps(remainingLegs, destination.name, t);
   const locationStepIndices = timelineSteps
     .map((step, index) => ((step.kind === "label" || step.kind === "ferryQuay") ? index : -1))
     .filter((index) => index >= 0);
@@ -346,7 +382,7 @@ export default function JourneyDetails({
       )}
 
       {/* Legs */}
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1 min-h-0">
         {tripState === 'arrived' ? (
           <div
             className="px-5 py-5 text-sm text-center"
@@ -365,7 +401,6 @@ export default function JourneyDetails({
                 <TimelineStepRow
                   key={`${step.kind}-${index}`}
                   step={step}
-                  isActive={step.isActive}
                   isFirst={index === 0}
                   isLast={index === timelineSteps.length - 1}
                   iconType={

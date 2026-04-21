@@ -237,7 +237,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         {journey && (
           <div className="flex flex-col xl:flex-row flex-1 min-h-0 rounded-b-2xl">
             <div
-              className="flex-shrink-0 xl:w-96 xl:flex-shrink-0 overflow-hidden"
+              className="flex-1 min-h-0 xl:w-96 xl:flex-none overflow-hidden"
               style={{ backgroundColor: "var(--surface)" }}
             >
               <JourneyDetails
