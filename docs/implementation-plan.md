@@ -158,20 +158,73 @@ Key decisions:
 
 _Only after the design brief from 6a is complete._
 
-**Search (Landing state)**
-- Large, visually dominant search input: bigger font, prominent border/shadow, descriptive placeholder.
-- Supporting label or tagline above the input.
-- Consistent on web (Tailwind) and app (NativeWind + StyleSheet).
+#### 6b-R1 — Search & Layout Refactor ✓
 
-**Journey summary card (Minimal result)**
-- Timeline layout: vertical left rail with icons at each step node; step label left-aligned, duration right-aligned.
-- `MarginBadge` enlarged and colour-coded by urgency tier (safe / tight / missed); rendered prominently under the ferry leg, not inline with text.
-- Arrival time displayed as the footer anchor ("Arrives at HH:MM"), not computed duration.
+_Complete. Component restructure:_
+- `page.tsx` — skinned down to just `destination` state + toggle between `<Search>` and `<Journey>`
+- `ContentPanel.tsx` — new compound component (`Header` + `Body`) providing card chrome (rounded-2xl, surface bg, shadow). `Header` gets `last:rounded-b-2xl` when no `Body` follows.
+- `Search.tsx` — self-contained in own `ContentPanel`. Shows results only when focused. Derives display list from `[...filteredFavorites, ...searchResults]`. Matching query substring bolded via `HighlightMatch` helper.
+- `Journey.tsx` — all trip state, GPS logic, journey fetching. Renders `ContentPanel` with header (destination name, heart, close) and body (details + map). Shows `JourneySkeleton` during loading.
+- `JourneySkeleton.tsx` — loading skeleton matching the real layout at each breakpoint.
+- `JourneyDetails.tsx` — renamed from `TripPanel`. Margin-centric layout with `MarginBadge` as section divider. Tight margins show next departure ("Next: HH:MM").
+- `JourneyMap.tsx` — thin wrapper for dynamic Map import (no SSR).
 
-**Trip view**
-- Bottom panel shows only the active step + next step; completed steps are dropped.
-- Live margin badge updates visually (no full re-layout) as GPS recalculates.
-- Stale position banner styled distinctly from normal UI (amber, full-width).
+#### 6b-R2 — JourneyDetails Timeline Redesign (next)
+
+_Inspired by travel itinerary timeline UI (see screenshot reference in plan file)._
+
+**Goal:** Replace the current flat-row layout in `JourneyDetails.tsx` with a vertical timeline that visually separates transport legs from ferry waypoints.
+
+**Layout structure:**
+
+```
+  ●─── Kjør til Ørsta kai                    42 min
+  │
+  │    ┌─────────────────────────────────────────┐
+  │    │  Ørsta kai → Festøya                    │
+  │    │                                         │
+  │    │  ┌────────────┐                         │
+  │    │  │  +14 min   │   Avgang 15:35          │
+  │    │  │  margin    │   30 min overf.         │
+  │    │  └────────────┘                         │
+  │    │                                         │
+  │    │  Neste: 16:05                           │  ← only if tight
+  │    └─────────────────────────────────────────┘
+  │
+  ●─── Kjør til destinasjon                   8 min
+```
+
+**Timeline rail:**
+- Each leg is a flex row: left column (~24px, fixed) for the vertical line + dot, right column for content.
+- Vertical line: `border-left: 2px solid var(--border)` on the left column, continuous through all legs.
+- First leg: no line above its dot. Last leg: no line below its dot.
+
+**Drive legs (muted transport):**
+- Small dot: 8px circle, `var(--surface)` fill, `var(--border)` or `var(--water-light)` border, centred on the line.
+- Content: single line — `Kjør til {place}` left, `{duration}` right. `text-sm`, `color: var(--text-secondary)`.
+- Compact: `py-2` padding.
+
+**Ferry sections (POI-card style):**
+- Larger dot: 12px circle, `var(--water)` fill, centred on the line.
+- Content wrapped in a card: `bg-[--surface-variant]`, `rounded-lg`, `p-4`.
+- Inside card: route name (`{from} → {to}`), then `MarginBadge` + departure time + crossing duration.
+- If tight (<10 min margin), show next departure below.
+
+**Files to modify:**
+- `packages/web/components/JourneyDetails.tsx` — restructure `DriveLeg` and `FerrySection` into timeline layout.
+- No other files need changes.
+
+**Keep unchanged:** `MarginBadge`, arrival footer, stale-position banner, arrived state, next-departure logic.
+
+#### 6b-R3 — Auto-Refresh & Staleness Indicator
+
+_See design brief R2.4. Not started._
+- 60s departure-only polling (re-call `/quay/departures`, not `/journey`)
+- "Updated X min ago" label at bottom of details zone
+- Live dot (green → gray as data ages)
+- Tab refocus triggers immediate refresh if >60s stale
+
+---
 
 **Design system**
 - Single token set: Tailwind v4 CSS variables (web) + `ThemeContext` hex values (app).
@@ -190,7 +243,9 @@ Phase 2 — Core Journey Flow        ✓ complete
 Phase 2b — Search-First Layout     ✓ complete
 Phase 5 — Routing API              ✓ complete
 Phase 3 — Trip View Page           ✓ complete
-Phase 4 — Recents & Favorites      ← next
+Phase 4 — Recents & Favorites      ✓ complete
 Phase 6a — Design Research         ✓ complete (see docs/design-brief.md)
-Phase 6b — UI Polish & Design Sys  (after 6a brief is done)
+Phase 6b-R1 — Search & Layout      ✓ complete (uncommitted)
+Phase 6b-R2 — Timeline Redesign    ← next
+Phase 6b-R3 — Auto-Refresh         (after R2)
 ```
