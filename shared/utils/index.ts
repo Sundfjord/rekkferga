@@ -69,6 +69,20 @@ export function nextReachable(deps: DepartureOption[] | undefined): DepartureOpt
   return deps.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? deps[0];
 }
 
+export function selectDeparturesForDisplay(deps: DepartureOption[] | undefined): DepartureOption[] {
+  if (!deps?.length) return [];
+
+  const departuresWithMargin = deps.filter((d) => d.marginMinutes !== null);
+  if (!departuresWithMargin.length) return [];
+
+  const firstReachable = departuresWithMargin.find((d) => (d.marginMinutes ?? -1) >= 0);
+  if (firstReachable && (firstReachable.marginMinutes ?? -1) >= 10) {
+    return [firstReachable];
+  }
+
+  return departuresWithMargin.slice(0, 2);
+}
+
 export function marginTier(minutes: number): "safe" | "tight" | "missed" {
   if (minutes > 10) return "safe";
   if (minutes >= 0) return "tight";

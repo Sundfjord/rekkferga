@@ -36,7 +36,7 @@ const ContentPanelBody = ({ children, fullHeight = false }: ContentPanelBodyProp
   return (
     <div
       className={`flex min-h-0 overflow-hidden rounded-b-2xl ${fullHeight ? "flex-1" : "flex-shrink-0"}`}
-      style={{ backgroundColor: "var(--surface)", boxShadow: "0 4px 24px rgba(1,22,56,0.18)"}}
+      style={{ backgroundColor: "var(--surface)"}}
     >
       {children}
     </div>

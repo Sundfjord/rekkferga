@@ -1,7 +1,7 @@
 "use client";
 
 import type { JourneyResult, FerryLeg, DepartureOption, ResultItem, TripState, JourneyLeg } from "@shared/types";
-import { formatTime, formatDuration, marginTier, formatMarginLabel } from "@shared/utils";
+import { formatTime, formatDuration, marginTier, formatMarginLabel, selectDeparturesForDisplay } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
 function MarginBadge({ minutes, departureTime }: { minutes: number | null; departureTime?: string }) {
@@ -224,7 +224,7 @@ function DurationStepContent({ step }: { step: Extract<TimelineStep, { kind: "du
     <div className="flex min-w-0 flex-1 py-1">
       <div className="flex w-full items-baseline justify-between gap-3">
         <span
-          className="text-xs"
+          className="text-sm"
           style={{
             color: "var(--text-secondary)",
             fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
@@ -323,9 +323,7 @@ function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key
     }
 
     const ferryLeg = leg as FerryLeg;
-    const departures = (ferryLeg.departures ?? [])
-      .filter((departure) => departure.marginMinutes !== null)
-      .slice(0, 2);
+    const departures = selectDeparturesForDisplay(ferryLeg.departures);
 
     steps.push({
       kind: "ferryQuay",
@@ -369,7 +367,7 @@ export default function JourneyDetails({
   const destinationStepIndex = timelineSteps.length - 1;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="flex flex-col h-full w-full overflow-hidden">
       {stalePosition && (
         <div
           className="px-5 py-2.5 text-sm flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
@@ -382,7 +380,7 @@ export default function JourneyDetails({
       )}
 
       {/* Legs */}
-      <div className="overflow-y-auto flex-1 min-h-0">
+      <div className="overflow-y-auto flex-1 min-h-0 pb-4">
         {tripState === 'arrived' ? (
           <div
             className="px-5 py-5 text-sm text-center"
@@ -391,30 +389,28 @@ export default function JourneyDetails({
             {t("arriveAt", { place: destination.name })}
           </div>
         ) : (
-          <>
-            <div className="relative">
-              <div
-                className="absolute top-0 bottom-0"
-                style={{ left: "2rem", borderLeft: "2px solid var(--border)" }}
+          <div className="relative">
+            <div
+              className="absolute top-0 bottom-0"
+              style={{ left: "2rem", borderLeft: "2px solid var(--border)" }}
+            />
+            {timelineSteps.map((step, index) => (
+              <TimelineStepRow
+                key={`${step.kind}-${index}`}
+                step={step}
+                isFirst={index === 0}
+                isLast={index === timelineSteps.length - 1}
+                iconType={
+                  index === firstLocationStepIndex
+                    ? "start"
+                    : index === destinationStepIndex && step.kind === "label"
+                      ? "finish"
+                      : undefined
+                }
+                t={t}
               />
-              {timelineSteps.map((step, index) => (
-                <TimelineStepRow
-                  key={`${step.kind}-${index}`}
-                  step={step}
-                  isFirst={index === 0}
-                  isLast={index === timelineSteps.length - 1}
-                  iconType={
-                    index === firstLocationStepIndex
-                      ? "start"
-                      : index === destinationStepIndex && step.kind === "label"
-                        ? "finish"
-                        : undefined
-                  }
-                  t={t}
-                />
-              ))}
-            </div>
-          </>
+            ))}
+          </div>
         )}
       </div>
 

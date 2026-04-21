@@ -139,7 +139,7 @@ const Search = forwardRef<SearchHandle, SearchProps>(
             onFocus={() => setIsFocused(true)}
             onBlur={() => setTimeout(() => setIsFocused(false), 200)}
             placeholder={t("searchPlaceholder")}
-            className="flex-1 outline-none bg-transparent text-lg"
+            className="flex-1 outline-none bg-transparent text-xl"
             style={{
               color: "var(--text-primary)",
               fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",

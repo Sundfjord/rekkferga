@@ -132,3 +132,19 @@ body {
 @utility animate-pulse-subtle {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
+
+.leaflet-popup.journey-ferry-popup .leaflet-popup-content-wrapper {
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+.leaflet-popup.journey-ferry-popup .leaflet-popup-tip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.leaflet-popup.journey-ferry-popup .leaflet-popup-content {
+  margin: 10px 12px;
+}

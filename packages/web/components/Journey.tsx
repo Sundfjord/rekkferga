@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useId } from "react";
+import dynamic from "next/dynamic";
 import JourneyDetails from "@/components/JourneyDetails";
-import JourneyMap from "@/components/JourneyMap";
 import JourneySkeleton from "@/components/JourneySkeleton";
 import ContentPanel from "@/components/ContentPanel";
 import type { JourneyResult, FerryLeg, TripState, ResultItem } from "@shared/types";
@@ -13,15 +13,19 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const JourneyMap = dynamic(() => import("@/components/JourneyMap"), { ssr: false });
 
 interface JourneyProps {
   destination: ResultItem;
   onExit: () => void;
 }
 
+type JourneyTab = "details" | "map";
+
 export default function Journey({ destination, onExit }: JourneyProps) {
   const t = useTranslation();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const tabIdBase = useId();
 
   const [journey, setJourney] = useState<JourneyResult | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -33,6 +37,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   const [completedLegs, setCompletedLegs] = useState<Set<number>>(new Set());
   const [fitBoundsSignal, setFitBoundsSignal] = useState(0);
   const [journeyLoaded, setJourneyLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<JourneyTab>("details");
 
   const journeyRef = useRef<JourneyResult | null>(null);
   const currentLegIndexRef = useRef(0);
@@ -191,13 +196,22 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   }, [handlePosition]);
 
   const isFav = isFavorite(destination.id);
+  const tabs: Array<{ key: JourneyTab; label: string }> = [
+    { key: "details", label: t("detailsTab") },
+    { key: "map", label: t("mapTab") },
+  ];
+
+  useEffect(() => {
+    if (!journey || activeTab !== "map") return;
+    setFitBoundsSignal((s) => s + 1);
+  }, [activeTab, journey]);
 
   return (
     <ContentPanel>
       <ContentPanel.Header>
         <div className="flex items-center gap-3">
           <div
-            className="flex-1 min-w-0 text-lg font-bold truncate"
+            className="flex-1 min-w-0 text-xl font-bold truncate"
             style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
           >
             {destination.name}
@@ -225,6 +239,46 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         </div>
       </ContentPanel.Header>
 
+      {journey && !isLoading && !error && (
+        <div className="flex-shrink-0 px-4 py-2 xl:hidden" style={{ backgroundColor: "var(--surface)" }}>
+          <div
+            role="tablist"
+            aria-label={t("journeyViews")}
+            className="grid grid-cols-2 gap-2 rounded-xl p-2"
+            style={{
+              backgroundColor: "var(--surface-variant)",
+              border: "1px solid var(--border)",
+            }}
+          >
+            {tabs.map((tab) => {
+              const isSelected = activeTab === tab.key;
+              const tabId = `${tabIdBase}-tab-${tab.key}`;
+              return (
+                <button
+                  key={tab.key}
+                  id={tabId}
+                  role="tab"
+                  type="button"
+                  aria-selected={isSelected}
+                  aria-controls={`${tabIdBase}-panel-${tab.key}`}
+                  onClick={() => setActiveTab(tab.key)}
+                  className="cursor-pointer rounded-lg px-5 py-3.5 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+                  style={{
+                    backgroundColor: isSelected ? "var(--surface)" : "transparent",
+                    border: isSelected ? "1px solid var(--border)" : "1px solid transparent",
+                    color: isSelected ? "var(--text-primary)" : "var(--text-secondary)",
+                    boxShadow: isSelected ? "0 1px 2px rgba(1,22,56,0.10)" : "none",
+                    fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <ContentPanel.Body fullHeight>
         {isLoading && <JourneySkeleton />}
         {error && (
@@ -235,9 +289,12 @@ export default function Journey({ destination, onExit }: JourneyProps) {
           </div>
         )}
         {journey && (
-          <div className="flex flex-col xl:flex-row flex-1 min-h-0 rounded-b-2xl">
+          <div className="flex flex-1 min-h-0 rounded-b-2xl flex-col xl:flex-row">
             <div
-              className="flex-1 min-h-0 xl:w-96 xl:flex-none overflow-hidden"
+              id={`${tabIdBase}-panel-details`}
+              role="tabpanel"
+              aria-labelledby={`${tabIdBase}-tab-details`}
+              className={`${activeTab === "details" ? "flex" : "hidden"} xl:flex min-h-0 overflow-hidden xl:w-96 xl:flex-none`}
               style={{ backgroundColor: "var(--surface)" }}
             >
               <JourneyDetails
@@ -249,7 +306,12 @@ export default function Journey({ destination, onExit }: JourneyProps) {
                 onRefreshPosition={refreshPosition}
               />
             </div>
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div
+              id={`${tabIdBase}-panel-map`}
+              role="tabpanel"
+              aria-labelledby={`${tabIdBase}-tab-map`}
+              className={`${activeTab === "map" ? "flex" : "hidden"} xl:flex flex-1 min-h-0 overflow-hidden`}
+            >
               <JourneyMap
                 journey={journey}
                 userLocation={userLocation}
