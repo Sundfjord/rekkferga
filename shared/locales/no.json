@@ -88,6 +88,7 @@
   "exitTrip": "Avslutt tur",
   "driveStep": "Kjøring",
   "ferryTripStep": "Fergetur",
+  "waitStep": "Ventetid",
   "totalTravelTime": "Total reisetid",
   "arrivedAt": "Du har ankommet {destination}.",
   "stalePosition": "Posisjonen kan være utdatert — trykk for å oppdatere",

@@ -89,6 +89,7 @@
   "exitTrip": "Exit trip",
   "driveStep": "Drive",
   "ferryTripStep": "Ferry trip",
+  "waitStep": "Wait",
   "totalTravelTime": "Total travel",
   "arrivedAt": "You have arrived at {destination}.",
   "stalePosition": "Position may be stale — tap to refresh",
