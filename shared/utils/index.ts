@@ -69,6 +69,10 @@ export function nextReachable(deps: DepartureOption[] | undefined): DepartureOpt
   return deps.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? deps[0];
 }
 
+export function departureIsRealtime(dep: DepartureOption | undefined): boolean {
+  return dep?.realtime === true;
+}
+
 export function selectDeparturesForDisplay(deps: DepartureOption[] | undefined): DepartureOption[] {
   if (!deps?.length) return [];
 

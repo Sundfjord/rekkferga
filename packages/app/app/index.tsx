@@ -7,9 +7,9 @@ import {
   Accuracy,
   type LocationSubscription,
 } from "expo-location";
-import type { SearchResult, JourneyResult, FerryLeg, TripState } from "@shared/types";
+import type { SearchResult, JourneyResult, TripState } from "@shared/types";
 import { STALE_THRESHOLD_MS } from "@shared/utils";
-import { fetchJourney, fetchDeparturesForLeg } from "@shared/services/journey";
+import { fetchJourney } from "@shared/services/journey";
 import { processPosition as processPositionShared, refreshDepartures, type TripStateCallbacks } from "@shared/services/tripStateMachine";
 import { useTranslation } from "@/hooks/useTranslation";
 import Map from "@/components/Map";
@@ -158,35 +158,9 @@ export default function HomeScreen() {
         return;
       }
 
-      const base = journeys[0];
-      // Hydrate ferry legs sequentially — each needs the cumulative travel time
-      // from all preceding legs to compute a correct arrival estimate.
-      const hydratedLegs: typeof base.legs = [];
-      let cumulativeMs = 0;
-      for (let index = 0; index < base.legs.length; index++) {
-        const leg = base.legs[index];
-        if (leg.mode !== "water") {
-          cumulativeMs += leg.duration * 1000;
-          hydratedLegs.push(leg);
-          continue;
-        }
-        const arrivalTime = new Date(Date.now() + cumulativeMs).toISOString();
-        const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
-        const dep = departures.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? departures[0];
-        if (dep) {
-          const arriveAtQuayMs = Date.now() + cumulativeMs;
-          const depTimeMs = new Date(dep.expectedDepartureTime).getTime();
-          const waitMs = Math.max(0, depTimeMs - arriveAtQuayMs);
-          cumulativeMs += waitMs + leg.duration * 1000;
-        } else {
-          cumulativeMs += leg.duration * 1000;
-        }
-        hydratedLegs.push({ ...leg, departures });
-      }
-
-      const hydratedJourney = { ...base, legs: hydratedLegs };
-      journeyRef.current = hydratedJourney;
-      setJourney(hydratedJourney);
+      const serverJourney = journeys[0];
+      journeyRef.current = serverJourney;
+      setJourney(serverJourney);
       setFitBoundsSignal((s) => s + 1);
     } catch {
       setError(t("error"));

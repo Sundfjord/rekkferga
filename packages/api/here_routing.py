@@ -57,7 +57,6 @@ def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime
         {
             "duration":     int (seconds, traffic-aware),
             "geometry":     [[lat, lng], ...],
-            "alternatives": [{"duration": int, "geometry": [[lat, lng], ...]}, ...]
         }
         or None if HERE is unavailable or the call fails.
     """
@@ -75,7 +74,6 @@ def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime
         "transportMode": "car",
         "return": "travelSummary,polyline",
         "departureTime": dep_time.isoformat(),
-        "alternatives": 2,
     }
 
     try:
@@ -120,7 +118,6 @@ def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime
     return {
         "duration": routes[0]["duration"],
         "geometry": routes[0]["geometry"],
-        "alternatives": routes[1:],
     }
 
 
@@ -157,8 +154,6 @@ def enrich_journey(journey: dict) -> dict:
         if result:
             leg["duration"] = result["duration"]
             leg["geometry"] = result["geometry"]
-            if result.get("alternatives"):
-                leg["alternatives"] = result["alternatives"]
             any_success = True
 
     _recompute_journey_durations(journey)

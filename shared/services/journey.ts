@@ -34,18 +34,11 @@ export async function fetchDeparturesForLeg(apiUrl: string, ferryLeg: FerryLeg, 
   if (!ferryLeg.fromQuayId || !ferryLeg.toQuayId) return [];
   try {
     const res = await fetch(
-      `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&toQuayId=${ferryLeg.toQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}`
+      `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&toQuayId=${ferryLeg.toQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}&mode=refresh`
     );
     if (!res.ok) return [];
-    const data: DepartureOption[] | Record<string, DepartureOption[]> = await res.json();
-    if (Array.isArray(data)) return data;
-
-    const destName = ferryLeg.toPlace.name;
-    const key =
-      Object.keys(data).find((k) => k === destName) ??
-      Object.keys(data).find((k) => k.toLowerCase() === destName.toLowerCase()) ??
-      Object.keys(data)[0];
-    return key ? (data[key] ?? []) : [];
+    const data: DepartureOption[] = await res.json();
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }

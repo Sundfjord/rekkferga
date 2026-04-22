@@ -10,6 +10,8 @@ from journey_planner import (
     health_check,
 )
 from here_routing import enrich_journey
+from journey_domain import hydrate_destination_journey
+from departures_domain import evaluate_ferry_departures
 from nominatim import get_locations_nominatim
 
 load_dotenv()
@@ -49,7 +51,9 @@ def get_journey():
         if not journey_patterns:
             return cache([], 60)
         journey_patterns.sort(key=lambda x: x["duration"])
-        return cache([enrich_journey(serialise_journey(p)) for p in journey_patterns], 300)
+        enriched = [enrich_journey(serialise_journey(p)) for p in journey_patterns]
+        hydrated = [hydrate_destination_journey(j) for j in enriched]
+        return cache(hydrated, 300)
     except Exception:
         logger.exception("Error in get_journey")
         return {"error": "Internal server error"}, 500
@@ -60,16 +64,23 @@ def get_quay_departures():
     quay_id = request.args.get("quayId")
     to_quay_id = request.args.get("toQuayId")
     arrival_time = request.args.get("arrivalTime")
+    mode = request.args.get("mode")
 
     if not quay_id or not is_valid_nsr_id(quay_id):
         return {"error": "Valid quayId is required"}, 400
     if not to_quay_id or not is_valid_nsr_id(to_quay_id):
         return {"error": "Valid toQuayId is required"}, 400
+    if mode == "refresh" and not arrival_time:
+        return {"error": "arrivalTime is required in refresh mode"}, 400
 
     route = {"expectedEndTime": arrival_time} if arrival_time else None
     quay = {"id": quay_id}
 
     try:
+        if mode == "refresh":
+            patch = evaluate_ferry_departures(quay_id, to_quay_id, arrival_time or "")
+            return patch["departures"]
+
         departures = get_departures_from_entur(quay, route, to_quay_id)
         return departures
     except Exception:

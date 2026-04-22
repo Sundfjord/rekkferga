@@ -50,18 +50,13 @@ def get_departures_from_nsr_id(nsr_id, start_time=None):
         query ($ids: [String], $startTime: DateTime) {
             stopPlaces(ids: $ids) {
                 id,
-                estimatedCalls(numberOfDepartures: 30, startTime: $startTime) {
+                estimatedCalls(numberOfDepartures: 4, startTime: $startTime) {
                     realtime
                     expectedDepartureTime
-                    expectedArrivalTime
                     serviceJourney {
                         estimatedCalls {
-                            realtime
-                            expectedDepartureTime
-                            expectedArrivalTime
                             quay {
                                 stopPlace {
-                                    name
                                     id
                                 }
                             }
@@ -273,7 +268,6 @@ def process_departures(departure_data, route=None, to_quay_id=None):
     if not estimated_calls:
         return departures
 
-    first_reachable_departure_time = None
     for departure in estimated_calls:
         service_journey = departure.get("serviceJourney") or {}
         service_journey_calls = service_journey.get("estimatedCalls", [])
@@ -302,20 +296,9 @@ def process_departures(departure_data, route=None, to_quay_id=None):
             if target_index <= 0:
                 continue
 
-            is_first_reachable = False
-            if arrival_time and dep_time and dep_time >= arrival_time:
-                if first_reachable_departure_time is None:
-                    first_reachable_departure_time = dep_time
-                    is_first_reachable = True
-                else:
-                    is_first_reachable = dep_time == first_reachable_departure_time
-
             departures.append({
                 "expectedDepartureTime": dep_time,
-                "realtime": False,
-                "journey": [],
-                "relevant": False,
-                "isFirstReachable": is_first_reachable,
+                "realtime": departure.get("realtime", False),
                 "marginMinutes": margin_minutes,
             })
             continue
@@ -339,39 +322,15 @@ def process_departures(departure_data, route=None, to_quay_id=None):
             else None
         )
 
-        is_first_reachable = False
-        if arrival_time and dep_time and dep_time >= arrival_time:
-            if first_reachable_departure_time is None:
-                first_reachable_departure_time = dep_time
-                is_first_reachable = True
-            else:
-                is_first_reachable = dep_time == first_reachable_departure_time
-
-        journey = [
-            {
-                "time": call.get("expectedDepartureTime"),
-                "realtime": call.get("realtime", False),
-                "stopPlaceName": (call.get("quay") or {})
-                .get("stopPlace", {})
-                .get("name", "Unknown Stop Place"),
-            }
-            for call in service_journey_calls[: target_index + 1]
-        ]
-
         departures.append(
             {
                 "expectedDepartureTime": dep_time,
                 "realtime": departure.get("realtime", False),
-                "journey": journey,
-                "relevant": False,
-                "isFirstReachable": is_first_reachable,
                 "marginMinutes": margin_minutes,
             }
         )
 
     departures.sort(key=lambda x: x["expectedDepartureTime"])
-    departures = departures[:10]
-    for i in range(len(departures)):
-        departures[i]["relevant"] = i < 4
+    departures = departures[:2]
 
     return departures

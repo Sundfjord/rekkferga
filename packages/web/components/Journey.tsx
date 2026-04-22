@@ -5,9 +5,9 @@ import dynamic from "next/dynamic";
 import JourneyDetails from "@/components/JourneyDetails";
 import JourneySkeleton from "@/components/JourneySkeleton";
 import ContentPanel from "@/components/ContentPanel";
-import type { JourneyResult, FerryLeg, TripState, ResultItem } from "@shared/types";
+import type { JourneyResult, TripState, ResultItem } from "@shared/types";
 import { STALE_THRESHOLD_MS } from "@shared/utils";
-import { fetchJourney, fetchDeparturesForLeg } from "@shared/services/journey";
+import { fetchJourney } from "@shared/services/journey";
 import { processPosition as processPositionShared, refreshDepartures, type TripStateCallbacks } from "@shared/services/tripStateMachine";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -104,35 +104,9 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         if (cancelled) return;
         if (!journeys.length) { setError(t("noRouteQuays")); return; }
 
-        const base = journeys[0];
-        const hydratedLegs: typeof base.legs = [];
-        let cumulativeMs = 0;
-        for (let index = 0; index < base.legs.length; index++) {
-          const leg = base.legs[index];
-          if (leg.mode !== "water") {
-            cumulativeMs += leg.duration * 1000;
-            hydratedLegs.push(leg);
-            continue;
-          }
-          const arrivalTime = new Date(Date.now() + cumulativeMs).toISOString();
-          const departures = await fetchDeparturesForLeg(API_URL!, leg as FerryLeg, arrivalTime);
-          if (cancelled) return;
-          const dep = departures.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? departures[0];
-          if (dep) {
-            const arriveAtQuayMs = Date.now() + cumulativeMs;
-            const depTimeMs = new Date(dep.expectedDepartureTime).getTime();
-            const waitMs = Math.max(0, depTimeMs - arriveAtQuayMs);
-            cumulativeMs += waitMs + leg.duration * 1000;
-          } else {
-            cumulativeMs += leg.duration * 1000;
-          }
-          hydratedLegs.push({ ...leg, departures });
-        }
-
-        if (cancelled) return;
-        const hydratedJourney = { ...base, legs: hydratedLegs };
-        journeyRef.current = hydratedJourney;
-        setJourney(hydratedJourney);
+        const serverJourney = journeys[0];
+        journeyRef.current = serverJourney;
+        setJourney(serverJourney);
         setFitBoundsSignal((s) => s + 1);
         setJourneyLoaded(true);
       } catch (err) {
