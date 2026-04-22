@@ -9,6 +9,36 @@ logger = logging.getLogger(__name__)
 _HERE_BASE = "https://router.hereapi.com/v8/routes"
 
 
+def _safe_iso_delta_seconds(start: str | None, end: str | None) -> int:
+    if not start or not end:
+        return 0
+    try:
+        start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
+        return max(0, int((end_dt - start_dt).total_seconds()))
+    except ValueError:
+        return 0
+
+
+def _recompute_journey_durations(journey: dict) -> dict:
+    travel_duration = sum((leg.get("duration") or 0) for leg in journey.get("legs", []))
+
+    wait_duration = 0
+    previous_end = None
+    for leg in journey.get("legs", []):
+        leg_start = leg.get("expectedStartTime")
+        if previous_end and leg_start:
+            wait_duration += _safe_iso_delta_seconds(previous_end, leg_start)
+        previous_end = leg.get("expectedEndTime") or previous_end
+
+    total_duration = travel_duration + wait_duration
+    journey["duration"] = total_duration
+    journey["travelDurationSeconds"] = travel_duration
+    journey["waitDurationSeconds"] = wait_duration
+    journey["totalDurationSeconds"] = total_duration
+    return journey
+
+
 def _decode_polyline(encoded: str) -> list[list[float]]:
     """Decode a HERE Flexible Polyline string to [[lat, lng], ...]."""
     return [[pt[0], pt[1]] for pt in flexpolyline.decode(encoded)]
@@ -131,5 +161,6 @@ def enrich_journey(journey: dict) -> dict:
                 leg["alternatives"] = result["alternatives"]
             any_success = True
 
+    _recompute_journey_durations(journey)
     journey["trafficDataAvailable"] = any_success
     return journey

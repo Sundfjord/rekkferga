@@ -58,16 +58,19 @@ def get_journey():
 @app.get("/quay/departures")
 def get_quay_departures():
     quay_id = request.args.get("quayId")
+    to_quay_id = request.args.get("toQuayId")
     arrival_time = request.args.get("arrivalTime")
 
     if not quay_id or not is_valid_nsr_id(quay_id):
         return {"error": "Valid quayId is required"}, 400
+    if not to_quay_id or not is_valid_nsr_id(to_quay_id):
+        return {"error": "Valid toQuayId is required"}, 400
 
     route = {"expectedEndTime": arrival_time} if arrival_time else None
     quay = {"id": quay_id}
 
     try:
-        departures = get_departures_from_entur(quay, route)
+        departures = get_departures_from_entur(quay, route, to_quay_id)
         return departures
     except Exception:
         logger.exception("Error in get_quay_departures")
