@@ -31,13 +31,15 @@ export async function fetchJourney(apiUrl: string, fromLat: number, fromLng: num
 }
 
 export async function fetchDeparturesForLeg(apiUrl: string, ferryLeg: FerryLeg, arrivalTime: string): Promise<DepartureOption[]> {
-  if (!ferryLeg.fromQuayId) return [];
+  if (!ferryLeg.fromQuayId || !ferryLeg.toQuayId) return [];
   try {
     const res = await fetch(
-      `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}`
+      `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&toQuayId=${ferryLeg.toQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}`
     );
     if (!res.ok) return [];
-    const data: Record<string, DepartureOption[]> = await res.json();
+    const data: DepartureOption[] | Record<string, DepartureOption[]> = await res.json();
+    if (Array.isArray(data)) return data;
+
     const destName = ferryLeg.toPlace.name;
     const key =
       Object.keys(data).find((k) => k === destName) ??
