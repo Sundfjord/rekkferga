@@ -54,7 +54,16 @@ def _recompute_canonical_totals(
 
 
 def _prune_journey_for_client(journey: dict[str, Any]) -> dict[str, Any]:
-    allowed_journey_fields = {"expectedEndTime", "duration", "legs"}
+    allowed_journey_fields = {
+        "expectedEndTime",
+        "expectedStartTime",
+        "duration",
+        "travelDurationSeconds",
+        "waitDurationSeconds",
+        "totalDurationSeconds",
+        "trafficDataAvailable",
+        "legs",
+    }
     allowed_leg_fields = {
         "mode",
         "duration",
@@ -64,6 +73,7 @@ def _prune_journey_for_client(journey: dict[str, Any]) -> dict[str, Any]:
         "fromQuayId",
         "toQuayId",
         "departures",
+        "selectedDeparture",
         "geometry",
     }
     allowed_place_fields = {"name", "latitude", "longitude"}

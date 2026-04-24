@@ -33,8 +33,13 @@ export type ResultItem = SearchResult | SavedDestination;
 // ---------------------------------------------------------------------------
 
 export interface JourneyResult {
+  expectedStartTime?: string;
   expectedEndTime: string;
   duration: number; // seconds
+  travelDurationSeconds?: number; // sum of leg durations
+  waitDurationSeconds?: number; // time spent waiting between legs
+  totalDurationSeconds?: number; // travel + wait
+  trafficDataAvailable?: boolean;
   legs: JourneyLeg[];
 }
 
@@ -59,6 +64,7 @@ export interface FerryLeg extends BaseLeg {
   fromQuayId: string; // NSR stop place ID
   toQuayId: string;
   departures?: DepartureOption[];
+  selectedDeparture?: DepartureOption; // server-selected departure for canonical timing
 }
 
 export interface LegPlace {
