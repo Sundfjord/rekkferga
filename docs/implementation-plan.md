@@ -1,6 +1,6 @@
 # Rekkferga — Implementation Plan
 
-_Last updated: 2026-04-15_
+_Last updated: 2026-04-24_
 
 ## Product Direction
 
@@ -23,11 +23,13 @@ The product has three distinct states, progressing linearly with an easy exit ba
 _Updated after Phases 0–2b, Phase 5, and pre-Phase 3 cleanup._
 
 ### API (`packages/api/`)
-- `GET /journey?from=lat,lng&to=lat,lng` — returns `JourneyResult[]`. Car legs have HERE-provided traffic-aware `duration`, road-snapped `geometry` (`[[lat,lng],...]`), and optional `alternatives`. Ferry legs have `fromQuayId`/`toQuayId`. Response cached 5 min (`Cache-Control: public, max-age=300`). Falls back to EnTur static data if HERE unavailable (`trafficDataAvailable: false`).
-- `GET /quay/departures?quayId=NSR:...&arrivalTime=ISO` — departures from `now` grouped by destination. Each option has `marginMinutes: number | null`, `isFirstReachable: bool`. Not cached — always live.
+- `GET /journey?from=lat,lng&to=lat,lng` — returns `JourneyResult[]`. Car legs have HERE-provided traffic-aware `duration`, road-snapped `geometry` (`[[lat,lng],...]`). Ferry legs have `fromQuayId`/`toQuayId` and a server-hydrated `departures[]` (each with `marginMinutes`). Response cached 5 min (`Cache-Control: public, max-age=300`).
+  - ⚠ The destination-centric rewrite (see `docs/destination-centric-backend-plan.md`) is partially in flight: `journey_domain.hydrate_destination_journey` computes `selectedDeparture`, `travelDurationSeconds`, `waitDurationSeconds`, `totalDurationSeconds`, and `expectedStartTime`, but `_prune_journey_for_client` strips them before serialization. The wire shape is still the pre-rewrite contract plus `departures[]` on ferry legs.
+  - `isFirstReachable` is no longer emitted. `trafficDataAvailable` is set but also stripped by the prune step.
+- `GET /quay/departures?quayId=NSR:...&toQuayId=NSR:...&arrivalTime=ISO[&mode=refresh]` — `toQuayId` is now required for both modes. `mode=refresh` additionally requires `arrivalTime` and is intended as the poll endpoint for the trip view. Current refresh response is just the `departures[]` list; the planned "leg patch + recomputed totals" shape is not implemented. Not cached — always live.
 - `GET /search?query=X&size=N` — Nominatim geocoding, Norway only. Returns `{id, name, subName, latitude, longitude, type: 'location'}`.
 - `GET /health` — queries EnTur to verify connectivity. Returns `{status, entur: bool}`.
-- Files: `app.py`, `journey_planner.py`, `here_routing.py`, `nominatim.py`, `util.py`.
+- Files: `app.py`, `journey_planner.py`, `journey_domain.py`, `departures_domain.py`, `here_routing.py`, `nominatim.py`, `util.py`.
 - ORS removed entirely. `flexpolyline` added for HERE geometry decoding.
 
 ### Shared (`shared/`)
