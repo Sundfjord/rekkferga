@@ -2,6 +2,7 @@
 
 import type { DepartureOption } from "@shared/types";
 import { formatDuration, formatTime, marginTier, formatMarginLabel, selectDeparturesForDisplay } from "@shared/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface QuayCardProps {
   driveDuration: number;
@@ -58,6 +59,7 @@ export default function QuayCard({
   departures,
   onViewFullJourney,
 }: QuayCardProps) {
+  const t = useTranslation();
   const displayDepartures = selectDeparturesForDisplay(departures);
 
   return (
@@ -75,7 +77,7 @@ export default function QuayCard({
           className="flex items-baseline gap-2 text-sm"
           style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
         >
-          <span>Drive to quay</span>
+          <span>{t("driveToQuay")}</span>
           <span
             className="font-semibold tabular-nums"
             style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
@@ -96,7 +98,7 @@ export default function QuayCard({
             className="text-sm"
             style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
           >
-            No departures available
+            {t("noDepartures")}
           </div>
         )}
       </div>
@@ -112,7 +114,7 @@ export default function QuayCard({
           fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)",
         }}
       >
-        View full journey
+        {t("viewFullJourney")}
       </button>
 
     </div>
