@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTheme } from "next-themes";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { JourneyResult, CarLeg, FerryLeg, DepartureOption } from "@shared/types";
 import { formatMarginLabel, formatTime, marginTier, selectDeparturesForDisplay } from "@shared/utils";
 import { createQuayWaypointMarker, createUserMarker, createDestinationMarker } from "./MapElements";
+import { useTranslation } from "@/hooks/useTranslation";
 
 function isValidCoordinate(value: number | undefined): value is number {
   return typeof value === "number" && Number.isFinite(value);
@@ -48,27 +49,34 @@ function quayKey(name: string, latitude: number, longitude: number): string {
   return `${name}|${latitude.toFixed(6)}|${longitude.toFixed(6)}`;
 }
 
-function buildDeparturePopupContent(quayName: string, departures: DepartureOption[]): HTMLElement {
+function buildDeparturePopupContent(
+  quayName: string,
+  departures: DepartureOption[],
+  labels: { departure: string; margin: string; unavailable: string },
+): HTMLElement {
+  const mono = "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)";
+  const sans = "var(--font-dm-sans, 'DM Sans', sans-serif)";
+
   const container = document.createElement("div");
   container.style.minWidth = "220px";
   container.style.padding = "2px 0";
-  container.style.fontFamily = "var(--font-dm-sans, 'DM Sans', sans-serif)";
+  container.style.fontFamily = sans;
   container.style.color = "var(--text-primary)";
   container.style.display = "flex";
   container.style.flexDirection = "column";
-  container.style.gap = "4px";
+  container.style.gap = "6px";
 
   const title = document.createElement("div");
   title.textContent = quayName;
   title.style.fontSize = "14px";
   title.style.fontWeight = "700";
-  title.style.marginBottom = "8px";
+  title.style.marginBottom = "4px";
   container.appendChild(title);
 
   const selectedDepartures = selectDeparturesForDisplay(departures);
   if (!selectedDepartures.length) {
     const unavailable = document.createElement("div");
-    unavailable.textContent = "Unavailable";
+    unavailable.textContent = labels.unavailable;
     unavailable.style.fontSize = "13px";
     unavailable.style.color = "var(--text-secondary)";
     container.appendChild(unavailable);
@@ -78,25 +86,50 @@ function buildDeparturePopupContent(quayName: string, departures: DepartureOptio
   for (const departure of selectedDepartures) {
     if (departure.marginMinutes === null) continue;
     const tier = marginTier(departure.marginMinutes);
-    const styles: Record<typeof tier, { bg: string; text: string }> = {
-      safe: { bg: "var(--color-margin-safe-surface)", text: "var(--color-margin-safe-text)" },
-      tight: { bg: "var(--color-margin-tight-surface)", text: "var(--color-margin-tight-text)" },
+    const tierStyles: Record<typeof tier, { bg: string; text: string }> = {
+      safe:   { bg: "var(--color-margin-safe-surface)",   text: "var(--color-margin-safe-text)" },
+      tight:  { bg: "var(--color-margin-tight-surface)",  text: "var(--color-margin-tight-text)" },
       missed: { bg: "var(--color-margin-missed-surface)", text: "var(--color-margin-missed-text)" },
     };
-    const row = document.createElement("div");
+    const { bg, text } = tierStyles[tier];
     const { prefix, label } = formatMarginLabel(departure.marginMinutes);
-    row.textContent = `${formatTime(departure.expectedDepartureTime)} - ${prefix}${label}`;
-    row.style.display = "inline-flex";
-    row.style.alignItems = "center";
-    row.style.fontSize = "12px";
-    row.style.fontWeight = "700";
-    row.style.padding = "5px 8px";
-    row.style.borderRadius = "8px";
-    row.style.marginBottom = "4px";
-    row.style.backgroundColor = styles[tier].bg;
-    row.style.color = styles[tier].text;
-    row.style.fontFamily = "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)";
-    container.appendChild(row);
+
+    const badge = document.createElement("div");
+    badge.style.display = "grid";
+    badge.style.gridTemplateColumns = "1fr 1fr";
+    badge.style.columnGap = "16px";
+    badge.style.rowGap = "2px";
+    badge.style.backgroundColor = bg;
+    badge.style.borderRadius = "10px";
+    badge.style.padding = "8px 12px";
+
+    const makeLabel = (t: string) => {
+      const el = document.createElement("span");
+      el.textContent = t;
+      el.style.fontSize = "10px";
+      el.style.fontWeight = "500";
+      el.style.textTransform = "uppercase";
+      el.style.letterSpacing = "0.05em";
+      el.style.color = text;
+      el.style.opacity = "0.6";
+      el.style.fontFamily = sans;
+      return el;
+    };
+    const makeValue = (t: string) => {
+      const el = document.createElement("span");
+      el.textContent = t;
+      el.style.fontSize = "15px";
+      el.style.fontWeight = "700";
+      el.style.color = text;
+      el.style.fontFamily = mono;
+      return el;
+    };
+
+    badge.appendChild(makeLabel(labels.departure));
+    badge.appendChild(makeLabel(labels.margin));
+    badge.appendChild(makeValue(formatTime(departure.expectedDepartureTime)));
+    badge.appendChild(makeValue(`${prefix}${label}`));
+    container.appendChild(badge);
   }
 
   return container;
@@ -119,6 +152,12 @@ export default function JourneyMap({ journey, userLocation, completedLegs, follo
   const fitRafRef = useRef<number | null>(null);
   const prevJourneyRef = useRef<JourneyResult | null>(null);
   const { resolvedTheme } = useTheme();
+  const t = useTranslation();
+  const popupLabels = useMemo(
+    () => ({ departure: t("departure"), margin: t("margin"), unavailable: t("unavailable") }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t("departure"), t("margin"), t("unavailable")],
+  );
 
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
@@ -220,7 +259,7 @@ export default function JourneyMap({ journey, userLocation, completedLegs, follo
           interactive: true,
           opacity: isCompleted ? 0.3 : 1,
         }).addTo(map);
-        fromMarker.bindPopup(buildDeparturePopupContent(ferryLeg.fromPlace.name, fromDepartures), {
+        fromMarker.bindPopup(buildDeparturePopupContent(ferryLeg.fromPlace.name, fromDepartures, popupLabels), {
           className: "journey-ferry-popup",
           autoPan: true,
         });
@@ -245,7 +284,7 @@ export default function JourneyMap({ journey, userLocation, completedLegs, follo
       prevJourneyRef.current = journey;
       fitMapToRoute(map, buildRouteCoordinates(journey), [48, 48], true);
     }
-  }, [journey, completedLegs, userLocation]);
+  }, [journey, completedLegs, userLocation, popupLabels]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

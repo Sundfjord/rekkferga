@@ -1,43 +1,9 @@
 "use client";
 
 import type { JourneyResult, FerryLeg, DepartureOption, ResultItem, TripState, JourneyLeg } from "@shared/types";
-import { formatTime, formatDuration, marginTier, formatMarginLabel, selectDeparturesForDisplay } from "@shared/utils";
+import { formatTime, formatDuration, selectDeparturesForDisplay } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-
-function MarginBadge({ minutes, departureTime }: { minutes: number | null; departureTime?: string }) {
-  if (minutes === null) return null;
-  const tier = marginTier(minutes);
-  const { prefix, label } = formatMarginLabel(minutes);
-  const isTight = tier === "tight";
-  const departurePrefix = departureTime ? `${formatTime(departureTime)} ` : "";
-
-  const styles: Record<string, { bg: string; text: string }> = {
-    safe:   { bg: "var(--color-margin-safe-surface)",  text: "var(--color-margin-safe-text)" },
-    tight:  { bg: "var(--color-margin-tight-surface)", text: "var(--color-margin-tight-text)" },
-    missed: { bg: "var(--color-margin-missed-surface)",text: "var(--color-margin-missed-text)" },
-  };
-  const { bg, text } = styles[tier];
-
-  return (
-    <div
-      className={`flex items-baseline gap-1.5 px-5 py-3 rounded-lg ${isTight ? "animate-pulse-subtle" : ""}`}
-      style={{ backgroundColor: bg }}
-    >
-      <span
-        className="text-xl font-bold leading-none"
-        style={{ color: text, fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
-      >
-        {departurePrefix}{prefix}{label}
-      </span>
-      <span
-        className="text-xs font-medium"
-        style={{ color: text, opacity: 0.75, fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-      >
-        margin
-      </span>
-    </div>
-  );
-}
+import MarginBadge from "@/components/MarginBadge";
 
 type TimelineStep =
   | { kind: "label"; text: string; markerTone?: "default" | "water" }
@@ -202,8 +168,7 @@ function FerryQuayStepContent({ step, t }: { step: Extract<TimelineStep, { kind:
             {step.departures.map((departure, index) => (
               <MarginBadge
                 key={`${departure.expectedDepartureTime}-${index}`}
-                minutes={departure.marginMinutes}
-                departureTime={departure.expectedDepartureTime}
+                departure={departure}
               />
             ))}
           </div>

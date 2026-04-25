@@ -1,8 +1,9 @@
 "use client";
 
 import type { DepartureOption } from "@shared/types";
-import { formatDuration, formatTime, marginTier, formatMarginLabel, selectDeparturesForDisplay } from "@shared/utils";
+import { formatDuration, selectDeparturesForDisplay } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import MarginBadge from "@/components/MarginBadge";
 
 export interface QuayCardProps {
   driveDuration: number;
@@ -11,45 +12,6 @@ export interface QuayCardProps {
   departures: DepartureOption[];
   selectedDeparture: DepartureOption | null;
   onViewFullJourney: () => void;
-}
-
-const marginStyles: Record<string, { bg: string; text: string }> = {
-  safe:   { bg: "var(--color-margin-safe-surface)",   text: "var(--color-margin-safe-text)" },
-  tight:  { bg: "var(--color-margin-tight-surface)",  text: "var(--color-margin-tight-text)" },
-  missed: { bg: "var(--color-margin-missed-surface)", text: "var(--color-margin-missed-text)" },
-};
-
-function DepartureBadge({ dep }: { dep: DepartureOption }) {
-  if (dep.marginMinutes === null) return null;
-  const tier = marginTier(dep.marginMinutes);
-  const { prefix, label } = formatMarginLabel(dep.marginMinutes);
-  const { bg, text } = marginStyles[tier];
-
-  return (
-    <div
-      className="flex flex-col gap-2 rounded-2xl px-6 py-5 flex-1"
-      style={{ backgroundColor: bg }}
-    >
-      <span
-        className="text-sm font-medium tabular-nums"
-        style={{ color: text, opacity: 0.7, fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
-      >
-        {formatTime(dep.expectedDepartureTime)}
-      </span>
-      <span
-        className="text-5xl font-bold leading-none"
-        style={{ color: text, fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
-      >
-        {prefix}{label}
-      </span>
-      <span
-        className="text-xs font-medium uppercase tracking-wide"
-        style={{ color: text, opacity: 0.55, fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-      >
-        margin
-      </span>
-    </div>
-  );
 }
 
 export default function QuayCard({
@@ -88,10 +50,10 @@ export default function QuayCard({
       </div>
 
       {/* Margin badges */}
-      <div className="flex gap-3 flex-1 items-stretch">
+      <div className="flex gap-3">
         {displayDepartures.length > 0 ? (
           displayDepartures.map((dep, i) => (
-            <DepartureBadge key={`${dep.expectedDepartureTime}-${i}`} dep={dep} />
+            <MarginBadge key={`${dep.expectedDepartureTime}-${i}`} departure={dep} className="flex-1 max-w-96" />
           ))
         ) : (
           <div

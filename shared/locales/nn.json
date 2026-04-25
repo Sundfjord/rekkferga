@@ -53,6 +53,8 @@
   "driveToQuay": "Køyring til kai",
   "viewFullJourney": "Sjå heile reisa",
   "noDepartures": "Ingen avgangar tilgjengeleg",
+  "departure": "Avgang",
+  "margin": "Margin",
   "totalTravelTime": "Total reisetid",
   "arrivedAt": "Du har ankomme {destination}.",
   "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",

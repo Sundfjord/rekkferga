@@ -93,6 +93,8 @@
   "driveToQuay": "Drive to quay",
   "viewFullJourney": "View full journey",
   "noDepartures": "No departures available",
+  "departure": "Departure",
+  "margin": "Margin",
   "totalTravelTime": "Total travel",
   "arrivedAt": "You have arrived at {destination}.",
   "stalePosition": "Position may be stale — tap to refresh",
