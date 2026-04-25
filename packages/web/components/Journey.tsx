@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef, useCallback, useId } from "react";
 import dynamic from "next/dynamic";
 import JourneyDetails from "@/components/JourneyDetails";
+import QuayCard from "@/components/QuayCard";
 import JourneySkeleton from "@/components/JourneySkeleton";
 import ContentPanel from "@/components/ContentPanel";
-import type { JourneyResult, TripState, ResultItem } from "@shared/types";
-import { STALE_THRESHOLD_MS } from "@shared/utils";
+import type { JourneyResult, TripState, ResultItem, FerryLeg } from "@shared/types";
+import { STALE_THRESHOLD_MS, nextReachable } from "@shared/utils";
 import { fetchJourney } from "@shared/services/journey";
 import { processPosition as processPositionShared, refreshDepartures, type TripStateCallbacks } from "@shared/services/tripStateMachine";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -38,6 +39,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   const [fitBoundsSignal, setFitBoundsSignal] = useState(0);
   const [journeyLoaded, setJourneyLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<JourneyTab>("details");
+  const [showFullJourney, setShowFullJourney] = useState(false);
 
   const journeyRef = useRef<JourneyResult | null>(null);
   const currentLegIndexRef = useRef(0);
@@ -58,7 +60,11 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     updateJourneyDepartures: (legIdx, departures) =>
       setJourney((prev) => {
         if (!prev) return prev;
-        const newLegs = prev.legs.map((leg, idx) => idx === legIdx ? { ...leg, departures } : leg);
+        const newLegs = prev.legs.map((leg, idx) =>
+          idx === legIdx
+            ? { ...leg, departures, selectedDeparture: nextReachable(departures) }
+            : leg
+        );
         return { ...prev, legs: newLegs };
       }),
   }).current;
@@ -180,6 +186,16 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     setFitBoundsSignal((s) => s + 1);
   }, [activeTab, journey]);
 
+  const firstFerryLeg = journey?.legs.find((l): l is FerryLeg => l.mode === "water") ?? null;
+  const firstCarLeg = journey?.legs.find((l) => l.mode === "car") ?? null;
+  const showQuayCard = !showFullJourney && firstFerryLeg != null;
+
+  const handleViewFullJourney = useCallback(() => {
+    setShowFullJourney(true);
+    setActiveTab("details");
+    setFitBoundsSignal((s) => s + 1);
+  }, []);
+
   return (
     <ContentPanel>
       <ContentPanel.Header>
@@ -213,7 +229,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         </div>
       </ContentPanel.Header>
 
-      {journey && !isLoading && !error && (
+      {showFullJourney && journey && !isLoading && !error && (
         <div className="flex-shrink-0 px-4 py-2 xl:hidden" style={{ backgroundColor: "var(--surface)" }}>
           <div
             role="tablist"
@@ -262,7 +278,17 @@ export default function Journey({ destination, onExit }: JourneyProps) {
             {error}
           </div>
         )}
-        {journey && (
+        {journey && showQuayCard && firstFerryLeg && (
+          <QuayCard
+            driveDuration={firstCarLeg?.duration ?? 0}
+            fromQuayName={firstFerryLeg.fromPlace.name}
+            toQuayName={firstFerryLeg.toPlace.name}
+            departures={firstFerryLeg.departures ?? []}
+            selectedDeparture={firstFerryLeg.selectedDeparture ?? null}
+            onViewFullJourney={handleViewFullJourney}
+          />
+        )}
+        {journey && showFullJourney && (
           <div className="flex flex-1 min-h-0 rounded-b-2xl flex-col xl:flex-row">
             <div
               id={`${tabIdBase}-panel-details`}

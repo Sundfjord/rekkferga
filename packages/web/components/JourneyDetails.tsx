@@ -42,6 +42,7 @@ function MarginBadge({ minutes, departureTime }: { minutes: number | null; depar
 type TimelineStep =
   | { kind: "label"; text: string; markerTone?: "default" | "water" }
   | { kind: "duration"; label: string; durationSeconds: number }
+  | { kind: "wait"; label: string; durationSeconds: number }
   | { kind: "ferryQuay"; quayName: string; departures: DepartureOption[]; markerTone: "water" };
 
 type TimelineMarker = "dot" | "arrow" | "start" | "finish";
@@ -219,7 +220,7 @@ function FerryQuayStepContent({ step, t }: { step: Extract<TimelineStep, { kind:
   );
 }
 
-function DurationStepContent({ step }: { step: Extract<TimelineStep, { kind: "duration" }> }) {
+function DurationStepContent({ step }: { step: Extract<TimelineStep, { kind: "duration" | "wait" }> }) {
   return (
     <div className="flex min-w-0 flex-1 py-1">
       <div className="flex w-full items-baseline justify-between gap-3">
@@ -265,6 +266,7 @@ function LabelStepContent({ step }: { step: Extract<TimelineStep, { kind: "label
 function StepContent({ step, t }: { step: TimelineStep; t: (key: string) => string }) {
   if (step.kind === "ferryQuay") return <FerryQuayStepContent step={step} t={t} />;
   if (step.kind === "duration") return <DurationStepContent step={step} />;
+  if (step.kind === "wait") return <DurationStepContent step={step} />;
   return <LabelStepContent step={step} />;
 }
 
@@ -284,8 +286,8 @@ function TimelineStepRow({
   return (
     <div className={`px-5 ${isFirst ? "pb-2" : isLast ? "pt-2" : ""} ${!isFirst && !isLast ? "py-2" : ""} flex gap-3`}>
       <TimelineRail
-        marker={step.kind === "duration" ? "arrow" : iconType ?? "dot"}
-        markerTone={step.kind === "duration" ? "default" : step.markerTone ?? "default"}
+        marker={step.kind === "duration" || step.kind === "wait" ? "arrow" : iconType ?? "dot"}
+        markerTone={step.kind === "duration" || step.kind === "wait" ? "default" : (step as { markerTone?: "default" | "water" }).markerTone ?? "default"}
         isFirst={isFirst}
         isLast={isLast}
       />
@@ -331,6 +333,10 @@ function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key
       departures,
       markerTone: "water",
     });
+    const waitMinutes = ferryLeg.selectedDeparture?.marginMinutes;
+    if (waitMinutes != null && waitMinutes > 0) {
+      steps.push({ kind: "wait", label: t("waitStep"), durationSeconds: waitMinutes * 60 });
+    }
     steps.push({ kind: "duration", label: t("ferryTripStep"), durationSeconds: ferryLeg.duration });
     pushLabelStep(ferryLeg.toPlace.name, false, "water");
   }

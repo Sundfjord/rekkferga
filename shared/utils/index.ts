@@ -95,7 +95,7 @@ export function marginTier(minutes: number): "safe" | "tight" | "missed" {
 
 export function formatMarginLabel(minutes: number): { prefix: string; label: string } {
   const abs = Math.abs(minutes);
-  const label = abs >= 60 ? `${Math.floor(abs / 60)}h ${abs % 60}m` : `${abs}m`;
+  const label = abs >= 60 ? `${Math.floor(abs / 60)}h${abs % 60}m` : `${abs}m`;
   const prefix = minutes > 0 ? "+" : minutes < 0 ? "−" : "";
   return { prefix, label };
 }
