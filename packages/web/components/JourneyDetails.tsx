@@ -323,8 +323,6 @@ interface JourneyDetailsProps {
   destination: ResultItem;
   currentLegIndex: number;
   tripState: TripState;
-  stalePosition?: boolean;
-  onRefreshPosition?: () => void;
   lastRefreshAt?: Date | null;
   isRefreshing?: boolean;
 }
@@ -334,8 +332,6 @@ export default function JourneyDetails({
   destination,
   currentLegIndex,
   tripState,
-  stalePosition,
-  onRefreshPosition,
   lastRefreshAt,
   isRefreshing = false,
 }: JourneyDetailsProps) {
@@ -350,16 +346,6 @@ export default function JourneyDetails({
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
-      {stalePosition && (
-        <div
-          className="px-5 py-2.5 text-sm flex items-center gap-2 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-          style={{ backgroundColor: "#FFFBEB", borderBottom: "1px solid #FDE68A", color: "#92400E" }}
-          onClick={onRefreshPosition}
-        >
-          <span>⚠</span>
-          <span style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}>{t("stalePosition")}</span>
-        </div>
-      )}
 
       {/* Legs */}
       <div className="overflow-y-auto flex-1 min-h-0 pb-4">

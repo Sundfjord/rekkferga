@@ -10,9 +10,15 @@ import ContentPanel from "@/components/ContentPanel";
 import type { JourneyResult, TripState, ResultItem, FerryLeg } from "@shared/types";
 import { STALE_THRESHOLD_MS, nextReachable } from "@shared/utils";
 import { fetchJourney } from "@shared/services/journey";
-import { processPosition as processPositionShared, refreshDepartures, type TripStateCallbacks } from "@shared/services/tripStateMachine";
+import {
+  processPosition as processPositionShared,
+  refreshDepartures,
+  estimateRemainingMsToNextFerry,
+  type TripStateCallbacks,
+} from "@shared/services/tripStateMachine";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useTripSimulator } from "@/hooks/useTripSimulator";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const JourneyMap = dynamic(() => import("@/components/JourneyMap"), { ssr: false });
@@ -43,12 +49,13 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   const [error, setError] = useState<string | null>(null);
   const [currentLegIndex, setCurrentLegIndex] = useState(0);
   const [tripState, setTripState] = useState<TripState>("driving_to_quay");
-  const [stalePosition, setStalePosition] = useState(false);
   const [completedLegs, setCompletedLegs] = useState<Set<number>>(new Set());
   const [fitBoundsSignal, setFitBoundsSignal] = useState(0);
   const [journeyLoaded, setJourneyLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<JourneyTab>("details");
   const [showFullJourney, setShowFullJourney] = useState(false);
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const journeyRef = useRef<JourneyResult | null>(null);
   const currentLegIndexRef = useRef(0);
@@ -56,11 +63,10 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   const lastPositionTimeRef = useRef(Date.now());
   const watchIdRef = useRef<number | null>(null);
   const userLocationRef = useRef<[number, number] | null>(null);
+  const lastRemainingMsAtFixRef = useRef<number | null>(null);
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastRefreshAtRef = useRef<Date | null>(null);
   const doRefreshRef = useRef<(() => Promise<void>) | undefined>(undefined);
-  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => { journeyRef.current = journey; }, [journey]);
   useEffect(() => {
@@ -87,8 +93,19 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   // Assigned every render so it always closes over fresh refs without stale values.
   doRefreshRef.current = async () => {
     const currentJourney = journeyRef.current;
-    const pos = userLocationRef.current;
-    if (!currentJourney || !pos || !API_URL) return;
+    if (!currentJourney || !API_URL) return;
+
+    // Compute remaining drive time: use the GPS-based estimate from last fix, decayed
+    // by elapsed time. Falls back to the full car leg duration if no fix has arrived yet.
+    const lastRemaining = lastRemainingMsAtFixRef.current;
+    let remainingMs: number;
+    if (lastRemaining !== null) {
+      remainingMs = Math.max(0, lastRemaining - (Date.now() - lastPositionTimeRef.current));
+    } else {
+      remainingMs = currentJourney.legs
+        .filter((l) => l.mode === "car")
+        .reduce((s, l) => s + l.duration * 1000, 0);
+    }
 
     setIsRefreshing(true);
     try {
@@ -96,8 +113,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         API_URL,
         currentJourney,
         currentLegIndexRef.current,
-        pos[0],
-        pos[1],
+        remainingMs,
         tripCallbacks.updateJourneyDepartures,
       );
       const now = new Date();
@@ -113,13 +129,18 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     refreshTimerRef.current = setTimeout(() => doRefreshRef.current?.(), getRefreshIntervalMs(margin));
   };
 
-  const handlePosition = useCallback((position: GeolocationPosition) => {
-    const lat = position.coords.latitude;
-    const lng = position.coords.longitude;
+  // Shared position handler used by both the GPS watch and the dev simulator.
+  const processCoords = useCallback((lat: number, lng: number) => {
     setUserLocation([lat, lng]);
     userLocationRef.current = [lat, lng];
     lastPositionTimeRef.current = Date.now();
-    setStalePosition(false);
+
+    const j = journeyRef.current;
+    if (j) {
+      lastRemainingMsAtFixRef.current = estimateRemainingMsToNextFerry(
+        j, currentLegIndexRef.current, lat, lng,
+      );
+    }
 
     processPositionShared(lat, lng, {
       journey: journeyRef.current,
@@ -127,6 +148,19 @@ export default function Journey({ destination, onExit }: JourneyProps) {
       tripState: tripStateRef.current,
     }, tripCallbacks);
   }, [tripCallbacks]);
+
+  const handlePosition = useCallback((position: GeolocationPosition) => {
+    processCoords(position.coords.latitude, position.coords.longitude);
+  }, [processCoords]);
+
+  useTripSimulator({
+    journey,
+    injectPosition: processCoords,
+    updateJourneyDepartures: tripCallbacks.updateJourneyDepartures,
+    journeyRef,
+    currentLegIndexRef,
+    userLocationRef,
+  });
 
   // Fetch journey on mount
   useEffect(() => {
@@ -145,6 +179,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         const userLng = position.coords.longitude;
         setUserLocation([userLat, userLng]);
         userLocationRef.current = [userLat, userLng];
+        lastPositionTimeRef.current = Date.now();
 
         if (!API_URL) { setError(t("error")); return; }
         const journeys = await fetchJourney(API_URL, userLat, userLng, destination.latitude, destination.longitude);
@@ -153,6 +188,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
 
         const serverJourney = journeys[0];
         journeyRef.current = serverJourney;
+        lastRemainingMsAtFixRef.current = estimateRemainingMsToNextFerry(serverJourney, 0, userLat, userLng);
         setJourney(serverJourney);
         setFitBoundsSignal((s) => s + 1);
         setJourneyLoaded(true);
@@ -183,8 +219,17 @@ export default function Journey({ destination, onExit }: JourneyProps) {
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     );
 
-    const staleTimer = setInterval(() => {
-      if (Date.now() - lastPositionTimeRef.current > STALE_THRESHOLD_MS) setStalePosition(true);
+    // If GPS stops updating, silently re-register watchPosition with maximumAge: 0
+    // to force a fresh fix rather than showing a banner.
+    const staleCheckTimer = setInterval(() => {
+      if (Date.now() - lastPositionTimeRef.current > STALE_THRESHOLD_MS) {
+        if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = navigator.geolocation.watchPosition(
+          handlePosition,
+          () => {},
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+        );
+      }
     }, 30_000);
 
     const handleVisibility = () => {
@@ -199,14 +244,13 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    // Start the departure refresh loop
     const ferryLeg = journeyRef.current?.legs.find(l => l.mode === "water") as FerryLeg | undefined;
     const initialMargin = ferryLeg?.selectedDeparture?.marginMinutes ?? null;
     refreshTimerRef.current = setTimeout(() => doRefreshRef.current?.(), getRefreshIntervalMs(initialMargin));
 
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
-      clearInterval(staleTimer);
+      clearInterval(staleCheckTimer);
       document.removeEventListener("visibilitychange", handleVisibility);
       if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current);
       watchIdRef.current = null;
@@ -226,10 +270,6 @@ export default function Journey({ destination, onExit }: JourneyProps) {
       }
     };
   }, []);
-
-  const refreshPosition = useCallback(() => {
-    navigator.geolocation.getCurrentPosition(handlePosition, () => {});
-  }, [handlePosition]);
 
   const isFav = isFavorite(destination.id);
   const tabs: Array<{ key: JourneyTab; label: string }> = [
@@ -361,8 +401,6 @@ export default function Journey({ destination, onExit }: JourneyProps) {
                 destination={destination}
                 currentLegIndex={currentLegIndex}
                 tripState={tripState}
-                stalePosition={stalePosition}
-                onRefreshPosition={refreshPosition}
                 lastRefreshAt={lastRefreshAt}
                 isRefreshing={isRefreshing}
               />

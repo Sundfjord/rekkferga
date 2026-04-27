@@ -19,10 +19,11 @@
     "deploy:web": "cd packages/web && vercel --prod",
     "deploy:cron": "cd packages/cron && func azure functionapp publish rekkferga-cron",
     "deploy:all": "npm run deploy:api && npm run deploy:web && npm run deploy:cron",
+    "test:shared": "vitest run",
     "test:api": "cd packages/api && source .venv/bin/activate && python3 -m pytest",
     "test:web": "cd packages/web && npm test",
     "test:app": "cd packages/app && npm test",
-    "test:all": "npm run test:api && npm run test:web && npm run test:app",
+    "test:all": "npm run test:shared && npm run test:api && npm run test:web && npm run test:app",
     "lint:all": "npm run lint:web && npm run lint:app",
     "lint:web": "cd packages/web && npm run lint",
     "lint:app": "cd packages/app && npm run lint",
@@ -32,7 +33,8 @@
   "devDependencies": {
     "@types/node": "^20",
     "concurrently": "^8.2.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   },
   "keywords": [
     "ferry",

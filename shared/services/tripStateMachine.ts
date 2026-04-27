@@ -79,12 +79,37 @@ export function processPosition(
   }
 }
 
+// Returns the estimated milliseconds remaining until the next ferry departure quay,
+// accounting for the current position within the active car leg.
+export function estimateRemainingMsToNextFerry(
+  journey: JourneyResult,
+  legIndex: number,
+  lat: number,
+  lng: number,
+): number {
+  const legs = journey.legs;
+  for (let i = legIndex; i < legs.length; i++) {
+    if (legs[i].mode !== "water") continue;
+    let ms = 0;
+    for (let j = legIndex; j < i; j++) {
+      if (legs[j].mode !== "car") continue;
+      ms += j === legIndex
+        ? estimateRemainingSeconds(legs[j] as CarLeg, lat, lng) * 1000
+        : legs[j].duration * 1000;
+    }
+    return ms;
+  }
+  return 0;
+}
+
+// Refresh departures for the next upcoming ferry leg. Expects remainingMs — the
+// estimated milliseconds from now until arrival at the ferry quay — to be
+// computed by the caller (e.g. from live GPS or time-decay fallback).
 export async function refreshDepartures(
   apiUrl: string,
   currentJourney: JourneyResult,
   legIndex: number,
-  lat: number,
-  lng: number,
+  remainingMs: number,
   updateJourneyDepartures: (legIndex: number, departures: DepartureOption[]) => void,
 ): Promise<void> {
   const legs = currentJourney.legs;
@@ -92,19 +117,9 @@ export async function refreshDepartures(
     if (legs[i].mode !== "water") continue;
     const ferryLeg = legs[i] as FerryLeg;
     if (!ferryLeg.fromQuayId) continue;
-
-    let remainingMs = 0;
-    for (let j = legIndex; j < i; j++) {
-      if (legs[j].mode === "car") {
-        remainingMs += j === legIndex
-          ? estimateRemainingSeconds(legs[j] as CarLeg, lat, lng) * 1000
-          : legs[j].duration * 1000;
-      }
-    }
-
     const arrivalTime = new Date(Date.now() + remainingMs).toISOString();
     const departures = await fetchDeparturesForLeg(apiUrl, ferryLeg, arrivalTime);
     updateJourneyDepartures(i, departures);
-    break; // only refresh the nearest upcoming ferry
+    break;
   }
 }

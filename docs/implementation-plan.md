@@ -276,8 +276,8 @@ Ferry not found component                   ✓ (key fix; design pass deferred t
 Quality check tripPatterns (pattern selection, overnight wait bug, missing ferry legs)  ✓
 6b-R3 — Auto-Refresh & Staleness Indicator  ✓
 Favorites on landing page                   ✓ (favorites shown persistently below search; section labels added)
-Adaptive GPS refresh rate
-Trip state machine testing
+Adaptive GPS refresh rate                   ✓
+Trip state machine testing                  ✓ (vitest at root; 11 tests cover all processPosition transitions)
 
 --- Release API + Web to production before continuing with app ---
 
