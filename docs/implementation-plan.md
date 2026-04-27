@@ -232,11 +232,16 @@ _Direction change: QuayCard is now the primary result view. Full journey toggled
 
 #### 6b-R3 — Auto-Refresh & Staleness Indicator
 
-_See design brief R2.4. Not started._
-- 60s departure-only polling (re-call `/quay/departures`, not `/journey`)
-- "Updated X min ago" label at bottom of details zone
-- Live dot (green → gray as data ages)
-- Tab refocus triggers immediate refresh if >60s stale
+- Margin-adaptive departure polling via `setTimeout` loop — interval determined by `selectedDeparture.marginMinutes` after each refresh:
+  - ≥ +10 min → 3 min
+  - +3 to +10 min → 90 s
+  - −5 to +3 min → 30 s
+  - < −5 min (missed) → 3 min (next ferry has large margin)
+  - `null` → 2 min fallback
+- Drive time estimate stays as client-side geometry-progress (`estimateRemainingSeconds`) — no HERE calls during the trip. Live HERE recalibration deferred; see "Post-release revisits" below.
+- Each timer fire reads the latest GPS position ref to compute `arrivalTime`; passes it to `/quay/departures` (EnTur only — no HERE).
+- Tab refocus triggers immediate refresh if last refresh was >30 s ago.
+- UI: `↻ Updated HH:MM` at bottom of QuayCard. Icon spins briefly during each fetch. No aging-dot / color-decay paradigm.
 
 ---
 
@@ -261,16 +266,16 @@ Phase 4 — Recents & Favorites      ✓ complete
 Phase 6a — Design Research         ✓ complete (see docs/design-brief.md)
 Phase 6b-R1 — Search & Layout      ✓ complete
 Phase 6b-R2 — Timeline Redesign    ✓ complete
-Phase 6b-R4 — QuayCard Primary View  ← in progress
+Phase 6b-R4 — QuayCard Primary View  ✓ complete
 
 --- Stabilise before continuing ---
 
-Localise QuayCard
-Margin badge consistency (QuayCard / JourneyDetails / JourneyMap)
-Ferry not found component
-Quality check tripPatterns (pattern selection, overnight wait bug, missing ferry legs)
-6b-R3 — Auto-Refresh & Staleness Indicator
-Favorites on landing page
+Localise QuayCard                           ✓ (QuayCard uses t(); FerryNotFound key noRouteDocks→noRouteQuays fixed)
+Margin badge consistency (QuayCard / JourneyDetails / JourneyMap)  ✓
+Ferry not found component                   ✓ (key fix; design pass deferred to post-release)
+Quality check tripPatterns (pattern selection, overnight wait bug, missing ferry legs)  ✓
+6b-R3 — Auto-Refresh & Staleness Indicator  ✓
+Favorites on landing page                   ✓ (favorites shown persistently below search; section labels added)
 Adaptive GPS refresh rate
 Trip state machine testing
 
@@ -287,4 +292,5 @@ Discovery: Realtime ferry tracking
 
 QuayCard design pass (layout, copy, edge cases informed by real usage)
 FerryNotFound design pass (copy, animation, consider adding a "view route anyway" option)
+HERE drive-time recalibration during trip (distance-triggered — every ~2 km — via new /drive-time endpoint; see 6b-R3 notes)
 ```
