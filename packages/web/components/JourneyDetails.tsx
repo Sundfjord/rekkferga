@@ -325,6 +325,8 @@ interface JourneyDetailsProps {
   tripState: TripState;
   stalePosition?: boolean;
   onRefreshPosition?: () => void;
+  lastRefreshAt?: Date | null;
+  isRefreshing?: boolean;
 }
 
 export default function JourneyDetails({
@@ -334,6 +336,8 @@ export default function JourneyDetails({
   tripState,
   stalePosition,
   onRefreshPosition,
+  lastRefreshAt,
+  isRefreshing = false,
 }: JourneyDetailsProps) {
   const t = useTranslation();
   const remainingLegs = journey.legs.slice(currentLegIndex);
@@ -394,25 +398,51 @@ export default function JourneyDetails({
 
       {/* Arrival footer */}
       <div
-        className="px-5 py-3 flex items-center justify-between gap-4 flex-shrink-0"
-        style={{ borderTop: "1px solid var(--border)", color: "var(--text-secondary)" }}
+        className="px-5 py-3 flex flex-col gap-2 flex-shrink-0"
+        style={{ borderTop: "1px solid var(--border)" }}
       >
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}>
-            {t("arrivalTime")}
-          </span>
-          <span style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}>
-            {formatTime(journey.expectedEndTime)}
-          </span>
+        <div className="flex items-center justify-between gap-4" style={{ color: "var(--text-secondary)" }}>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span style={{ fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}>
+              {t("arrivalTime")}
+            </span>
+            <span style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}>
+              {formatTime(journey.expectedEndTime)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+            <span
+              className="text-sm"
+              style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
+            >
+              {formatDuration(journey.duration)}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-          <span
-            className="text-sm"
-            style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
+        {lastRefreshAt && (
+          <div
+            className="flex items-center gap-1.5 text-xs"
+            style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
           >
-            {formatDuration(journey.duration)}
-          </span>
-        </div>
+            <svg
+              className={isRefreshing ? "animate-spin" : ""}
+              style={{ width: 12, height: 12, flexShrink: 0 }}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+              />
+            </svg>
+            <span>
+              {t("updatedAt", { time: lastRefreshAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

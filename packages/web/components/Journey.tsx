@@ -17,6 +17,14 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const JourneyMap = dynamic(() => import("@/components/JourneyMap"), { ssr: false });
 
+function getRefreshIntervalMs(marginMinutes: number | null): number {
+  if (marginMinutes === null) return 120_000;
+  if (marginMinutes >= 10) return 180_000;
+  if (marginMinutes >= 3) return 90_000;
+  if (marginMinutes >= -5) return 30_000;
+  return 180_000;
+}
+
 interface JourneyProps {
   destination: ResultItem;
   onExit: () => void;
@@ -47,6 +55,12 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   const tripStateRef = useRef<TripState>("driving_to_quay");
   const lastPositionTimeRef = useRef(Date.now());
   const watchIdRef = useRef<number | null>(null);
+  const userLocationRef = useRef<[number, number] | null>(null);
+  const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastRefreshAtRef = useRef<Date | null>(null);
+  const doRefreshRef = useRef<(() => Promise<void>) | undefined>(undefined);
+  const [lastRefreshAt, setLastRefreshAt] = useState<Date | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => { journeyRef.current = journey; }, [journey]);
   useEffect(() => {
@@ -70,10 +84,40 @@ export default function Journey({ destination, onExit }: JourneyProps) {
       }),
   }).current;
 
+  // Assigned every render so it always closes over fresh refs without stale values.
+  doRefreshRef.current = async () => {
+    const currentJourney = journeyRef.current;
+    const pos = userLocationRef.current;
+    if (!currentJourney || !pos || !API_URL) return;
+
+    setIsRefreshing(true);
+    try {
+      await refreshDepartures(
+        API_URL,
+        currentJourney,
+        currentLegIndexRef.current,
+        pos[0],
+        pos[1],
+        tripCallbacks.updateJourneyDepartures,
+      );
+      const now = new Date();
+      lastRefreshAtRef.current = now;
+      setLastRefreshAt(now);
+    } finally {
+      setIsRefreshing(false);
+    }
+
+    const nextFerryLeg = journeyRef.current?.legs.find(l => l.mode === "water") as FerryLeg | undefined;
+    const margin = nextFerryLeg?.selectedDeparture?.marginMinutes ?? null;
+    if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = setTimeout(() => doRefreshRef.current?.(), getRefreshIntervalMs(margin));
+  };
+
   const handlePosition = useCallback((position: GeolocationPosition) => {
     const lat = position.coords.latitude;
     const lng = position.coords.longitude;
     setUserLocation([lat, lng]);
+    userLocationRef.current = [lat, lng];
     lastPositionTimeRef.current = Date.now();
     setStalePosition(false);
 
@@ -82,11 +126,6 @@ export default function Journey({ destination, onExit }: JourneyProps) {
       currentLegIndex: currentLegIndexRef.current,
       tripState: tripStateRef.current,
     }, tripCallbacks);
-
-    const currentJourney = journeyRef.current;
-    if (currentJourney && API_URL) {
-      refreshDepartures(API_URL, currentJourney, currentLegIndexRef.current, lat, lng, tripCallbacks.updateJourneyDepartures);
-    }
   }, [tripCallbacks]);
 
   // Fetch journey on mount
@@ -105,6 +144,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
         setUserLocation([userLat, userLng]);
+        userLocationRef.current = [userLat, userLng];
 
         if (!API_URL) { setError(t("error")); return; }
         const journeys = await fetchJourney(API_URL, userLat, userLng, destination.latitude, destination.longitude);
@@ -133,7 +173,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destination]);
 
-  // Start GPS watch once journey is loaded
+  // Start GPS watch and margin-adaptive departure refresh once journey is loaded
   useEffect(() => {
     if (!journeyLoaded) return;
 
@@ -150,24 +190,39 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         navigator.geolocation.getCurrentPosition(handlePosition, () => {});
+        const lastRefresh = lastRefreshAtRef.current;
+        if (!lastRefresh || Date.now() - lastRefresh.getTime() > 30_000) {
+          if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current);
+          doRefreshRef.current?.();
+        }
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
+
+    // Start the departure refresh loop
+    const ferryLeg = journeyRef.current?.legs.find(l => l.mode === "water") as FerryLeg | undefined;
+    const initialMargin = ferryLeg?.selectedDeparture?.marginMinutes ?? null;
+    refreshTimerRef.current = setTimeout(() => doRefreshRef.current?.(), getRefreshIntervalMs(initialMargin));
 
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);
       clearInterval(staleTimer);
       document.removeEventListener("visibilitychange", handleVisibility);
+      if (refreshTimerRef.current !== null) clearTimeout(refreshTimerRef.current);
       watchIdRef.current = null;
     };
   }, [journeyLoaded, handlePosition]);
 
-  // Tear down GPS on unmount
+  // Tear down GPS and refresh timer on unmount
   useEffect(() => {
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
         watchIdRef.current = null;
+      }
+      if (refreshTimerRef.current !== null) {
+        clearTimeout(refreshTimerRef.current);
+        refreshTimerRef.current = null;
       }
     };
   }, []);
@@ -288,6 +343,8 @@ export default function Journey({ destination, onExit }: JourneyProps) {
             departures={firstFerryLeg.departures ?? []}
             selectedDeparture={firstFerryLeg.selectedDeparture ?? null}
             onViewFullJourney={handleViewFullJourney}
+            lastRefreshAt={lastRefreshAt}
+            isRefreshing={isRefreshing}
           />
         )}
         {journey && showFullJourney && (
@@ -306,6 +363,8 @@ export default function Journey({ destination, onExit }: JourneyProps) {
                 tripState={tripState}
                 stalePosition={stalePosition}
                 onRefreshPosition={refreshPosition}
+                lastRefreshAt={lastRefreshAt}
+                isRefreshing={isRefreshing}
               />
             </div>
             <div

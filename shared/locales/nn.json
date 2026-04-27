@@ -59,5 +59,6 @@
   "arrivedAt": "Du har ankomme {destination}.",
   "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",
   "nextDeparture": "Neste:",
-  "yourLocation": "Di plassering"
+  "yourLocation": "Di plassering",
+  "updatedAt": "Oppdatert {time}"
 }
