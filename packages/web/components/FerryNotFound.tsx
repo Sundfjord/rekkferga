@@ -34,7 +34,7 @@ export default function FerryNotFound() {
         className="text-sm text-center max-w-xs leading-relaxed"
         style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
       >
-        {t("noRouteDocks")}
+        {t("noRouteQuays")}
       </p>
     </div>
   );
