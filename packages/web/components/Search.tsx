@@ -60,6 +60,48 @@ const HeartIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
+const ResultRow = ({
+  r,
+  query,
+  onSelect,
+}: {
+  r: ResultItem;
+  query: string;
+  onSelect: (r: ResultItem) => void;
+}) => (
+  <div
+    onClick={() => onSelect(r)}
+    className="w-full hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
+  >
+    {r.type === "favorite" ? <HeartIcon filled /> : <LocationIcon />}
+    <div className="flex-1 min-w-0">
+      <div
+        className="text-base truncate"
+        style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+      >
+        <HighlightMatch text={r.name} query={query} />
+      </div>
+      {r.subName && (
+        <div
+          className="text-sm mt-0.5 truncate"
+          style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+        >
+          {r.subName}
+        </div>
+      )}
+    </div>
+  </div>
+);
+
+const SectionLabel = ({ label }: { label: string }) => (
+  <div
+    className="pt-4 text-xs font-semibold uppercase tracking-widest"
+    style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+  >
+    {label}
+  </div>
+);
+
 interface SearchProps {
   onSelect: (result: ResultItem) => void;
 }
@@ -80,11 +122,8 @@ const Search = forwardRef<SearchHandle, SearchProps>(
     clear: () => { setQuery(""); setSearchResults([]); },
   }));
 
-  // Compute filtered favorites based on query
   const filteredFavorites = query.trim()
-    ? favorites.filter((f) =>
-        f.name.toLowerCase().includes(query.trim().toLowerCase())
-      )
+    ? favorites.filter((f) => f.name.toLowerCase().includes(query.trim().toLowerCase()))
     : favorites;
   const allFavoriteIds = new Set(favorites.map((f) => f.id));
 
@@ -124,8 +163,10 @@ const Search = forwardRef<SearchHandle, SearchProps>(
     inputRef.current?.blur();
   };
 
-  // Derive visible results: filtered favorites first, then search results
-  const results = [...filteredFavorites, ...searchResults];
+  // Show favorites persistently on landing (no query). When typing, show results only when focused.
+  const showBody = !query.trim()
+    ? filteredFavorites.length > 0
+    : isFocused && (filteredFavorites.length > 0 || searchResults.length > 0);
 
   return (
     <ContentPanel>
@@ -155,49 +196,35 @@ const Search = forwardRef<SearchHandle, SearchProps>(
               <SearchIcon />
             )}
           </div>
-        </div>    
+        </div>
       </ContentPanel.Header>
-      {isFocused && results.length > 0 && (
+      {showBody && (
         <ContentPanel.Body>
           <div
             className="overflow-hidden z-20 w-full overflow-y-auto px-4"
             style={{ backgroundColor: "var(--surface)", boxShadow: "var(--shadow-elevated)" }}
           >
             <div className="flex flex-col flex-1 gap-4 pb-4">
-              {results.map((r, i) => (
-                <div
-                  key={`${r.id}-${i}`}
-                  onClick={() => handleSelect(r)}
-                  className="w-full hover:bg-[--surface-tint] cursor-pointer transition-colors flex items-center gap-3"
-                >
-                  {r.type === 'favorite' ? (
-                    <HeartIcon filled />
-                  ) : (
-                    <LocationIcon />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div
-                      className="text-base truncate"
-                      style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                    >
-                      <HighlightMatch text={r.name} query={query} />
-                    </div>
-                    {r.subName && (
-                      <div
-                        className="text-sm mt-0.5 truncate"
-                        style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
-                      >
-                        {r.subName}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
+              {filteredFavorites.length > 0 && (
+                <>
+                  <SectionLabel label={t("favorites")} />
+                  {filteredFavorites.map((r) => (
+                    <ResultRow key={r.id} r={r} query={query} onSelect={handleSelect} />
+                  ))}
+                </>
+              )}
+              {searchResults.length > 0 && (
+                <>
+                  {filteredFavorites.length > 0 && <SectionLabel label={t("search")} />}
+                  {searchResults.map((r) => (
+                    <ResultRow key={r.id} r={r} query={query} onSelect={handleSelect} />
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </ContentPanel.Body>
       )}
-      
     </ContentPanel>
   );
 });
