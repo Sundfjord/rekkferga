@@ -166,10 +166,17 @@ function FerryQuayStepContent({ step, t }: { step: Extract<TimelineStep, { kind:
         {step.departures.length > 0 ? (
           <div className="mt-2 flex flex-col items-start gap-2">
             {step.departures.map((departure, index) => (
-              <MarginBadge
-                key={`${departure.expectedDepartureTime}-${index}`}
-                departure={departure}
-              />
+              <div key={`${departure.expectedDepartureTime}-${index}`} className="flex flex-col gap-1 w-full">
+                <MarginBadge departure={departure} />
+                {departure.viaNames && departure.viaNames.length > 0 && (
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                  >
+                    {t("via")} {departure.viaNames.join(", ")}
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         ) : (

@@ -42,7 +42,7 @@ def get_departures_from_entur(quay, route=None, to_quay_id=None):
     else:
         start_time = format_datetime_for_api(None)
     departures = get_departures_from_nsr_id(quay["id"], start_time)
-    return process_departures(departures, route, to_quay_id)
+    return process_departures(departures, route, to_quay_id, from_quay_id=quay["id"])
 
 
 def get_departures_from_nsr_id(nsr_id, start_time=None):
@@ -242,7 +242,23 @@ def health_check():
     return result["data"]["__typename"] == "QueryType"
 
 
-def process_departures(departure_data, route=None, to_quay_id=None):
+def _extract_via_names(passing_times, from_quay_id, to_quay_id):
+    """Return stop names that fall strictly between from_quay_id and to_quay_id in passing_times."""
+    if not passing_times or not from_quay_id or not to_quay_id:
+        return []
+    get_id = lambda pt: (pt.get("quay") or {}).get("stopPlace", {}).get("id")
+    from_index = next((i for i, pt in enumerate(passing_times) if get_id(pt) == from_quay_id), -1)
+    to_index = next((i for i, pt in enumerate(passing_times) if get_id(pt) == to_quay_id), -1)
+    if from_index < 0 or to_index <= from_index:
+        return []
+    return [
+        (pt.get("quay") or {}).get("stopPlace", {}).get("name")
+        for pt in passing_times[from_index + 1:to_index]
+        if (pt.get("quay") or {}).get("stopPlace", {}).get("name")
+    ]
+
+
+def process_departures(departure_data, route=None, to_quay_id=None, from_quay_id=None):
     """
     Process EnTur departure data and return standardized departure objects.
 
@@ -300,6 +316,7 @@ def process_departures(departure_data, route=None, to_quay_id=None):
                 "expectedDepartureTime": dep_time,
                 "realtime": departure.get("realtime", False),
                 "marginMinutes": margin_minutes,
+                "viaNames": _extract_via_names(passing_times, from_quay_id, to_quay_id),
             })
             continue
 
@@ -327,6 +344,7 @@ def process_departures(departure_data, route=None, to_quay_id=None):
                 "expectedDepartureTime": dep_time,
                 "realtime": departure.get("realtime", False),
                 "marginMinutes": margin_minutes,
+                "viaNames": _extract_via_names(passing_times, from_quay_id, to_quay_id),
             }
         )
 

@@ -81,6 +81,7 @@ export interface DepartureOption {
   expectedDepartureTime: string;
   realtime: boolean;
   marginMinutes: number | null; // positive = buffer (will make it), negative = will miss; null = unavailable
+  viaNames?: string[]; // intermediate stops between fromQuay and toQuay for this specific departure
 }
 
 // ---------------------------------------------------------------------------

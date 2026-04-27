@@ -53,7 +53,17 @@ export default function QuayCard({
       <div className="flex gap-3">
         {displayDepartures.length > 0 ? (
           displayDepartures.map((dep, i) => (
-            <MarginBadge key={`${dep.expectedDepartureTime}-${i}`} departure={dep} className="flex-1 max-w-96" />
+            <div key={`${dep.expectedDepartureTime}-${i}`} className="flex flex-col gap-1 flex-1 max-w-96">
+              <MarginBadge departure={dep} />
+              {dep.viaNames && dep.viaNames.length > 0 && (
+                <span
+                  className="text-xs"
+                  style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans, 'DM Sans', sans-serif)" }}
+                >
+                  {t("via")} {dep.viaNames.join(", ")}
+                </span>
+              )}
+            </div>
           ))
         ) : (
           <div
