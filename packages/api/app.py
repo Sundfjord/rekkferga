@@ -50,9 +50,14 @@ def get_journey():
         journey_patterns = get_journey_with_ferries(from_coords, to_coords)
         if not journey_patterns:
             return cache([], 60)
-        journey_patterns.sort(key=lambda x: x["duration"])
         enriched = [enrich_journey(serialise_journey(p)) for p in journey_patterns]
         hydrated = [hydrate_destination_journey(j) for j in enriched]
+        # Sort after hydration so real-time ferry wait is included in the ranking.
+        # Prefer patterns with ferry legs (car-only patterns trigger FerryNotFound).
+        def _sort_key(j):
+            has_ferry = any(leg.get("mode") == "water" for leg in j.get("legs", []))
+            return (0 if has_ferry else 1, j.get("totalDurationSeconds", float("inf")))
+        hydrated.sort(key=_sort_key)
         return cache(hydrated, 300)
     except Exception:
         logger.exception("Error in get_journey")

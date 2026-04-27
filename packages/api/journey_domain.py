@@ -1,7 +1,10 @@
+import logging
 from datetime import datetime, timedelta
 from typing import Any
 
 from departures_domain import evaluate_ferry_departures
+
+logger = logging.getLogger(__name__)
 
 
 def _parse_iso(value: str | None) -> datetime | None:
@@ -48,7 +51,9 @@ def _recompute_canonical_totals(
         start_time_for_leg = _parse_iso(leg.get("expectedStartTime"))
         if start_time_for_leg and start_time_for_leg > cursor:
             wait_seconds += int((start_time_for_leg - cursor).total_seconds())
-        cursor = cursor + timedelta(seconds=duration)
+            cursor = start_time_for_leg + timedelta(seconds=duration)
+        else:
+            cursor = cursor + timedelta(seconds=duration)
 
     return travel_seconds, wait_seconds, travel_seconds + wait_seconds
 
@@ -109,9 +114,17 @@ def hydrate_destination_journey(journey: dict[str, Any]) -> dict[str, Any]:
             continue
 
         arrival_time_iso = _iso(cursor)
+        from_quay_id = leg.get("fromQuayId")
+        to_quay_id = leg.get("toQuayId")
+        if not from_quay_id or not to_quay_id:
+            logger.warning(
+                "Ferry leg missing quay IDs: fromQuayId=%s toQuayId=%s",
+                from_quay_id,
+                to_quay_id,
+            )
         ferry_data = evaluate_ferry_departures(
-            leg.get("fromQuayId"),
-            leg.get("toQuayId"),
+            from_quay_id,
+            to_quay_id,
             arrival_time_iso,
         )
         leg["departures"] = ferry_data["departures"]
