@@ -133,6 +133,16 @@ body {
   animation: pulse-subtle 2s ease-in-out infinite;
 }
 
+@keyframes ferry-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%       { transform: translateY(-5px) rotate(-3deg); }
+  75%       { transform: translateY(4px) rotate(3deg); }
+}
+
+@utility animate-ferry-bob {
+  animation: ferry-bob 3s ease-in-out infinite;
+}
+
 .leaflet-popup.journey-ferry-popup .leaflet-popup-content-wrapper {
   background: var(--surface);
   color: var(--text-primary);

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useId } from "react";
 import dynamic from "next/dynamic";
 import JourneyDetails from "@/components/JourneyDetails";
 import QuayCard from "@/components/QuayCard";
+import FerryNotFound from "@/components/FerryNotFound";
 import JourneySkeleton from "@/components/JourneySkeleton";
 import ContentPanel from "@/components/ContentPanel";
 import type { JourneyResult, TripState, ResultItem, FerryLeg } from "@shared/types";
@@ -278,6 +279,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
             {error}
           </div>
         )}
+        {journey && !firstFerryLeg && <FerryNotFound />}
         {journey && showQuayCard && firstFerryLeg && (
           <QuayCard
             driveDuration={firstCarLeg?.duration ?? 0}
