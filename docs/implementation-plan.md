@@ -171,7 +171,7 @@ _Complete. Component restructure:_
 - `JourneyDetails.tsx` — renamed from `TripPanel`. Margin-centric layout with `MarginBadge` as section divider. Tight margins show next departure ("Next: HH:MM").
 - `JourneyMap.tsx` — thin wrapper for dynamic Map import (no SSR).
 
-#### 6b-R2 — JourneyDetails Timeline Redesign (next)
+#### 6b-R2 — JourneyDetails Timeline Redesign ✓
 
 _Inspired by travel itinerary timeline UI (see screenshot reference in plan file)._
 
@@ -218,6 +218,18 @@ _Inspired by travel itinerary timeline UI (see screenshot reference in plan file
 
 **Keep unchanged:** `MarginBadge`, arrival footer, stale-position banner, arrived state, next-departure logic.
 
+#### 6b-R4 — QuayCard Primary View ✓ (in progress)
+
+_Direction change: QuayCard is now the primary result view. Full journey toggled on demand._
+
+- `QuayCard.tsx` — new component; shows quay route, drive duration, margin badge(s), "View full journey" button. ✓
+- `FerryNotFound.tsx` — fallback component shown when journey has no ferry leg; bobbing ferry animation. ✓
+- `Journey.tsx` — wired to show QuayCard by default; toggles to full journey (JourneyDetails + map) on button press. ✓
+- `JourneyDetails.tsx` — wait duration added as a distinct timeline step, derived from `selectedDeparture.marginMinutes`. ✓
+- `selectedDeparture` bug fix — `updateJourneyDepartures` now also recomputes `selectedDeparture` via `nextReachable` on each GPS refresh, keeping wait step in sync with badges. ✓
+
+> ⚠ **Revisit post-release:** `QuayCard` and `FerryNotFound` are functional but provisional. Both need a proper design pass — layout, copy, and edge-case handling — once the app is in users' hands and real usage patterns are known.
+
 #### 6b-R3 — Auto-Refresh & Staleness Indicator
 
 _See design brief R2.4. Not started._
@@ -247,7 +259,32 @@ Phase 5 — Routing API              ✓ complete
 Phase 3 — Trip View Page           ✓ complete
 Phase 4 — Recents & Favorites      ✓ complete
 Phase 6a — Design Research         ✓ complete (see docs/design-brief.md)
-Phase 6b-R1 — Search & Layout      ✓ complete (uncommitted)
-Phase 6b-R2 — Timeline Redesign    ← next
-Phase 6b-R3 — Auto-Refresh         (after R2)
+Phase 6b-R1 — Search & Layout      ✓ complete
+Phase 6b-R2 — Timeline Redesign    ✓ complete
+Phase 6b-R4 — QuayCard Primary View  ← in progress
+
+--- Stabilise before continuing ---
+
+Localise QuayCard
+Margin badge consistency (QuayCard / JourneyDetails / JourneyMap)
+Ferry not found component
+Quality check tripPatterns (pattern selection, overnight wait bug, missing ferry legs)
+6b-R3 — Auto-Refresh & Staleness Indicator
+Favorites on landing page
+Adaptive GPS refresh rate
+Trip state machine testing
+
+--- Release API + Web to production before continuing with app ---
+
+App parity (QuayCard primary view + all web changes)
+Street number search
+Driving time delays (HERE investigation)
+Accessibility QA
+Footer animation
+Discovery: Realtime ferry tracking
+
+--- Post-release revisits ---
+
+QuayCard design pass (layout, copy, edge cases informed by real usage)
+FerryNotFound design pass (copy, animation, consider adding a "view route anyway" option)
 ```
