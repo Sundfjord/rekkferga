@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import type { JourneyResult, FerryLeg, DepartureOption } from "@shared/types";
+import type { DepartureRefresh } from "@shared/services/journey";
 
 interface SimulatorConfig {
   journey: JourneyResult | null;
   injectPosition: (lat: number, lng: number) => void;
-  updateJourneyDepartures: (legIndex: number, departures: DepartureOption[]) => void;
+  updateJourneyDepartures: (legIndex: number, refresh: DepartureRefresh) => void;
   journeyRef: { current: JourneyResult | null };
   currentLegIndexRef: { current: number };
   userLocationRef: { current: [number, number] | null };
@@ -67,7 +68,7 @@ export function useTripSimulator(config: SimulatorConfig): void {
             ...d,
             expectedDepartureTime: new Date(Date.now() - 60_000).toISOString(),
           }));
-          updateJourneyDepartures(idx, patched);
+          updateJourneyDepartures(idx, { departures: patched, selectedDeparture: patched[0] ?? null });
           const pos = userLocationRef.current;
           if (pos) injectPosition(pos[0], pos[1]);
           console.log(`[sim] Ferry leg ${idx} departure patched to 1 min ago → should transition to crossing.`);

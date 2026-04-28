@@ -104,7 +104,10 @@ def _prune_journey_for_client(journey: dict[str, Any]) -> dict[str, Any]:
 
 def hydrate_destination_journey(journey: dict[str, Any]) -> dict[str, Any]:
     legs = journey.get("legs", [])
-    start_time = _parse_iso(journey.get("expectedStartTime")) or datetime.now().astimezone()
+    # Use now as the cursor start. EnTur's expectedStartTime is its planned optimal
+    # departure time (which may be later than the actual request time), so using it
+    # inflates the computed quay arrival and can cause the wrong ferry to be selected.
+    start_time = datetime.now().astimezone()
     cursor = start_time
 
     for leg in legs:

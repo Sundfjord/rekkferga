@@ -1,7 +1,7 @@
 "use client";
 
 import type { JourneyResult, FerryLeg, DepartureOption, ResultItem, TripState, JourneyLeg } from "@shared/types";
-import { formatTime, formatDuration, selectDeparturesForDisplay } from "@shared/utils";
+import { formatTime, formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import MarginBadge from "@/components/MarginBadge";
 
@@ -297,7 +297,7 @@ function buildTimelineSteps(legs: JourneyLeg[], destinationName: string, t: (key
     }
 
     const ferryLeg = leg as FerryLeg;
-    const departures = selectDeparturesForDisplay(ferryLeg.departures);
+    const departures = ferryLeg.departures ?? [];
 
     steps.push({
       kind: "ferryQuay",
@@ -343,6 +343,8 @@ export default function JourneyDetails({
     .filter((index) => index >= 0);
   const firstLocationStepIndex = locationStepIndices[0];
   const destinationStepIndex = timelineSteps.length - 1;
+
+  const totalDuration = journey.totalDurationSeconds ?? journey.duration;
 
   return (
     <div className="flex flex-col h-full w-full overflow-hidden">
@@ -401,7 +403,7 @@ export default function JourneyDetails({
               className="text-sm"
               style={{ fontFamily: "var(--font-jetbrains-mono, 'JetBrains Mono', monospace)" }}
             >
-              {formatDuration(journey.duration)}
+              {formatDuration(totalDuration)}
             </span>
           </div>
         </div>

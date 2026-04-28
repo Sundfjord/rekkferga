@@ -30,16 +30,24 @@ export async function fetchJourney(apiUrl: string, fromLat: number, fromLng: num
   return res.json();
 }
 
-export async function fetchDeparturesForLeg(apiUrl: string, ferryLeg: FerryLeg, arrivalTime: string): Promise<DepartureOption[]> {
-  if (!ferryLeg.fromQuayId || !ferryLeg.toQuayId) return [];
+export interface DepartureRefresh {
+  departures: DepartureOption[];
+  selectedDeparture: DepartureOption | null;
+}
+
+export async function fetchDeparturesForLeg(apiUrl: string, ferryLeg: FerryLeg, arrivalTime: string): Promise<DepartureRefresh> {
+  if (!ferryLeg.fromQuayId || !ferryLeg.toQuayId) return { departures: [], selectedDeparture: null };
   try {
     const res = await fetch(
       `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&toQuayId=${ferryLeg.toQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}&mode=refresh`
     );
-    if (!res.ok) return [];
-    const data: DepartureOption[] = await res.json();
-    return Array.isArray(data) ? data : [];
+    if (!res.ok) return { departures: [], selectedDeparture: null };
+    const data = await res.json();
+    return {
+      departures: Array.isArray(data.departures) ? data.departures : [],
+      selectedDeparture: data.selectedDeparture ?? null,
+    };
   } catch {
-    return [];
+    return { departures: [], selectedDeparture: null };
   }
 }

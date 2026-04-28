@@ -64,27 +64,8 @@ export const QUAY_PROXIMITY_KM = 0.2;
 export const DESTINATION_PROXIMITY_KM = 0.2;
 export const STALE_THRESHOLD_MS = 5 * 60 * 1000;
 
-export function nextReachable(deps: DepartureOption[] | undefined): DepartureOption | undefined {
-  if (!deps?.length) return undefined;
-  return deps.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? deps[0];
-}
-
 export function departureIsRealtime(dep: DepartureOption | undefined): boolean {
   return dep?.realtime === true;
-}
-
-export function selectDeparturesForDisplay(deps: DepartureOption[] | undefined): DepartureOption[] {
-  if (!deps?.length) return [];
-
-  const departuresWithMargin = deps.filter((d) => d.marginMinutes !== null);
-  if (!departuresWithMargin.length) return [];
-
-  const firstReachable = departuresWithMargin.find((d) => (d.marginMinutes ?? -1) >= 0);
-  if (firstReachable && (firstReachable.marginMinutes ?? -1) >= 10) {
-    return [firstReachable];
-  }
-
-  return departuresWithMargin.slice(0, 2);
 }
 
 export function marginTier(minutes: number): "safe" | "tight" | "missed" {

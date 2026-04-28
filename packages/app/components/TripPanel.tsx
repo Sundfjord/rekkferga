@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { JourneyResult, FerryLeg, SearchResult, TripState } from "@shared/types";
-import { formatTime, formatDuration, nextReachable } from "@shared/utils";
+import { formatTime, formatDuration } from "@shared/utils";
 import MarginBadge from "./MarginBadge";
 import { useThemeColors } from "../contexts/ThemeContext";
 import { useFavorites } from "../contexts/FavoritesContext";
@@ -98,7 +98,7 @@ export default function TripPanel({
 
               if (leg.mode === "water") {
                 const ferryLeg = leg as FerryLeg;
-                const dep = nextReachable(ferryLeg.departures);
+                const dep = ferryLeg.selectedDeparture ?? ferryLeg.departures?.[0];
                 return (
                   <View
                     key={legGlobalIndex}

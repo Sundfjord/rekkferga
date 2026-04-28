@@ -139,7 +139,7 @@ export default function Header() {
         src="/logo-revised.png"
         alt="Rekkferga"
         width={125}
-        height={100}
+        height={73}
         priority
         className="object-contain"
       />

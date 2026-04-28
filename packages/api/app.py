@@ -83,8 +83,7 @@ def get_quay_departures():
 
     try:
         if mode == "refresh":
-            patch = evaluate_ferry_departures(quay_id, to_quay_id, arrival_time or "")
-            return patch["departures"]
+            return evaluate_ferry_departures(quay_id, to_quay_id, arrival_time or "")
 
         departures = get_departures_from_entur(quay, route, to_quay_id)
         return departures

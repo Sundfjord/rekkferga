@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { JourneyResult, CarLeg, FerryLeg, DepartureOption } from "@shared/types";
-import { formatMarginLabel, formatTime, marginTier, selectDeparturesForDisplay } from "@shared/utils";
+import { formatMarginLabel, formatTime, marginTier } from "@shared/utils";
 import { createQuayWaypointMarker, createUserMarker, createDestinationMarker } from "./MapElements";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -73,7 +73,7 @@ function buildDeparturePopupContent(
   title.style.marginBottom = "4px";
   container.appendChild(title);
 
-  const selectedDepartures = selectDeparturesForDisplay(departures);
+  const selectedDepartures = departures;
   if (!selectedDepartures.length) {
     const unavailable = document.createElement("div");
     unavailable.textContent = labels.unavailable;

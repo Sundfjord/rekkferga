@@ -1,7 +1,7 @@
 import type { JourneyResult, FerryLeg, CarLeg, DepartureOption } from '../types';
 import type { TripState } from '../types';
 import { calculateDistance, QUAY_PROXIMITY_KM, DESTINATION_PROXIMITY_KM } from '../utils';
-import { estimateRemainingSeconds, fetchDeparturesForLeg } from './journey';
+import { estimateRemainingSeconds, fetchDeparturesForLeg, type DepartureRefresh } from './journey';
 
 export interface TripStateRefs {
   journey: JourneyResult | null;
@@ -13,7 +13,7 @@ export interface TripStateCallbacks {
   setTripState: (state: TripState) => void;
   setCurrentLegIndex: (index: number) => void;
   addCompletedLeg: (index: number) => void;
-  updateJourneyDepartures: (legIndex: number, departures: DepartureOption[]) => void;
+  updateJourneyDepartures: (legIndex: number, refresh: DepartureRefresh) => void;
 }
 
 export function processPosition(
@@ -110,7 +110,7 @@ export async function refreshDepartures(
   currentJourney: JourneyResult,
   legIndex: number,
   remainingMs: number,
-  updateJourneyDepartures: (legIndex: number, departures: DepartureOption[]) => void,
+  updateJourneyDepartures: (legIndex: number, refresh: DepartureRefresh) => void,
 ): Promise<void> {
   const legs = currentJourney.legs;
   for (let i = legIndex; i < legs.length; i++) {
@@ -118,8 +118,8 @@ export async function refreshDepartures(
     const ferryLeg = legs[i] as FerryLeg;
     if (!ferryLeg.fromQuayId) continue;
     const arrivalTime = new Date(Date.now() + remainingMs).toISOString();
-    const departures = await fetchDeparturesForLeg(apiUrl, ferryLeg, arrivalTime);
-    updateJourneyDepartures(i, departures);
+    const refresh = await fetchDeparturesForLeg(apiUrl, ferryLeg, arrivalTime);
+    updateJourneyDepartures(i, refresh);
     break;
   }
 }

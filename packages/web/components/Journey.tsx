@@ -8,7 +8,7 @@ import FerryNotFound from "@/components/FerryNotFound";
 import JourneySkeleton from "@/components/JourneySkeleton";
 import ContentPanel from "@/components/ContentPanel";
 import type { JourneyResult, TripState, ResultItem, FerryLeg } from "@shared/types";
-import { STALE_THRESHOLD_MS, nextReachable } from "@shared/utils";
+import { STALE_THRESHOLD_MS } from "@shared/utils";
 import { fetchJourney } from "@shared/services/journey";
 import {
   processPosition as processPositionShared,
@@ -78,12 +78,12 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     setTripState: (state) => { setTripState(state); tripStateRef.current = state; },
     setCurrentLegIndex: (index) => { setCurrentLegIndex(index); currentLegIndexRef.current = index; },
     addCompletedLeg: (index) => setCompletedLegs((prev) => new Set([...prev, index])),
-    updateJourneyDepartures: (legIdx, departures) =>
+    updateJourneyDepartures: (legIdx, { departures, selectedDeparture }) =>
       setJourney((prev) => {
         if (!prev) return prev;
         const newLegs = prev.legs.map((leg, idx) =>
           idx === legIdx
-            ? { ...leg, departures, selectedDeparture: nextReachable(departures) }
+            ? { ...leg, departures, selectedDeparture: selectedDeparture ?? leg.selectedDeparture }
             : leg
         );
         return { ...prev, legs: newLegs };
@@ -95,17 +95,12 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     const currentJourney = journeyRef.current;
     if (!currentJourney || !API_URL) return;
 
-    // Compute remaining drive time: use the GPS-based estimate from last fix, decayed
-    // by elapsed time. Falls back to the full car leg duration if no fix has arrived yet.
-    const lastRemaining = lastRemainingMsAtFixRef.current;
-    let remainingMs: number;
-    if (lastRemaining !== null) {
-      remainingMs = Math.max(0, lastRemaining - (Date.now() - lastPositionTimeRef.current));
-    } else {
-      remainingMs = currentJourney.legs
-        .filter((l) => l.mode === "car")
-        .reduce((s, l) => s + l.duration * 1000, 0);
-    }
+    // remainingMs is the GPS-based remaining drive time from the last position fix.
+    // We do NOT subtract elapsed time here — that would make arrivalTime a constant
+    // (Date.now() cancels out). Instead, arrivalTime = now + remainingMs, which
+    // correctly increases when stationary and stays roughly constant when moving.
+    const remainingMs = lastRemainingMsAtFixRef.current ??
+      currentJourney.legs.filter((l) => l.mode === "car").reduce((s, l) => s + l.duration * 1000, 0);
 
     setIsRefreshing(true);
     try {
@@ -244,9 +239,7 @@ export default function Journey({ destination, onExit }: JourneyProps) {
     };
     document.addEventListener("visibilitychange", handleVisibility);
 
-    const ferryLeg = journeyRef.current?.legs.find(l => l.mode === "water") as FerryLeg | undefined;
-    const initialMargin = ferryLeg?.selectedDeparture?.marginMinutes ?? null;
-    refreshTimerRef.current = setTimeout(() => doRefreshRef.current?.(), getRefreshIntervalMs(initialMargin));
+    doRefreshRef.current?.();
 
     return () => {
       if (watchIdRef.current !== null) navigator.geolocation.clearWatch(watchIdRef.current);

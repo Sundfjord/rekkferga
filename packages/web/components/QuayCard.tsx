@@ -1,7 +1,7 @@
 "use client";
 
 import type { DepartureOption } from "@shared/types";
-import { formatDuration, selectDeparturesForDisplay } from "@shared/utils";
+import { formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import MarginBadge from "@/components/MarginBadge";
 
@@ -26,7 +26,7 @@ export default function QuayCard({
   isRefreshing = false,
 }: QuayCardProps) {
   const t = useTranslation();
-  const displayDepartures = selectDeparturesForDisplay(departures);
+  const displayDepartures = departures;
 
   return (
     <div className="flex flex-col w-full h-full p-5 gap-6">
