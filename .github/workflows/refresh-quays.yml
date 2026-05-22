@@ -1,0 +1,44 @@
+name: Refresh ferry-quay snapshot
+
+# Re-fetches the static quay dataset from Vegvesen NVDB and opens a PR if it changed.
+# New/changed quays are rare, so a monthly cadence is plenty. Run manually anytime via
+# the "Run workflow" button. The committed snapshot is the source of truth; this job only
+# proposes updates as a reviewable diff.
+
+on:
+  schedule:
+    - cron: "0 4 1 * *" # 04:00 UTC on the 1st of each month
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Refresh quay snapshot
+        run: python packages/api/scripts/refresh_quays.py
+
+      - name: Open PR if snapshot changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          add-paths: packages/api/data/quays.json
+          branch: chore/refresh-quays
+          commit-message: "chore(quays): refresh ferry-quay snapshot from Vegvesen"
+          title: "chore(quays): refresh ferry-quay snapshot"
+          body: |
+            Automated refresh of `packages/api/data/quays.json` from
+            `ferry.atlas.vegvesen.no/quays`. Review the diff for added/removed quays
+            or changed coordinates before merging.

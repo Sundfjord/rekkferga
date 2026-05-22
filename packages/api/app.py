@@ -13,6 +13,7 @@ from here_routing import enrich_journey
 from journey_domain import hydrate_destination_journey
 from departures_domain import evaluate_ferry_departures
 from nominatim import get_locations_nominatim
+from quays import get_all_quays
 
 load_dotenv()
 
@@ -36,6 +37,12 @@ def health():
     except Exception:
         logger.exception("Health check failed")
         return {"status": "degraded"}, 503
+
+
+@app.get("/quays")
+def get_quays():
+    # Static dataset loaded from the committed Vegvesen snapshot; long cache.
+    return cache(get_all_quays(), 86400)
 
 
 @app.get("/journey")

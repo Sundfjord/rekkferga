@@ -1,6 +1,42 @@
 # Rekkferga — Implementation Plan
 
-_Last updated: 2026-04-24_
+_Last updated: 2026-05-22_
+
+---
+
+## ⚓ ACTIVE: Quay-Centric Pivot (web first)
+
+Per `docs/reflections.md`, the app is reverting from destination-centric to a
+**quay-centric** model (full-page map + search overlay + margin panel), with light
+destination capability. Full plan: `~/.claude/plans/given-the-reasons-outlined-dapper-fog.md`.
+Branch: `feat/quay-centric-web`. Everything below the "Product Direction" heading describes
+the **superseded** destination-centric build and is being dismantled (Phase 6).
+
+**Key fact:** `ferry.atlas.vegvesen.no/quays` (header `X-System-ID: <any>`, 366 quays) uses
+the EnTur NSR id as each quay's `id`, and exposes `relatedQuayIds` for destination quays — no
+ID mapping needed.
+
+### Phase progress
+- [x] **Phase 1 — Quay data layer.** `scripts/refresh_quays.py`, committed `data/quays.json`
+  (366), `quays.py` loader (projection + county subName + `relatedQuayIds`/`quay_name`
+  helpers), `GET /quays` (cached 24h), `.github/workflows/refresh-quays.yml` (monthly PR).
+- [ ] **Phase 2 — API quay flow.** `GET /quay/route` (single car leg via HERE),
+  `GET /quay/departures` multi-destination (toQuayId optional, label by destination via
+  `relatedQuayIds`), simplify `/journey` to first-ferry-quay extraction.
+- [ ] **Phase 3 — Web map-first shell.** `page.tsx` map host, `MapView` (rework JourneyMap)
+  with all quay pins, `useQuays` hook.
+- [ ] **Phase 4 — Search overlay.** Quay|Destination toggle; client-side quay filter.
+- [ ] **Phase 5 — Margin panel.** select → route → departures → margin badges + auto-refresh.
+- [ ] **Phase 6 — Delete legacy + docs.** Remove destination-centric machinery, update
+  CLAUDE.md (drop Cosmos DB + Azure cron), shared type cleanup.
+- [ ] **Phase 7 — Mobile.** Out of scope until web is accepted.
+
+### Resume protocol
+On a fresh session: `git log`/`git status`, read this section, run the last completed phase's
+verification, then continue. Each phase is one commit; deletions (Phase 6) come last so no
+intermediate state is broken.
+
+---
 
 ## Product Direction
 
