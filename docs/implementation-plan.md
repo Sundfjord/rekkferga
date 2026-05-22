@@ -47,8 +47,24 @@ ID mapping needed.
   `fetchQuayDepartures` with live arrival estimate (`getRefreshIntervalMs` margin-adaptive).
   Search overlay hides while a quay is selected (R2.1 behaviour). tsc-clean. **Needs runtime
   verification in a browser (map pins, select → route+panel, auto-refresh).**
-- [ ] **Phase 6 — Delete legacy + docs.** Remove destination-centric machinery, update
-  CLAUDE.md (drop Cosmos DB + Azure cron), shared type cleanup.
+- [x] **Phase 6 — Delete legacy + docs.** Deleted web-local legacy (Search, Journey,
+  JourneyDetails, JourneyMap, JourneySkeleton, QuayCard, FerryNotFound, ContentPanel, Error,
+  Loading, useTripSimulator) + `journey_domain.py`. Simplified `/journey` to ferry-quay
+  extraction (no HERE enrich / hydration). Updated `CLAUDE.md` (no Cosmos DB; quay refresh =
+  GitHub Actions). Fixed a pre-existing `ThemeProvider` `any` so `next build` is green
+  (compiles + 5/5 static pages). **Kept** `shared/services/{tripStateMachine,journey}.ts` and
+  the multi-leg journey types — `packages/app` (mobile) still imports them; their removal is
+  deferred to the mobile phase to avoid breaking mobile.
+- [ ] **Phase 7 — Mobile.** Out of scope until web is accepted. When started: rework
+  `packages/app/app/index.tsx` to the quay-centric flow, then retire the shared trip-state
+  machinery + multi-leg types.
+
+### Outstanding before "accepted"
+- **Browser-interaction verification** of the web flow (pins render, select → route + panel +
+  margins, auto-refresh, destination→first-quay). API + build + route-compile are verified;
+  live in-browser clicking is not yet done.
+- Note: `packages/web/.env.local` points `NEXT_PUBLIC_API_URL` at a Tailscale IP — use
+  localhost for local manual testing.
 - [ ] **Phase 7 — Mobile.** Out of scope until web is accepted.
 
 ### Resume protocol

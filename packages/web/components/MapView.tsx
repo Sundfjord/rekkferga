@@ -60,7 +60,6 @@ export default function MapView({
       tileLayerRef.current = null;
       pinsLayerRef.current = null;
       overlayLayerRef.current = null;
-      markersByIdRef.current.clear();
       userMarkerRef.current = null;
     };
   }, []);

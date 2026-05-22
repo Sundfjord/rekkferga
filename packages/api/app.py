@@ -9,8 +9,7 @@ from journey_planner import (
     serialise_journey,
     health_check,
 )
-from here_routing import enrich_journey, get_car_route
-from journey_domain import hydrate_destination_journey
+from here_routing import get_car_route
 from departures_domain import evaluate_ferry_departures, evaluate_quay_departures
 from nominatim import get_locations_nominatim
 from quays import get_all_quays, get_quay
@@ -54,18 +53,20 @@ def get_journey():
         return {"error": "from and to coordinates are required"}, 400
 
     try:
+        # Quay-centric: /journey now only locates the first ferry quay for destination
+        # search, so we skip HERE enrichment and the destination-centric hydration.
         journey_patterns = get_journey_with_ferries(from_coords, to_coords)
         if not journey_patterns:
             return cache([], 60)
-        enriched = [enrich_journey(serialise_journey(p)) for p in journey_patterns]
-        hydrated = [hydrate_destination_journey(j) for j in enriched]
-        # Sort after hydration so real-time ferry wait is included in the ranking.
-        # Prefer patterns with ferry legs (car-only patterns trigger FerryNotFound).
+        serialised = [serialise_journey(p) for p in journey_patterns]
+
+        # Prefer patterns that contain a ferry leg, then shorter total duration.
         def _sort_key(j):
             has_ferry = any(leg.get("mode") == "water" for leg in j.get("legs", []))
             return (0 if has_ferry else 1, j.get("totalDurationSeconds", float("inf")))
-        hydrated.sort(key=_sort_key)
-        return cache(hydrated, 300)
+
+        serialised.sort(key=_sort_key)
+        return cache(serialised, 300)
     except Exception:
         logger.exception("Error in get_journey")
         return {"error": "Internal server error"}, 500
