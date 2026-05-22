@@ -1,21 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import Search from "@/components/Search";
-import Journey from "@/components/Journey";
-import type { ResultItem } from "@shared/types";
+import { useState, useEffect, useCallback } from "react";
+import dynamic from "next/dynamic";
+import { useQuays } from "@/hooks/useQuays";
+import type { Quay } from "@shared/types";
+
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function Home() {
-  const [destination, setDestination] = useState<ResultItem | null>(null);
+  const { quays } = useQuays();
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [selectedQuay, setSelectedQuay] = useState<Quay | null>(null);
+  const [fitBoundsSignal, setFitBoundsSignal] = useState(0);
 
-  if (destination) {
-    return (
-      <Journey
-        destination={destination}
-        onExit={() => setDestination(null)}
-      />
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (p) => setUserLocation([p.coords.latitude, p.coords.longitude]),
+      () => {},
+      { enableHighAccuracy: true, timeout: 10000 },
     );
-  }
+  }, []);
 
-  return <Search onSelect={setDestination} />;
+  const handleSelectQuay = useCallback((quay: Quay) => {
+    setSelectedQuay(quay);
+    setFitBoundsSignal((s) => s + 1);
+  }, []);
+
+  return (
+    <div className="absolute inset-0">
+      <MapView
+        quays={quays}
+        userLocation={userLocation}
+        selectedQuay={selectedQuay}
+        route={null}
+        onSelectQuay={handleSelectQuay}
+        fitBoundsSignal={fitBoundsSignal}
+      />
+    </div>
+  );
 }

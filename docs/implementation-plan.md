@@ -28,8 +28,14 @@ ID mapping needed.
   already exposes ferry legs with `fromQuayId`, so destination search reuses it as-is;
   destination-centric hydration is removed in Phase 6, keeping the old flow working meanwhile).
   Verified: Anda margins/selection/naming correct; route returns 244-pt geometry.
-- [ ] **Phase 3 — Web map-first shell.** `page.tsx` map host, `MapView` (rework JourneyMap)
-  with all quay pins, `useQuays` hook.
+- [x] **Phase 3 — Web map-first shell.** Shared `Quay`/`QuayRoute`/`QuayDepartures` types +
+  `DepartureOption.destination*`; `shared/services/quay.ts` (fetchQuays/Route/Departures);
+  `useQuays` hook (localStorage-cached); new `MapView.tsx` (full-page Leaflet, 366 clickable
+  pins via `createQuayPinMarker`, user marker, selection highlight, route + dashed crossing
+  lines, fitBounds — route parts no-op until Phase 5); `page.tsx` repointed to the map;
+  `layout.tsx` column made full-width. New code is tsc-clean. **Known: a pre-existing tsc
+  error in legacy `Journey.tsx:86` (`leg.selectedDeparture` on the leg union) remains; it is
+  deleted in Phase 6, which greens `next build`.** Search overlay = Phase 4, panel = Phase 5.
 - [ ] **Phase 4 — Search overlay.** Quay|Destination toggle; client-side quay filter.
 - [ ] **Phase 5 — Margin panel.** select → route → departures → margin badges + auto-refresh.
 - [ ] **Phase 6 — Delete legacy + docs.** Remove destination-centric machinery, update

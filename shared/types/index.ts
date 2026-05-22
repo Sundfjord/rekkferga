@@ -29,6 +29,25 @@ export interface SearchResult {
 export type ResultItem = SearchResult | SavedDestination;
 
 // ---------------------------------------------------------------------------
+// Quays (quay-centric model)
+// ---------------------------------------------------------------------------
+
+export interface Quay {
+  id: string; // EnTur NSR stop-place id
+  name: string;
+  latitude: number;
+  longitude: number;
+  relatedQuayIds: string[]; // NSR ids of connected (destination) quays
+  subName?: string;
+}
+
+export interface QuayRoute {
+  durationSeconds: number;
+  geometry: [number, number][]; // road-snapped [[lat, lng], ...]
+  quay: Quay;
+}
+
+// ---------------------------------------------------------------------------
 // Journey & legs
 // ---------------------------------------------------------------------------
 
@@ -82,6 +101,13 @@ export interface DepartureOption {
   realtime: boolean;
   marginMinutes: number | null; // positive = buffer (will make it), negative = will miss; null = unavailable
   viaNames?: string[]; // intermediate stops between fromQuay and toQuay for this specific departure
+  destinationQuayId?: string; // quay-centric: the destination quay this departure serves
+  destinationName?: string;
+}
+
+export interface QuayDepartures {
+  departures: DepartureOption[];
+  selectedDeparture: DepartureOption | null;
 }
 
 // ---------------------------------------------------------------------------

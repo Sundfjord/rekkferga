@@ -49,12 +49,11 @@ export default function RootLayout({
           <ThemeWrapper>
             <LanguageProvider>
             <FavoritesProvider>
-              {/* Full-viewport background */}
+              {/* Full-viewport background; full-width column for the map-first layout */}
               <div className="h-screen bg-background flex justify-center">
-                {/* Constrained column — app-like on desktop, full-width on mobile */}
-                <div className="container flex flex-col h-full">
+                <div className="w-full flex flex-col h-full">
                   <Header />
-                  <main className="flex-1 overflow-hidden">{children}</main>
+                  <main className="flex-1 overflow-hidden relative">{children}</main>
                 </div>
               </div>
             </FavoritesProvider>
