@@ -3,9 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useQuays } from "@/hooks/useQuays";
-import type { Quay } from "@shared/types";
+import SearchOverlay from "@/components/SearchOverlay";
+import type { Quay, ResultItem, FerryLeg } from "@shared/types";
+import { fetchJourney } from "@shared/services/journey";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Home() {
   const { quays } = useQuays();
@@ -27,6 +31,29 @@ export default function Home() {
     setFitBoundsSignal((s) => s + 1);
   }, []);
 
+  // Destination search: resolve to the FIRST ferry quay on the route, then behave as a
+  // quay selection. (Deliberately shallow — see plan / reflections.)
+  const handleSelectDestination = useCallback(
+    async (result: ResultItem) => {
+      if (!API_URL || !userLocation) return;
+      const journeys = await fetchJourney(
+        API_URL,
+        userLocation[0],
+        userLocation[1],
+        result.latitude,
+        result.longitude,
+      );
+      const firstFerry = journeys[0]?.legs.find(
+        (l): l is FerryLeg => l.mode === "water",
+      );
+      const quay = firstFerry?.fromQuayId
+        ? quays.find((q) => q.id === firstFerry.fromQuayId)
+        : undefined;
+      if (quay) handleSelectQuay(quay);
+    },
+    [userLocation, quays, handleSelectQuay],
+  );
+
   return (
     <div className="absolute inset-0">
       <MapView
@@ -36,6 +63,11 @@ export default function Home() {
         route={null}
         onSelectQuay={handleSelectQuay}
         fitBoundsSignal={fitBoundsSignal}
+      />
+      <SearchOverlay
+        quays={quays}
+        onSelectQuay={handleSelectQuay}
+        onSelectDestination={handleSelectDestination}
       />
     </div>
   );

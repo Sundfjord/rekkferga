@@ -7,6 +7,7 @@
   "theme": "Theme",
   "search": "Search",
   "searchPlaceholder": "Where are you going today?",
+  "searchQuayPlaceholder": "Search for a ferry quay",
   "searchTagline": "Where to?",
   "destination": "Destination",
   "device": "Device",

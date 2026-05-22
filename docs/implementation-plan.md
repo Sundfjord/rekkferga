@@ -36,7 +36,11 @@ ID mapping needed.
   `layout.tsx` column made full-width. New code is tsc-clean. **Known: a pre-existing tsc
   error in legacy `Journey.tsx:86` (`leg.selectedDeparture` on the leg union) remains; it is
   deleted in Phase 6, which greens `next build`.** Search overlay = Phase 4, panel = Phase 5.
-- [ ] **Phase 4 — Search overlay.** Quay|Destination toggle; client-side quay filter.
+- [x] **Phase 4 — Search overlay.** `SearchOverlay.tsx` floating top-left card with a
+  Quay|Destination segmented toggle. Quay mode filters the in-memory quay list instantly +
+  shows favorited quays when empty; Destination mode debounces `/search` (Nominatim).
+  `page.tsx` wires `onSelectDestination` to resolve the first ferry quay via `/journey`
+  (reused) then select it. New locale key `searchQuayPlaceholder` (no/en/nn). tsc-clean.
 - [ ] **Phase 5 — Margin panel.** select → route → departures → margin badges + auto-refresh.
 - [ ] **Phase 6 — Delete legacy + docs.** Remove destination-centric machinery, update
   CLAUDE.md (drop Cosmos DB + Azure cron), shared type cleanup.
