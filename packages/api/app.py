@@ -9,11 +9,11 @@ from journey_planner import (
     serialise_journey,
     health_check,
 )
-from here_routing import enrich_journey
+from here_routing import enrich_journey, get_car_route
 from journey_domain import hydrate_destination_journey
-from departures_domain import evaluate_ferry_departures
+from departures_domain import evaluate_ferry_departures, evaluate_quay_departures
 from nominatim import get_locations_nominatim
-from quays import get_all_quays
+from quays import get_all_quays, get_quay
 
 load_dotenv()
 
@@ -71,6 +71,44 @@ def get_journey():
         return {"error": "Internal server error"}, 500
 
 
+@app.get("/quay/route")
+def get_quay_route():
+    """Single car leg from the user's position to a quay (drive duration + road geometry).
+    Quay-centric replacement for the multi-leg /journey on the quay flow."""
+    from_coords = request.args.get("from")
+    quay_id = request.args.get("quayId")
+
+    if not from_coords:
+        return {"error": "from coordinates are required"}, 400
+    if not quay_id or not is_valid_nsr_id(quay_id):
+        return {"error": "Valid quayId is required"}, 400
+
+    quay = get_quay(quay_id)
+    if not quay:
+        return {"error": "Unknown quay"}, 404
+
+    try:
+        from_lat, from_lng = (float(x) for x in from_coords.split(","))
+    except (ValueError, TypeError):
+        return {"error": "Invalid from coordinates"}, 400
+
+    try:
+        result = get_car_route((from_lat, from_lng), (quay["latitude"], quay["longitude"]))
+        if not result:
+            return {"error": "Routing unavailable"}, 502
+        return cache(
+            {
+                "durationSeconds": result["duration"],
+                "geometry": result["geometry"],
+                "quay": quay,
+            },
+            300,
+        )
+    except Exception:
+        logger.exception("Error in get_quay_route")
+        return {"error": "Internal server error"}, 500
+
+
 @app.get("/quay/departures")
 def get_quay_departures():
     quay_id = request.args.get("quayId")
@@ -80,20 +118,23 @@ def get_quay_departures():
 
     if not quay_id or not is_valid_nsr_id(quay_id):
         return {"error": "Valid quayId is required"}, 400
-    if not to_quay_id or not is_valid_nsr_id(to_quay_id):
-        return {"error": "Valid toQuayId is required"}, 400
-    if mode == "refresh" and not arrival_time:
-        return {"error": "arrivalTime is required in refresh mode"}, 400
-
-    route = {"expectedEndTime": arrival_time} if arrival_time else None
-    quay = {"id": quay_id}
 
     try:
-        if mode == "refresh":
-            return evaluate_ferry_departures(quay_id, to_quay_id, arrival_time or "")
+        # Quay-centric path: no toQuayId → all departures from the quay, labeled by
+        # destination across its related crossings.
+        if not to_quay_id:
+            return evaluate_quay_departures(quay_id, arrival_time)
 
-        departures = get_departures_from_entur(quay, route, to_quay_id)
-        return departures
+        # Legacy single-destination path (used by the destination-centric journey flow).
+        if not is_valid_nsr_id(to_quay_id):
+            return {"error": "Valid toQuayId is required"}, 400
+        if mode == "refresh":
+            if not arrival_time:
+                return {"error": "arrivalTime is required in refresh mode"}, 400
+            return evaluate_ferry_departures(quay_id, to_quay_id, arrival_time)
+
+        route = {"expectedEndTime": arrival_time} if arrival_time else None
+        return get_departures_from_entur({"id": quay_id}, route, to_quay_id)
     except Exception:
         logger.exception("Error in get_quay_departures")
         return {"error": "Internal server error"}, 500

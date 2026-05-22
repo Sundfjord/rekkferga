@@ -20,9 +20,14 @@ ID mapping needed.
 - [x] **Phase 1 — Quay data layer.** `scripts/refresh_quays.py`, committed `data/quays.json`
   (366), `quays.py` loader (projection + county subName + `relatedQuayIds`/`quay_name`
   helpers), `GET /quays` (cached 24h), `.github/workflows/refresh-quays.yml` (monthly PR).
-- [ ] **Phase 2 — API quay flow.** `GET /quay/route` (single car leg via HERE),
-  `GET /quay/departures` multi-destination (toQuayId optional, label by destination via
-  `relatedQuayIds`), simplify `/journey` to first-ferry-quay extraction.
+- [x] **Phase 2 — API quay flow.** `GET /quay/route` (single car leg via HERE → duration +
+  geometry + quay), `GET /quay/departures` now multi-destination when `toQuayId` is omitted
+  (`evaluate_quay_departures` → departures labeled by destination via `relatedQuayIds`, margin
+  + viaNames, `-5` visibility rule + `select_departure` reused). `get_departures_from_nsr_id`
+  gained `number_of_departures` + destination `name`. **`/journey` left untouched** (it
+  already exposes ferry legs with `fromQuayId`, so destination search reuses it as-is;
+  destination-centric hydration is removed in Phase 6, keeping the old flow working meanwhile).
+  Verified: Anda margins/selection/naming correct; route returns 244-pt geometry.
 - [ ] **Phase 3 — Web map-first shell.** `page.tsx` map host, `MapView` (rework JourneyMap)
   with all quay pins, `useQuays` hook.
 - [ ] **Phase 4 — Search overlay.** Quay|Destination toggle; client-side quay filter.

@@ -45,12 +45,12 @@ def get_departures_from_entur(quay, route=None, to_quay_id=None):
     return process_departures(departures, route, to_quay_id, from_quay_id=quay["id"])
 
 
-def get_departures_from_nsr_id(nsr_id, start_time=None):
+def get_departures_from_nsr_id(nsr_id, start_time=None, number_of_departures=4):
     query = """
-        query ($ids: [String], $startTime: DateTime) {
+        query ($ids: [String], $startTime: DateTime, $numberOfDepartures: Int) {
             stopPlaces(ids: $ids) {
                 id,
-                estimatedCalls(numberOfDepartures: 4, startTime: $startTime) {
+                estimatedCalls(numberOfDepartures: $numberOfDepartures, startTime: $startTime) {
                     realtime
                     expectedDepartureTime
                     serviceJourney {
@@ -58,6 +58,7 @@ def get_departures_from_nsr_id(nsr_id, start_time=None):
                             quay {
                                 stopPlace {
                                     id
+                                    name
                                 }
                             }
                         }
@@ -74,7 +75,11 @@ def get_departures_from_nsr_id(nsr_id, start_time=None):
             }
         }
     """
-    variables = {"ids": [nsr_id], "startTime": start_time}
+    variables = {
+        "ids": [nsr_id],
+        "startTime": start_time,
+        "numberOfDepartures": number_of_departures,
+    }
     result = query_journey_planner(query, variables)
     return result["data"]["stopPlaces"]
 
