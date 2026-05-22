@@ -41,7 +41,12 @@ ID mapping needed.
   shows favorited quays when empty; Destination mode debounces `/search` (Nominatim).
   `page.tsx` wires `onSelectDestination` to resolve the first ferry quay via `/journey`
   (reused) then select it. New locale key `searchQuayPlaceholder` (no/en/nn). tsc-clean.
-- [ ] **Phase 5 — Margin panel.** select → route → departures → margin badges + auto-refresh.
+- [x] **Phase 5 — Margin panel.** `MarginPanel.tsx` (header w/ favorite + close, drive
+  duration, departures grouped by destination via `MarginBadge`, refresh indicator). `page.tsx`
+  orchestrates: on select → `fetchQuayRoute` → draw route on map + fitBounds → poll
+  `fetchQuayDepartures` with live arrival estimate (`getRefreshIntervalMs` margin-adaptive).
+  Search overlay hides while a quay is selected (R2.1 behaviour). tsc-clean. **Needs runtime
+  verification in a browser (map pins, select → route+panel, auto-refresh).**
 - [ ] **Phase 6 — Delete legacy + docs.** Remove destination-centric machinery, update
   CLAUDE.md (drop Cosmos DB + Azure cron), shared type cleanup.
 - [ ] **Phase 7 — Mobile.** Out of scope until web is accepted.
