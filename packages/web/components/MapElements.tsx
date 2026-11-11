@@ -12,8 +12,8 @@ const FERRY_GLYPH = (size: number, windowColor: string) => `
   </svg>`;
 
 function buildQuayPin(selected: boolean): L.DivIcon {
-  const size = selected ? 36 : 24;
-  const glyph = selected ? 24 : 16;
+  const size = selected ? 44 : 30;
+  const glyph = selected ? 30 : 20;
   const bg = selected ? "#011638" : "#2569A3";
   return L.divIcon({
     className: "quay-pin-marker",
@@ -37,13 +37,13 @@ export const createUserMarker = () => {
   return L.divIcon({
     className: "user-marker",
     html: `
-      <div style="position:relative;width:40px;height:40px;">
+      <div style="position:relative;width:56px;height:56px;">
         <div style="
           position:absolute;
           top:50%;
           left:50%;
-          width:20px;
-          height:20px;
+          width:28px;
+          height:28px;
           border-radius:50%;
           background:rgba(59,130,246,0.4);
           animation:user-location-pulse 2s ease-out infinite;
@@ -53,16 +53,16 @@ export const createUserMarker = () => {
           top:50%;
           left:50%;
           transform:translate(-50%,-50%);
-          width:14px;
-          height:14px;
+          width:20px;
+          height:20px;
           background:#3b82f6;
-          border:2.5px solid white;
+          border:3px solid white;
           border-radius:50%;
           box-shadow:0 2px 10px rgba(59,130,246,0.45);
         "></div>
       </div>
     `,
-    iconSize: [40, 40],
-    iconAnchor: [20, 20],
+    iconSize: [56, 56],
+    iconAnchor: [28, 28],
   });
 };

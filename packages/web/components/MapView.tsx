@@ -7,6 +7,11 @@ import "leaflet/dist/leaflet.css";
 import type { Quay, QuayRoute } from "@shared/types";
 import { QUAY_PIN, QUAY_PIN_SELECTED, createUserMarker } from "./MapElements";
 
+// Overview of Norway until the user's position is known, then zoom in on it.
+const NORWAY_VIEW: [number, number] = [64.5, 12.0];
+const NORWAY_ZOOM = 5;
+const USER_ZOOM = 10;
+
 function isValidCoord(v: number | undefined | null): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
@@ -45,7 +50,7 @@ export default function MapView({
   // Init map once
   useEffect(() => {
     if (mapRef.current && !mapInstanceRef.current) {
-      const map = L.map(mapRef.current, { zoomControl: false }).setView([64.5, 12.0], 5);
+      const map = L.map(mapRef.current, { zoomControl: false }).setView(NORWAY_VIEW, NORWAY_ZOOM);
       mapInstanceRef.current = map;
       L.control.zoom({ position: "bottomright" }).addTo(map);
       pinsLayerRef.current = L.layerGroup().addTo(map);
@@ -150,7 +155,9 @@ export default function MapView({
     if (userMarkerRef.current) {
       userMarkerRef.current.setLatLng(userLocation);
     } else {
-      userMarkerRef.current = L.marker(userLocation, { icon: createUserMarker() }).addTo(map);
+      userMarkerRef.current = L.marker(userLocation, { icon: createUserMarker(), zIndexOffset: 2000 }).addTo(map);
+      // First fix: focus the user's surroundings, unless they've already picked a quay.
+      if (!highlightedIdRef.current) map.setView(userLocation, USER_ZOOM, { animate: true });
     }
   }, [userLocation]);
 
