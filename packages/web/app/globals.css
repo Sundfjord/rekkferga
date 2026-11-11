@@ -123,38 +123,3 @@ body {
   0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.55; }
   100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0;    }
 }
-
-@keyframes pulse-subtle {
-  0%, 100% { box-shadow: 0 0 0 0 var(--color-margin-tight-surface); }
-  50%      { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-margin-tight) 30%, transparent); }
-}
-
-@utility animate-pulse-subtle {
-  animation: pulse-subtle 2s ease-in-out infinite;
-}
-
-@keyframes ferry-bob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  25%       { transform: translateY(-5px) rotate(-3deg); }
-  75%       { transform: translateY(4px) rotate(3deg); }
-}
-
-@utility animate-ferry-bob {
-  animation: ferry-bob 3s ease-in-out infinite;
-}
-
-.leaflet-popup.journey-ferry-popup .leaflet-popup-content-wrapper {
-  background: var(--surface);
-  color: var(--text-primary);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-}
-
-.leaflet-popup.journey-ferry-popup .leaflet-popup-tip {
-  background: var(--surface);
-  border: 1px solid var(--border);
-}
-
-.leaflet-popup.journey-ferry-popup .leaflet-popup-content {
-  margin: 10px 12px;
-}

@@ -1,12 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { SavedDestination, ResultItem } from "@shared/types";
 import {
   FAVORITES_STORAGE_KEY,
   parseFavorites,
   toggleFavorite as toggle,
-  isFavorite as checkFavorite,
   toDestination,
 } from "@shared/utils";
 
@@ -22,27 +21,45 @@ const FavoritesContext = createContext<FavoritesContextType>({
   isFavorite: () => false,
 });
 
+function readStored(): SavedDestination[] {
+  try {
+    return parseFavorites(localStorage.getItem(FAVORITES_STORAGE_KEY));
+  } catch {
+    return [];
+  }
+}
+
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const [favorites, setFavorites] = useState<SavedDestination[]>([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
-    setFavorites(parseFavorites(saved));
+    setFavorites(readStored());
+    // Keep other open tabs in sync.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === FAVORITES_STORAGE_KEY) setFavorites(parseFavorites(e.newValue));
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  const handleToggle = (result: ResultItem) => {
-    const updated = toggle(favorites, toDestination(result));
-    setFavorites(updated);
-    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updated));
-  };
+  const toggleFavorite = useCallback((result: ResultItem) => {
+    setFavorites((current) => {
+      const updated = toggle(current, toDestination(result));
+      try {
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        /* storage unavailable — keep in memory */
+      }
+      return updated;
+    });
+  }, []);
 
-  const handleCheck = (id: string) => checkFavorite(favorites, id);
+  const value = useMemo(() => {
+    const ids = new Set(favorites.map((f) => f.id));
+    return { favorites, toggleFavorite, isFavorite: (id: string) => ids.has(id) };
+  }, [favorites, toggleFavorite]);
 
-  return (
-    <FavoritesContext.Provider value={{ favorites, toggleFavorite: handleToggle, isFavorite: handleCheck }}>
-      {children}
-    </FavoritesContext.Provider>
-  );
+  return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;
 }
 
 export function useFavorites() {

@@ -25,9 +25,14 @@ export function estimateRemainingSeconds(leg: CarLeg, currentLat: number, curren
 }
 
 export async function fetchJourney(apiUrl: string, fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<JourneyResult[]> {
-  const res = await fetch(`${apiUrl}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await fetch(`${apiUrl}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
 }
 
 export interface DepartureRefresh {

@@ -6,7 +6,7 @@
   "english": "English",
   "theme": "Tema",
   "search": "Søk",
-  "searchPlaceholder": "Hvor skal du i dag?",
+  "searchDestinationPlaceholder": "Søk etter destinasjon",
   "searchQuayPlaceholder": "Søk etter fergekai",
   "searchTagline": "Hvor skal du?",
   "destination": "Destinasjon",
@@ -100,5 +100,8 @@
   "stalePosition": "Posisjonen kan være utdatert — trykk for å oppdatere",
   "nextDeparture": "Neste:",
   "yourLocation": "Din posisjon",
-  "updatedAt": "Oppdatert {time}"
+  "updatedAt": "Oppdatert {time}",
+  "loadingDepartures": "Henter rute og avganger…",
+  "findingQuayFor": "Finner første fergerute på veien til {place}…",
+  "locationRequired": "Gi tilgang til posisjon for å søke etter destinasjon."
 }

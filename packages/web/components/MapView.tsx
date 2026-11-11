@@ -5,7 +5,7 @@ import { useTheme } from "next-themes";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Quay, QuayRoute } from "@shared/types";
-import { createQuayPinMarker, createUserMarker } from "./MapElements";
+import { QUAY_PIN, QUAY_PIN_SELECTED, createUserMarker } from "./MapElements";
 
 function isValidCoord(v: number | undefined | null): v is number {
   return typeof v === "number" && Number.isFinite(v);
@@ -17,7 +17,6 @@ export interface MapViewProps {
   selectedQuay: Quay | null;
   route: QuayRoute | null;
   onSelectQuay: (quay: Quay) => void;
-  fitBoundsSignal?: number;
 }
 
 export default function MapView({
@@ -26,7 +25,6 @@ export default function MapView({
   selectedQuay,
   route,
   onSelectQuay,
-  fitBoundsSignal,
 }: MapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -35,6 +33,7 @@ export default function MapView({
   const markersByIdRef = useRef<Map<string, L.Marker>>(new Map());
   const overlayLayerRef = useRef<L.LayerGroup | null>(null);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const highlightedIdRef = useRef<string | null>(null);
   const { resolvedTheme } = useTheme();
 
   const quaysById = useMemo(() => {
@@ -93,7 +92,8 @@ export default function MapView({
     for (const quay of quays) {
       if (!isValidCoord(quay.latitude) || !isValidCoord(quay.longitude)) continue;
       const marker = L.marker([quay.latitude, quay.longitude], {
-        icon: createQuayPinMarker(false),
+        icon: quay.id === highlightedIdRef.current ? QUAY_PIN_SELECTED : QUAY_PIN,
+        zIndexOffset: quay.id === highlightedIdRef.current ? 1000 : 0,
         title: quay.name,
       });
       marker.on("click", () => onSelectQuay(quay));
@@ -102,13 +102,18 @@ export default function MapView({
     }
   }, [quays, onSelectQuay]);
 
-  // Reflect the selected quay (enlarged pin)
+  // Reflect the selected quay (enlarged pin) — only touch the two markers that change.
   useEffect(() => {
-    for (const [id, marker] of markersByIdRef.current) {
-      marker.setIcon(createQuayPinMarker(id === selectedQuay?.id));
-      marker.setZIndexOffset(id === selectedQuay?.id ? 1000 : 0);
-    }
-  }, [selectedQuay]);
+    const markers = markersByIdRef.current;
+    const prevId = highlightedIdRef.current;
+    const nextId = selectedQuay?.id ?? null;
+    if (prevId === nextId) return;
+    const prev = prevId ? markers.get(prevId) : undefined;
+    prev?.setIcon(QUAY_PIN).setZIndexOffset(0);
+    const next = nextId ? markers.get(nextId) : undefined;
+    next?.setIcon(QUAY_PIN_SELECTED).setZIndexOffset(1000);
+    highlightedIdRef.current = nextId;
+  }, [selectedQuay, quays]);
 
   // Draw drive route + dashed crossing lines for the selected quay
   useEffect(() => {
@@ -149,7 +154,7 @@ export default function MapView({
     }
   }, [userLocation]);
 
-  // Fit to user + selected quay (+ its crossings) on demand
+  // Fit to user + selected quay (+ drive route once it arrives)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !selectedQuay) return;
@@ -167,8 +172,9 @@ export default function MapView({
       padding: [80, 80],
       animate: true,
     });
+  // userLocation is deliberately omitted: a position update shouldn't yank the viewport.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fitBoundsSignal]);
+  }, [selectedQuay, route]);
 
   return <div ref={mapRef} className="w-full h-full" style={{ zIndex: 0 }} />;
 }

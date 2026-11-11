@@ -1,19 +1,30 @@
 "use client";
 
-import type { Quay, QuayRoute, DepartureOption, ResultItem } from "@shared/types";
-import { formatDuration, formatTime } from "@shared/utils";
+import type { Quay, ResultItem } from "@shared/types";
+import { formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import MarginBadge from "@/components/MarginBadge";
+import Spinner from "@/components/Spinner";
+import type { QuayDeparturesState } from "@/hooks/useQuayDepartures";
 
-export interface MarginPanelProps {
+export interface MarginPanelProps extends QuayDeparturesState {
   quay: Quay;
-  route: QuayRoute | null;
-  departures: DepartureOption[];
-  loading: boolean;
   onClose: () => void;
-  lastRefreshAt: Date | null;
-  isRefreshing: boolean;
+}
+
+function LoadingState({ label }: { label: string }) {
+  return (
+    <div role="status" aria-live="polite" className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans)" }}>
+        <Spinner />
+        <span>{label}</span>
+      </div>
+      {[0, 1].map((i) => (
+        <div key={i} className="h-[92px] rounded-xl animate-pulse" style={{ backgroundColor: "var(--surface-variant)" }} />
+      ))}
+    </div>
+  );
 }
 
 export default function MarginPanel({
@@ -69,7 +80,7 @@ export default function MarginPanel({
         </div>
 
         {/* Body */}
-        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
+        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-3">
           {/* Drive time */}
           {route && (
             <div className="flex items-baseline gap-2 text-sm" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans)" }}>
@@ -81,41 +92,19 @@ export default function MarginPanel({
           )}
 
           {loading ? (
-            <div className="text-sm py-4" style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans)" }}>
-              {t("loading")}
-            </div>
+            <LoadingState label={t("loadingDepartures")} />
           ) : departures.length === 0 ? (
             <div className="text-sm py-2" style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans)" }}>
               {t("noDepartures")}
             </div>
           ) : (
-            departures.map((dep, i) => (
-              <div key={`${dep.expectedDepartureTime}-${i}`} className="flex flex-col gap-1.5">
-                {dep.destinationName && (
-                  <span className="text-sm font-semibold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}>
-                    {t("toQuay", { quay: dep.destinationName })}
-                  </span>
-                )}
-                {dep.marginMinutes !== null ? (
-                  <MarginBadge departure={dep} />
-                ) : (
-                  <span className="text-base font-bold" style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>
-                    {formatTime(dep.expectedDepartureTime)}
-                  </span>
-                )}
-                {dep.viaNames && dep.viaNames.length > 0 && (
-                  <span className="text-xs" style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans)" }}>
-                    {t("via")} {dep.viaNames.join(", ")}
-                  </span>
-                )}
-              </div>
-            ))
+            departures.map((dep, i) => <MarginBadge key={`${dep.expectedDepartureTime}-${i}`} departure={dep} />)
           )}
 
           {/* Refresh indicator */}
           {lastRefreshAt && !loading && (
             <div className="flex items-center gap-1.5 text-xs pt-1" style={{ color: "var(--text-disabled)", fontFamily: "var(--font-dm-sans)" }}>
-              <svg className={isRefreshing ? "animate-spin" : ""} style={{ width: 12, height: 12, flexShrink: 0 }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+              <svg className={isRefreshing ? "animate-spin" : ""} style={{ width: 12, height: 12, flexShrink: 0 }} aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
               <span>{t("updatedAt", { time: lastRefreshAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) })}</span>

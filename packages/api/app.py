@@ -11,7 +11,7 @@ from journey_planner import (
 )
 from here_routing import get_car_route
 from departures_domain import evaluate_ferry_departures, evaluate_quay_departures
-from nominatim import get_locations_nominatim
+from geocoder import search_locations
 from quays import get_all_quays, get_quay
 
 load_dotenv()
@@ -144,5 +144,15 @@ def get_quay_departures():
 @app.get("/search")
 def get_search_results():
     query = request.args.get("query")
-    size = int(request.args.get("size", 30))
-    return get_locations_nominatim(query, size) or []
+    try:
+        size = min(max(int(request.args.get("size", 10)), 1), 30)
+    except ValueError:
+        size = 10
+    focus = None
+    try:
+        lat, lon = request.args.get("lat"), request.args.get("lon")
+        if lat and lon:
+            focus = (float(lat), float(lon))
+    except ValueError:
+        pass
+    return cache(search_locations(query, size, focus), 300)

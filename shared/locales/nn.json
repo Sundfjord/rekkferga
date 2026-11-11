@@ -1,6 +1,6 @@
 {
   "settings": "Innstillingar",
-  "searchPlaceholder": "Kvar skal du i dag?",
+  "searchDestinationPlaceholder": "Søk etter destinasjon",
   "searchQuayPlaceholder": "Søk etter fergekai",
   "searchTagline": "Kvar skal du?",
   "selectedDestination": "Valt destinasjon",
@@ -59,5 +59,8 @@
   "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",
   "nextDeparture": "Neste:",
   "yourLocation": "Di plassering",
-  "updatedAt": "Oppdatert {time}"
+  "updatedAt": "Oppdatert {time}",
+  "loadingDepartures": "Hentar rute og avgangar…",
+  "findingQuayFor": "Finn første ferjerute på vegen til {place}…",
+  "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon."
 }

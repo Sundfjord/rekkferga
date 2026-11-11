@@ -23,6 +23,7 @@ def get_locations_nominatim(query: str | None, size: int = 5):
             url,
             params=params,
             headers={"User-Agent": "Rekkferga/1.0 (https://rekkferga.com)"},
+            timeout=5,
         )
 
         if response.status_code != 200:

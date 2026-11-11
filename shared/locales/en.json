@@ -101,5 +101,8 @@
   "stalePosition": "Position may be stale — tap to refresh",
   "nextDeparture": "Next:",
   "yourLocation": "Your location",
-  "updatedAt": "Updated {time}"
+  "updatedAt": "Updated {time}",
+  "loadingDepartures": "Fetching route and departures…",
+  "findingQuayFor": "Finding the ferry quay on the way to {place}…",
+  "locationRequired": "Allow location access to search by destination."
 }
