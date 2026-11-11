@@ -104,5 +104,19 @@
   "updatedAt": "Updated {time}",
   "loadingDepartures": "Fetching route and departures…",
   "findingQuayFor": "Finding the ferry quay on the way to {place}…",
-  "locationRequired": "Allow location access to search by destination."
+  "locationRequired": "Allow location access to search by destination.",
+  "driveTime": "Drive time",
+  "sentenceSafe": "You'll make the ferry with time to spare. Drive safely.",
+  "sentenceTight": "You'll make the ferry, but with little slack.",
+  "sentenceMissed": "You'll arrive after this ferry has left.",
+  "allDepartures": "All departures",
+  "marginOnArrival": "Margin on arrival",
+  "remainingDrive": "Drive remaining",
+  "planB": "Plan B",
+  "nextYouCanMake": "Next you can make",
+  "departureAria": "{destination} {time}, margin {margin} minutes",
+  "timelineAria": "Timeline: arrive {arrival}. Departures {times}.",
+  "progressAria": "{minutes} minutes to the quay, arriving {arrival}. Ferry leaves {departure}.",
+  "arrive": "Arrive",
+  "now": "Now"
 }

@@ -23,6 +23,8 @@ export interface QuayDeparturesState {
   /** True during background polls after the first load. */
   isRefreshing: boolean;
   lastRefreshAt: Date | null;
+  /** Estimated arrival at the quay used for the latest margins; null without a route. */
+  arrivalAt: Date | null;
 }
 
 const INITIAL: QuayDeparturesState = {
@@ -31,6 +33,7 @@ const INITIAL: QuayDeparturesState = {
   loading: false,
   isRefreshing: false,
   lastRefreshAt: null,
+  arrivalAt: null,
 };
 
 /**
@@ -55,9 +58,8 @@ export function useQuayDepartures(
     setState({ ...INITIAL, loading: true });
 
     const refreshDepartures = async (driveSeconds: number | null) => {
-      const arrival =
-        driveSeconds === null ? undefined : new Date(Date.now() + driveSeconds * 1000).toISOString();
-      const data = await fetchQuayDepartures(apiUrl, quay.id, arrival);
+      const arrivalAt = driveSeconds === null ? null : new Date(Date.now() + driveSeconds * 1000);
+      const data = await fetchQuayDepartures(apiUrl, quay.id, arrivalAt?.toISOString());
       if (cancelled) return;
       setState((s) => ({
         ...s,
@@ -65,6 +67,7 @@ export function useQuayDepartures(
         loading: false,
         isRefreshing: false,
         lastRefreshAt: new Date(),
+        arrivalAt,
       }));
       const margin = data.selectedDeparture?.marginMinutes ?? null;
       timer = setTimeout(() => {

@@ -75,7 +75,7 @@ export default function Home() {
         onSelectQuay={handleSelectQuay}
       />
       {selectedQuay ? (
-        <MarginPanel quay={selectedQuay} onClose={handleClose} {...departures} />
+        <MarginPanel key={selectedQuay.id} quay={selectedQuay} onClose={handleClose} {...departures} />
       ) : (
         <SearchOverlay
           quays={quays}

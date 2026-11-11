@@ -62,5 +62,19 @@
   "updatedAt": "Oppdatert {time}",
   "loadingDepartures": "Hentar rute og avgangar…",
   "findingQuayFor": "Finn første ferjerute på vegen til {place}…",
-  "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon."
+  "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon.",
+  "driveTime": "Køyretid",
+  "sentenceSafe": "Du rekk ferja med god margin. Køyr roleg.",
+  "sentenceTight": "Du rekk ferja, men med lite slakk.",
+  "sentenceMissed": "Du er framme etter at denne ferja har gått.",
+  "allDepartures": "Alle avgangar",
+  "marginOnArrival": "Margin ved ankomst",
+  "remainingDrive": "Att å køyre",
+  "planB": "Plan B",
+  "nextYouCanMake": "Neste du rekk",
+  "departureAria": "{destination} {time}, margin {margin} minutt",
+  "timelineAria": "Tidslinje: framme {arrival}. Avgangar {times}.",
+  "progressAria": "{minutes} minutt att til kaia, framme {arrival}. Ferja går {departure}.",
+  "arrive": "Framme",
+  "now": "No"
 }

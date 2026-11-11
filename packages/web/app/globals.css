@@ -37,18 +37,13 @@
   --success: #388e3c;
   --success-text: #ffffff;
 
-  /* ── Semantic margin tokens ──────────────────────────────── */
-  --color-margin-safe:         #16A34A;
-  --color-margin-safe-surface: #DCFCE7;
-  --color-margin-safe-text:    #14532D;
-
-  --color-margin-tight:         #D97706;
-  --color-margin-tight-surface: #FEF3C7;
-  --color-margin-tight-text:    #78350F;
-
-  --color-margin-missed:         #DC2626;
-  --color-margin-missed-surface: #FEE2E2;
-  --color-margin-missed-text:    #7F1D1D;
+  /* ── Margin tiers ─────────────────────────────────────────
+     One strong colour per tier, used everywhere a departure is shown
+     (cards, timeline, drive mode, Plan B), always with white text. */
+  --margin-safe:   #15803D;
+  --margin-tight:  #B45309;
+  --margin-missed: #B91C1C;
+  --margin-none:   #2569A3; /* no arrival estimate (no position) */
 
   /* ── Shadows ─────────────────────────────────────────────── */
   --shadow-search: 0 2px 8px rgba(0, 0, 0, 0.12);
@@ -73,15 +68,6 @@
 
   --border: #2a2a2a;
   --border-variant: #404040;
-
-  --color-margin-safe-surface: #14532D;
-  --color-margin-safe-text:    #86EFAC;
-
-  --color-margin-tight-surface: #78350F;
-  --color-margin-tight-text:    #FCD34D;
-
-  --color-margin-missed-surface: #7F1D1D;
-  --color-margin-missed-text:    #FCA5A5;
 }
 
 @theme inline {
@@ -101,7 +87,7 @@
   --color-error:        var(--error);
   --color-success:      var(--success);
 
-  --font-display: var(--font-syne);
+  --font-display: var(--font-dm-sans); /* headings: same family, set bold */
   --font-body:    var(--font-dm-sans);
   --font-mono:    var(--font-jetbrains-mono);
   --font-sans:    var(--font-dm-sans);
@@ -117,6 +103,30 @@ body {
 
 .user-marker {
   transition: transform 500ms ease-out !important;
+}
+
+/* Drive mode: the hero grows up from the bottom when a departure is picked,
+   echoing the panel's own grow. Replayed by re-keying the element. */
+@keyframes hero-grow {
+  from { clip-path: inset(78% 0 0 0 round 22px); }
+  to   { clip-path: inset(0 0 0 0 round 22px); }
+}
+
+@utility animate-hero-grow {
+  animation: hero-grow 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Margin panel: grows between its content height (overview) and full height (drive mode).
+   interpolate-size lets height animate to/from auto where supported; elsewhere it snaps
+   and the hero-grow animation still carries the transition. */
+.panel-morph {
+  interpolate-size: allow-keywords;
+  transition: height 340ms cubic-bezier(0.2, 0.8, 0.2, 1), max-height 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel-morph { transition: none; }
+  .animate-hero-grow { animation: none; }
 }
 
 @keyframes user-location-pulse {

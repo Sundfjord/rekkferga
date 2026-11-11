@@ -46,7 +46,8 @@ API endpoints:
 
 Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*`):
 - `app/page.tsx` — map + `SearchOverlay` / `MarginPanel` orchestration.
-- `hooks/useQuayDepartures.ts` — route fetch + margin-adaptive departure polling.
+- `components/MarginPanel.tsx` — one container, two modes: Overview (`DepartureTimeline`, `DepartureCard`s) and Drive mode (`DriveMode`) for a picked departure. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
+- `hooks/useQuayDepartures.ts` — route fetch + margin-adaptive departure polling; exposes `arrivalAt`.
 - `hooks/useQuays.ts` — quay dataset, cached in localStorage.
 
 Mobile (`packages/app`, alias `@/*` → `packages/app/*`) is **not yet migrated** to quay-centric; it still uses `shared/services/{journey,tripStateMachine}.ts` and the legacy `toQuayId`/`mode=refresh` departures path — keep those until mobile is ported.

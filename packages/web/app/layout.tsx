@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Syne, DM_Sans, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeWrapper } from "../components/ThemeWrapper";
@@ -7,16 +7,11 @@ import { LanguageProvider } from "../contexts/LanguageContext";
 import { FavoritesProvider } from "../contexts/FavoritesContext";
 import Header from "../components/Header";
 
-const syne = Syne({
-  subsets: ["latin"],
-  weight: ["400", "600", "700", "800"],
-  variable: "--font-syne",
-  display: "swap",
-});
-
+// Variable font: every weight in one file, plus the optical-size axis so headings get
+// tighter letterforms than body text automatically (font-optical-sizing: auto).
 const dmSans = DM_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  axes: ["opsz"],
   variable: "--font-dm-sans",
   display: "swap",
 });
@@ -42,7 +37,7 @@ export default function RootLayout({
     <html
       lang="no"
       suppressHydrationWarning
-      className={`${syne.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
+      className={`${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <body className="antialiased">
         <ThemeProvider>
