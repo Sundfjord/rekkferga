@@ -1,5 +1,6 @@
 import type { DepartureOption } from "@shared/types";
 import { formatDuration, marginTier, type Language } from "@shared/utils";
+import { shortQuayName } from "@/lib/quays";
 
 export type Tier = "safe" | "tight" | "missed" | "none";
 
@@ -13,6 +14,9 @@ export const TIER_COLOR: Record<Tier, string> = {
   missed: "var(--margin-missed)",
   none: "var(--margin-none)",
 };
+
+/** Where a departure goes, without the redundant "ferjekai" ("Hareid ferjekai" → "Hareid"). */
+export const destinationLabel = (d: DepartureOption) => (d.destinationName ? shortQuayName(d.destinationName) : "");
 
 /** Stable identity across polls (the list is re-fetched, so array indexes shift). */
 export const departureKey = (d: DepartureOption) =>

@@ -39,3 +39,20 @@ export const ChevronLeftIcon = ({ size = 22, className }: IconProps) => (
     <path d="M15 6l-6 6 6 6" />
   </svg>
 );
+
+export const SearchIcon = ({ size = 20, className }: IconProps) => (
+  <svg {...stroke(size, className)}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M20 20l-3.5-3.5" />
+  </svg>
+);
+
+export const PlaceIcon = ({ size = 18, className }: IconProps) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+    <path
+      fillRule="evenodd"
+      d="M11.54 22.351l.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-2.003 3.5-4.567 3.5-7.327a6.79 6.79 0 0 0-13.58 0c0 2.76 1.556 5.323 3.5 7.327a19.579 19.579 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"
+      clipRule="evenodd"
+    />
+  </svg>
+);

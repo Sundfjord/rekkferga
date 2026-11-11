@@ -42,9 +42,15 @@ export interface Quay {
 }
 
 export interface QuayRoute {
-  durationSeconds: number;
-  geometry: [number, number][]; // road-snapped [[lat, lng], ...]
+  durationSeconds: number; // traffic-aware drive time to the quay
   quay: Quay;
+}
+
+/** Next reachable departure for one quay (favourites), from GET /quays/next. */
+export interface QuayNext {
+  quayId: string;
+  driveSeconds: number | null;
+  departure: DepartureOption | null;
 }
 
 // ---------------------------------------------------------------------------

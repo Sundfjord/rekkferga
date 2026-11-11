@@ -44,7 +44,7 @@ export default function RootLayout({
           <ThemeWrapper>
             <LanguageProvider>
             <FavoritesProvider>
-              {/* Full-viewport background; full-width column for the map-first layout */}
+              {/* Full-viewport background: header on top, the ferry board fills the rest */}
               <div className="h-screen bg-background flex justify-center">
                 <div className="w-full flex flex-col h-full">
                   <Header />

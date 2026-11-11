@@ -44,6 +44,7 @@ const INITIAL: QuayDeparturesState = {
 export function useQuayDepartures(
   quay: Quay | null,
   userLocation: [number, number] | null,
+  limit = 4,
 ): QuayDeparturesState {
   const [state, setState] = useState<QuayDeparturesState>(INITIAL);
 
@@ -59,7 +60,7 @@ export function useQuayDepartures(
 
     const refreshDepartures = async (driveSeconds: number | null) => {
       const arrivalAt = driveSeconds === null ? null : new Date(Date.now() + driveSeconds * 1000);
-      const data = await fetchQuayDepartures(apiUrl, quay.id, arrivalAt?.toISOString());
+      const data = await fetchQuayDepartures(apiUrl, quay.id, arrivalAt?.toISOString(), limit);
       if (cancelled) return;
       setState((s) => ({
         ...s,
@@ -91,7 +92,7 @@ export function useQuayDepartures(
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [quay, userLocation]);
+  }, [quay, userLocation, limit]);
 
   return state;
 }

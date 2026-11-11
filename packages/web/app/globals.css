@@ -99,14 +99,8 @@ body {
   font-family: var(--font-dm-sans, 'DM Sans', sans-serif);
 }
 
-/* User location marker ─────────────────────────────────────────────────────── */
-
-.user-marker {
-  transition: transform 500ms ease-out !important;
-}
-
-/* Drive mode: the hero grows up from the bottom when a departure is picked,
-   echoing the panel's own grow. Replayed by re-keying the element. */
+/* Drive mode: the hero grows up from the bottom when a departure is picked.
+   Replayed by re-keying the element. */
 @keyframes hero-grow {
   from { clip-path: inset(78% 0 0 0 round 22px); }
   to   { clip-path: inset(0 0 0 0 round 22px); }
@@ -116,20 +110,6 @@ body {
   animation: hero-grow 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-/* Margin panel: grows between its content height (overview) and full height (drive mode).
-   interpolate-size lets height animate to/from auto where supported; elsewhere it snaps
-   and the hero-grow animation still carries the transition. */
-.panel-morph {
-  interpolate-size: allow-keywords;
-  transition: height 340ms cubic-bezier(0.2, 0.8, 0.2, 1), max-height 340ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .panel-morph { transition: none; }
   .animate-hero-grow { animation: none; }
-}
-
-@keyframes user-location-pulse {
-  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 0.55; }
-  100% { transform: translate(-50%, -50%) scale(3.5); opacity: 0;    }
 }

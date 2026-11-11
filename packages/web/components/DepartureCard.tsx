@@ -4,7 +4,7 @@ import type { DepartureOption } from "@shared/types";
 import { formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, splitMargin, tierOf } from "@/lib/departures";
+import { TIER_COLOR, destinationLabel, splitMargin, tierOf } from "@/lib/departures";
 import { ChevronRightIcon } from "@/components/icons";
 
 /**
@@ -16,7 +16,7 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
   const { language } = useLanguage();
   const tier = tierOf(departure);
   const time = formatTime(departure.expectedDepartureTime);
-  const destination = departure.destinationName ?? "";
+  const destination = destinationLabel(departure);
   const margin = departure.marginMinutes === null ? null : splitMargin(departure.marginMinutes, language);
 
   const body = (

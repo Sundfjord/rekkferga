@@ -4,7 +4,7 @@ import type { DepartureOption } from "@shared/types";
 import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
+import { TIER_COLOR, destinationLabel, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
 import { ChevronRightIcon } from "@/components/icons";
 import TimelineTrack from "@/components/TimelineTrack";
 
@@ -47,13 +47,13 @@ export default function DriveMode({
   const altTier = alt ? tierOf(alt) : "none";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex flex-1 flex-col">
       <div
-        className="animate-hero-grow mx-2.5 flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto rounded-[22px] p-5 text-white"
+        className="animate-hero-grow flex flex-1 flex-col gap-[18px] rounded-[22px] p-5 text-white"
         style={{ backgroundColor: color, fontFamily: "var(--font-dm-sans)" }}
       >
         <span className="text-2xl font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>
-          {departure.destinationName}
+          {destinationLabel(departure)}
         </span>
 
         <div className="grid flex-shrink-0 grid-cols-2 gap-2.5">
@@ -108,13 +108,13 @@ export default function DriveMode({
         <button
           type="button"
           onClick={() => onSelect(alt)}
-          className="mx-2.5 mt-2.5 flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl py-2.5 pl-4 pr-3 text-left text-white"
+          className="mt-2.5 flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl py-2.5 pl-4 pr-3 text-left text-white"
           style={{ backgroundColor: TIER_COLOR[altTier], fontFamily: "var(--font-dm-sans)" }}
         >
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[13px]">{t((departure.marginMinutes ?? 0) < 0 ? "nextYouCanMake" : "planB")}</span>
+            <span className="text-[13px]">{t("planB")}</span>
             <span className="truncate text-[17px] font-bold">
-              {alt.destinationName}{" "}
+              {destinationLabel(alt)}{" "}
               <span style={{ fontFamily: "var(--font-mono)" }}>{formatTime(alt.expectedDepartureTime)}</span>
             </span>
           </span>

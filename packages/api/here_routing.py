@@ -1,7 +1,6 @@
 import os
 import logging
 import requests
-import flexpolyline
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -9,153 +8,38 @@ logger = logging.getLogger(__name__)
 _HERE_BASE = "https://router.hereapi.com/v8/routes"
 
 
-def _safe_iso_delta_seconds(start: str | None, end: str | None) -> int:
-    if not start or not end:
-        return 0
-    try:
-        start_dt = datetime.fromisoformat(start.replace("Z", "+00:00"))
-        end_dt = datetime.fromisoformat(end.replace("Z", "+00:00"))
-        return max(0, int((end_dt - start_dt).total_seconds()))
-    except ValueError:
-        return 0
-
-
-def _recompute_journey_durations(journey: dict) -> dict:
-    travel_duration = sum((leg.get("duration") or 0) for leg in journey.get("legs", []))
-
-    wait_duration = 0
-    previous_end = None
-    for leg in journey.get("legs", []):
-        leg_start = leg.get("expectedStartTime")
-        if previous_end and leg_start:
-            wait_duration += _safe_iso_delta_seconds(previous_end, leg_start)
-        previous_end = leg.get("expectedEndTime") or previous_end
-
-    total_duration = travel_duration + wait_duration
-    journey["duration"] = total_duration
-    journey["travelDurationSeconds"] = travel_duration
-    journey["waitDurationSeconds"] = wait_duration
-    journey["totalDurationSeconds"] = total_duration
-    return journey
-
-
-def _decode_polyline(encoded: str) -> list[list[float]]:
-    """Decode a HERE Flexible Polyline string to [[lat, lng], ...]."""
-    return [[pt[0], pt[1]] for pt in flexpolyline.decode(encoded)]
-
-
-def get_car_route(from_coords: tuple, to_coords: tuple, departure_time: datetime | None = None) -> dict | None:
-    """
-    Call HERE Routing API v8 for a car leg.
-
-    Args:
-        from_coords: (lat, lng) tuple
-        to_coords:   (lat, lng) tuple
-        departure_time: datetime for traffic context (defaults to now)
-
-    Returns:
-        {
-            "duration":     int (seconds, traffic-aware),
-            "geometry":     [[lat, lng], ...],
-        }
-        or None if HERE is unavailable or the call fails.
-    """
+def get_drive_seconds(
+    from_coords: tuple, to_coords: tuple, departure_time: datetime | None = None
+) -> int | None:
+    """Traffic-aware car travel time in seconds via HERE Routing v8 (summary only, no
+    geometry). None if HERE is unconfigured, unavailable, or returns no usable route."""
     api_key = os.environ.get("HERE_API_KEY")
     if not api_key:
         logger.warning("HERE_API_KEY not set — skipping HERE routing")
         return None
-
-    dep_time = (departure_time or datetime.now()).astimezone()
 
     params = {
         "apiKey": api_key,
         "origin": f"{from_coords[0]},{from_coords[1]}",
         "destination": f"{to_coords[0]},{to_coords[1]}",
         "transportMode": "car",
-        "return": "travelSummary,polyline",
-        "departureTime": dep_time.isoformat(),
+        "return": "travelSummary",
+        "departureTime": (departure_time or datetime.now()).astimezone().isoformat(),
     }
 
     try:
         resp = requests.get(_HERE_BASE, params=params, timeout=8)
         resp.raise_for_status()
-        data = resp.json()
+        routes = resp.json().get("routes", [])
     except Exception:
         logger.exception("HERE API request failed for %s → %s", from_coords, to_coords)
         return None
 
-    routes = []
-    for route in data.get("routes", []):
+    for route in routes:
         sections = route.get("sections", [])
-        if not sections:
-            continue
+        duration = sum(s.get("travelSummary", {}).get("duration", 0) for s in sections)
+        if duration > 0:
+            return duration
 
-        # Section-level travelSummary (return=travelSummary), fall back to route-level summary
-        total_duration = sum(
-            s.get("travelSummary", {}).get("duration", 0) for s in sections
-        )
-        if total_duration == 0:
-            total_duration = route.get("summary", {}).get("duration", 0)
-        if total_duration == 0:
-            logger.warning("HERE returned 0 duration for %s → %s, skipping route", from_coords, to_coords)
-            continue
-
-        coords = []
-        for section in sections:
-            encoded = section.get("polyline", "")
-            if encoded:
-                coords.extend(_decode_polyline(encoded))
-
-        if not coords:
-            continue
-
-        routes.append({"duration": total_duration, "geometry": coords})
-
-    if not routes:
-        logger.warning("HERE returned no usable routes for %s → %s", from_coords, to_coords)
-        return None
-
-    return {
-        "duration": routes[0]["duration"],
-        "geometry": routes[0]["geometry"],
-    }
-
-
-def enrich_journey(journey: dict) -> dict:
-    """
-    Enrich a serialised JourneyResult's car legs with HERE routing data.
-
-    For each car leg, replaces EnTur's static duration with HERE's
-    traffic-aware duration and adds road-snapped geometry.
-    Adds a top-level trafficDataAvailable flag.
-
-    Safe to call without a HERE_API_KEY — legs are left unchanged and
-    trafficDataAvailable is set to False.
-    """
-    any_success = False
-
-    for leg in journey.get("legs", []):
-        if leg.get("mode") != "car":
-            continue
-
-        from_place = leg.get("fromPlace", {})
-        to_place = leg.get("toPlace", {})
-
-        from_lat = from_place.get("latitude")
-        from_lng = from_place.get("longitude")
-        to_lat = to_place.get("latitude")
-        to_lng = to_place.get("longitude")
-
-        if not all([from_lat, from_lng, to_lat, to_lng]):
-            continue
-
-        result = get_car_route((from_lat, from_lng), (to_lat, to_lng))
-
-        if result:
-            leg["duration"] = result["duration"]
-            leg["geometry"] = result["geometry"]
-            any_success = True
-
-    _recompute_journey_durations(journey)
-    journey["trafficDataAvailable"] = any_success
-    return journey
+    logger.warning("HERE returned no usable routes for %s → %s", from_coords, to_coords)
+    return None

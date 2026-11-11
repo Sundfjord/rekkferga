@@ -4,7 +4,7 @@ Rekkferga is a ferry journey planner for Norway. npm-workspaces monorepo:
 
 | Package | Stack | Deploys to |
 |---|---|---|
-| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4, Leaflet | Vercel |
+| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map) | Vercel |
 | `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind | EAS Build |
 | `packages/api` | Flask (Python, `.venv`) | Railway (Docker) |
 | `packages/cron` | Azure Functions skeleton — unused; quay refresh runs in GitHub Actions | Azure |
@@ -38,15 +38,16 @@ Type-check web: `cd packages/web && npx tsc --noEmit -p .`
 
 API endpoints:
 - `GET /quays` — committed Vegvesen NVDB snapshot (`packages/api/data/quays.json`, ~366 quays). `id` = EnTur NSR stop-place id; `relatedQuayIds` = destination quays. Refreshed monthly by `.github/workflows/refresh-quays.yml` → `scripts/refresh_quays.py`.
-- `GET /quay/route` — HERE Routing drive duration + road geometry.
-- `GET /quay/departures` — live from EnTur, margins computed, labeled by destination quay. `arrivalTime` optional (omitted → no margins).
+- `GET /quay/route` — HERE Routing traffic-aware drive duration (no geometry).
+- `GET /quays/next?ids=…&from=lat,lng` — batch: next reachable departure per quay (the user's favourites), fetched in parallel.
+- `GET /quay/departures` — live from EnTur, margins computed, labeled by destination quay. `arrivalTime` optional (omitted → no margins); `limit` 1–12 (default 4).
 - `GET /search` — EnTur geocoder autocomplete (`geocoder.py`), Nominatim fallback only on zero hits.
 - `GET /journey` — only used to resolve a destination to its first ferry quay.
 - No database: quays are the snapshot, departures are always live.
 
 Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*`):
-- `app/page.tsx` — map + `SearchOverlay` / `MarginPanel` orchestration.
-- `components/MarginPanel.tsx` — one container, two modes: Overview (`DepartureTimeline`, `DepartureCard`s) and Drive mode (`DriveMode`) for a picked departure. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
+- `app/page.tsx` — map-free "ferry board": a search pane (`Band` with the search field, then `HomeLists` = live favourites + nearest quays, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time on phones, side by side from `lg`. The app `Header` (logo, language, theme) stays above the blue `Band`.
+- `components/QuayPanel.tsx` — the band becomes the quay header; below it drive time, arrival, `DepartureTimeline`, a crossing filter (multi-crossing quays) and `DepartureCard`s; tapping a card switches to `DriveMode`. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
 - `hooks/useQuayDepartures.ts` — route fetch + margin-adaptive departure polling; exposes `arrivalAt`.
 - `hooks/useQuays.ts` — quay dataset, cached in localStorage.
 

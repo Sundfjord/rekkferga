@@ -113,10 +113,20 @@
   "marginOnArrival": "Margin on arrival",
   "remainingDrive": "Drive remaining",
   "planB": "Plan B",
-  "nextYouCanMake": "Next you can make",
   "departureAria": "{destination} {time}, margin {margin} minutes",
   "timelineAria": "Timeline: arrive {arrival}. Departures {times}.",
   "progressAria": "{minutes} minutes to the quay, arriving {arrival}. Ferry leaves {departure}.",
   "arrive": "Arrive",
-  "now": "Now"
+  "now": "Now",
+  "searchUnified": "Search for a quay or place",
+  "cancel": "Cancel",
+  "toDestinations": "To {destinations}",
+  "ferryQuays": "Ferry quays",
+  "places": "Places",
+  "allDestinations": "All",
+  "showDeparturesTo": "Show departures to",
+  "driveAway": "{time} away",
+  "selectQuayHint": "Pick a quay to see its departures and your margin.",
+  "noResultsFor": "No results for “{query}”",
+  "noNextDeparture": "No departures"
 }
