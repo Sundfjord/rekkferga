@@ -25,12 +25,20 @@ export function translate(
   return str;
 }
 
-export const formatDuration = (seconds: number): string => {
+const DURATION_UNITS: Record<Language, { hour: string; minute: string }> = {
+  en: { hour: "hr", minute: "min" },
+  no: { hour: "t", minute: "min" },
+  nn: { hour: "t", minute: "min" },
+};
+
+/** e.g. "45min", "2hr", "1hr 30min" (en) / "1t 30min" (no, nn). */
+export const formatDuration = (seconds: number, language: Language = "no"): string => {
+  const { hour, minute } = DURATION_UNITS[language] ?? DURATION_UNITS.no;
   const m = Math.round(seconds / 60);
-  if (m < 60) return `${m} min`;
+  if (m < 60) return `${m}${minute}`;
   const h = Math.floor(m / 60);
   const rem = m % 60;
-  return rem > 0 ? `${h}h ${rem}m` : `${h}h`;
+  return rem > 0 ? `${h}${hour} ${rem}${minute}` : `${h}${hour}`;
 };
 
 export const formatTime = (iso: string): string => {

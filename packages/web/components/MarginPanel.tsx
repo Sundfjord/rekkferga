@@ -3,6 +3,7 @@
 import type { Quay, ResultItem } from "@shared/types";
 import { formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import MarginBadge from "@/components/MarginBadge";
 import Spinner from "@/components/Spinner";
@@ -37,6 +38,7 @@ export default function MarginPanel({
   isRefreshing,
 }: MarginPanelProps) {
   const t = useTranslation();
+  const { language } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
   const isFav = isFavorite(quay.id);
 
@@ -86,7 +88,7 @@ export default function MarginPanel({
             <div className="flex items-baseline gap-2 text-sm" style={{ color: "var(--text-secondary)", fontFamily: "var(--font-dm-sans)" }}>
               <span>{t("driveToQuay")}</span>
               <span className="font-semibold" style={{ fontFamily: "var(--font-mono)" }}>
-                {formatDuration(route.durationSeconds)}
+                {formatDuration(route.durationSeconds, language)}
               </span>
             </div>
           )}

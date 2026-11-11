@@ -7,6 +7,7 @@ import MarginBadge from "./MarginBadge";
 import { useThemeColors } from "../contexts/ThemeContext";
 import { useFavorites } from "../contexts/FavoritesContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useLanguage } from "../contexts/LanguageContext";
 
 interface TripPanelProps {
   journey: JourneyResult;
@@ -28,6 +29,7 @@ export default function TripPanel({
   onRefreshPosition,
 }: TripPanelProps) {
   const { t } = useTranslation();
+  const { currentLanguage } = useLanguage();
   const colors = useThemeColors();
   const { toggleFavorite, isFavorite } = useFavorites();
   const isFav = isFavorite(destination.id);
@@ -156,7 +158,7 @@ export default function TripPanel({
                         {t("car")} → {leg.toPlace.name}
                       </Text>
                       <Text style={[styles.carDuration, { color: colors.onSurface, fontFamily: "JetBrainsMono-Medium", opacity: 0.5 }]}>
-                        {formatDuration(leg.duration)}
+                        {formatDuration(leg.duration, currentLanguage)}
                       </Text>
                     </View>
                   </View>
