@@ -79,3 +79,6 @@ __azurite_db*__.json
 __blobstorage__
 __queuestorage__
 .python_packages
+
+# TypeScript incremental build cache
+*.tsbuildinfo
