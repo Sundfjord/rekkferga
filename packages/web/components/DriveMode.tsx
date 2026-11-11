@@ -88,18 +88,17 @@ export default function DriveMode({
         <div className="mt-auto">
           <TimelineTrack
             markers={[
-              { key: "now", at: 0, kind: "car", fill: "#fff", ink: color, action: t("now"), time: formatTime(new Date(now).toISOString()), priority: 3 },
-              { key: "arrival", at: arr, kind: "quay", fill: "var(--water-dark)", ink: "#fff", action: t("arrive"), time: arrTime, priority: 2 },
-              { key: "ferry", at: dep, kind: "ferry", fill: "#fff", ink: color, action: t("departure"), time: depTime, priority: 2.5 },
+              { key: "now", at: 0, color: "#fff", action: t("now"), time: formatTime(new Date(now).toISOString()) },
+              { key: "arrival", at: arr, color: "var(--water-dark)", action: t("arrive"), time: arrTime },
+              { key: "ferry", at: dep, color: "#fff", action: t("departure"), time: depTime },
             ]}
             segments={[
               { key: "road", from: 0, to: Math.min(arr, dep), color: "#fff" },
               { key: "slack", from: Math.min(arr, dep), to: Math.max(arr, dep), color: "rgba(255,255,255,0.6)" },
             ]}
             trackColor="rgba(255,255,255,0.25)"
-            textColor="#fff"
-            labelSize={13}
-            labelGap={0.2}
+            tooltipBg="#fff"
+            tooltipText={color}
             ariaLabel={t("progressAria", { minutes: Math.round(toQuay), arrival: arrTime, departure: depTime })}
           />
         </div>

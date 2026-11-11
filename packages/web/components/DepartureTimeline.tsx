@@ -30,21 +30,19 @@ export default function DepartureTimeline({
   const frac = (min: number) => Math.min(1, Math.max(0, min / range));
   const arrivalTime = arrivalAt ? formatTime(arrivalAt.toISOString()) : "";
 
+  // Drawn in order, so the arrival marker (last) sits on top of a departure at the same spot.
   const markers: TimelineMarker[] = [
-    { key: "now", at: 0, kind: "car", fill: "var(--water-light)", ink: "#fff", action: t("now"), time: formatTime(new Date(now).toISOString()), priority: 3 },
-    ...departures.map((d, i) => ({
+    { key: "now", at: 0, color: "var(--water-light)", action: t("now"), time: formatTime(new Date(now).toISOString()) },
+    ...departures.map((d) => ({
       key: departureKey(d),
       at: frac(minutesUntil(d.expectedDepartureTime, now)),
-      kind: "ferry" as const,
-      fill: TIER_COLOR[tierOf(d)],
-      ink: "#fff",
+      color: TIER_COLOR[tierOf(d)],
       action: t("departure"),
       time: formatTime(d.expectedDepartureTime),
-      priority: 1 - i * 0.01, // earlier departures keep their labels first
     })),
   ];
   if (arrivalMin !== null) {
-    markers.push({ key: "arrival", at: frac(arrivalMin), kind: "quay", fill: "var(--text-primary)", ink: "var(--surface)", action: t("arrive"), time: arrivalTime, priority: 2 });
+    markers.push({ key: "arrival", at: frac(arrivalMin), color: "var(--text-primary)", action: t("arrive"), time: arrivalTime });
   }
 
   return (
@@ -52,9 +50,8 @@ export default function DepartureTimeline({
       markers={markers}
       segments={arrivalMin === null ? [] : [{ key: "drive", from: 0, to: frac(arrivalMin), color: "var(--water-light)" }]}
       trackColor="var(--surface-variant)"
-      textColor="var(--text-secondary)"
-      labelSize={11}
-      labelGap={0.15}
+      tooltipBg="var(--text-primary)"
+      tooltipText="var(--surface)"
       ariaLabel={t("timelineAria", { arrival: arrivalTime || "–", times: departures.map((d) => formatTime(d.expectedDepartureTime)).join(", ") })}
     />
   );
