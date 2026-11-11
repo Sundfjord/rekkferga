@@ -39,7 +39,7 @@ Type-check web: `cd packages/web && npx tsc --noEmit -p .`
 API endpoints:
 - `GET /quays` — committed Vegvesen NVDB snapshot (`packages/api/data/quays.json`, ~366 quays). `id` = EnTur NSR stop-place id; `relatedQuayIds` = destination quays. Refreshed monthly by `.github/workflows/refresh-quays.yml` → `scripts/refresh_quays.py`.
 - `GET /quay/route` — HERE Routing traffic-aware drive duration (no geometry).
-- `GET /quays/next?ids=…&from=lat,lng` — batch: next reachable departure per quay (the user's favourites), fetched in parallel.
+- `GET /quays/next?ids=…&from=lat,lng` — batch: next few departures + drive time per quay (the user's favourites), fetched in parallel.
 - `GET /quay/departures` — live from EnTur, margins computed, labeled by destination quay. `arrivalTime` optional (omitted → no margins); `limit` 1–12 (default 4).
 - `GET /search` — EnTur geocoder autocomplete (`geocoder.py`), Nominatim fallback only on zero hits.
 - `GET /journey` — only used to resolve a destination to its first ferry quay.
@@ -48,7 +48,8 @@ API endpoints:
 Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*`):
 - `app/page.tsx` — map-free "ferry board": a search pane (`Band` with the search field, then `HomeLists` = live favourites + nearest quays, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time on phones, side by side from `lg`. The app `Header` (logo, language, theme) stays above the blue `Band`.
 - `components/QuayPanel.tsx` — the band becomes the quay header; below it drive time, arrival, `DepartureTimeline`, a crossing filter (multi-crossing quays) and `DepartureCard`s; tapping a card switches to `DriveMode`. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
-- `hooks/useQuayDepartures.ts` — route fetch + margin-adaptive departure polling; exposes `arrivalAt`.
+- `hooks/useDriveTimes.ts` — one drive time per quay shared by all views (favourites write it, the quay view reuses it unless >3 min old). Displayed margins are recomputed client-side from it and one shared `useNow` clock (`withLiveMargins` in `lib/departures.ts`), so every view shows the same numbers.
+- `hooks/useQuayDepartures.ts` — margin-adaptive departure polling for the selected quay; refreshes the shared drive time when stale.
 - `hooks/useQuays.ts` — quay dataset, cached in localStorage.
 
 Mobile (`packages/app`, alias `@/*` → `packages/app/*`) is **not yet migrated** to quay-centric; it still uses `shared/services/{journey,tripStateMachine}.ts` and the legacy `toQuayId`/`mode=refresh` departures path — keep those until mobile is ported.

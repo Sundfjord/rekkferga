@@ -46,11 +46,11 @@ export interface QuayRoute {
   quay: Quay;
 }
 
-/** Next reachable departure for one quay (favourites), from GET /quays/next. */
+/** Next few departures + drive time for one quay (favourites), from GET /quays/next. */
 export interface QuayNext {
   quayId: string;
   driveSeconds: number | null;
-  departure: DepartureOption | null;
+  departures: DepartureOption[];
 }
 
 // ---------------------------------------------------------------------------
@@ -106,7 +106,8 @@ export interface DepartureOption {
   expectedDepartureTime: string;
   realtime: boolean;
   marginMinutes: number | null; // positive = buffer (will make it), negative = will miss; null = unavailable
-  viaNames?: string[]; // intermediate stops between fromQuay and toQuay for this specific departure
+  viaNames?: string[]; // stops called at between the departure quay and the end destination
+  viaQuayIds?: string[]; // NSR ids of those stops (quay-centric API), for crossing filters
   destinationQuayId?: string; // quay-centric: the destination quay this departure serves
   destinationName?: string;
 }

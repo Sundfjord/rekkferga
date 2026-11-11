@@ -49,7 +49,7 @@ export default function DepartureTimeline({
     <TimelineTrack
       markers={markers}
       segments={arrivalMin === null ? [] : [{ key: "drive", from: 0, to: frac(arrivalMin), color: "var(--water-light)" }]}
-      trackColor="var(--surface-variant)"
+      trackColor="var(--timeline-track)"
       tooltipBg="var(--text-primary)"
       tooltipText="var(--surface)"
       ariaLabel={t("timelineAria", { arrival: arrivalTime || "–", times: departures.map((d) => formatTime(d.expectedDepartureTime)).join(", ") })}

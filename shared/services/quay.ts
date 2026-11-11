@@ -48,7 +48,7 @@ export async function fetchQuayDepartures(
   };
 }
 
-/** Next reachable departure for each quay, in one request. `from` enables margins. */
+/** Next few departures + drive time for each quay, in one request. `from` enables drive times. */
 export async function fetchQuaysNext(
   apiUrl: string,
   quayIds: string[],

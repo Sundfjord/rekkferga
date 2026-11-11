@@ -4,7 +4,8 @@ import type { DepartureOption } from "@shared/types";
 import { formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, destinationLabel, splitMargin, tierOf } from "@/lib/departures";
+import { TIER_COLOR, destinationText, splitMargin, tierOf } from "@/lib/departures";
+import DestinationName from "@/components/DestinationName";
 import { ChevronRightIcon } from "@/components/icons";
 
 /**
@@ -16,13 +17,15 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
   const { language } = useLanguage();
   const tier = tierOf(departure);
   const time = formatTime(departure.expectedDepartureTime);
-  const destination = destinationLabel(departure);
+  const destination = destinationText(departure, t("via"));
   const margin = departure.marginMinutes === null ? null : splitMargin(departure.marginMinutes, language);
 
   const body = (
     <>
       <span className="flex w-full items-baseline gap-3 pr-1.5">
-        <span className="min-w-0 flex-1 truncate text-lg font-bold leading-tight">{destination}</span>
+        <span className="min-w-0 flex-1 truncate text-lg font-bold leading-tight">
+          <DestinationName departure={departure} />
+        </span>
         <span className="text-xl font-bold tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
           {time}
         </span>
@@ -37,11 +40,6 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
             {margin.unit && <span className="text-[15px] font-bold tracking-normal"> {margin.unit}</span>}
           </span>
           <ChevronRightIcon />
-        </span>
-      )}
-      {departure.viaNames && departure.viaNames.length > 0 && (
-        <span className="w-full truncate text-xs opacity-90">
-          {t("via")} {departure.viaNames.join(", ")}
         </span>
       )}
     </>

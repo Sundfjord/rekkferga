@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useQuays } from "@/hooks/useQuays";
+import { useDriveTimes } from "@/hooks/useDriveTimes";
+import { useNow } from "@/hooks/useNow";
 import { useQuayDepartures } from "@/hooks/useQuayDepartures";
 import { useFavoriteNext } from "@/hooks/useFavoriteNext";
 import { useDestinationSearch } from "@/hooks/useDestinationSearch";
@@ -51,13 +53,24 @@ export default function Home() {
 
   const quaysById = useMemo(() => new Map(quays.map((q) => [q.id, q])), [quays]);
   const favoriteQuayIds = useMemo(() => favorites.filter((f) => quaysById.has(f.id)).map((f) => f.id), [favorites, quaysById]);
-  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation);
+  // One drive time per quay and one clock for every view, so favourites and the quay
+  // overview always show the same drive time and margin.
+  const now = useNow();
+  const driveTimes = useDriveTimes(userLocation);
+  const driveSecondsFor = useCallback((id: string) => driveTimes.get(id)?.seconds ?? null, [driveTimes]);
+  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, driveTimes.put);
   const nearby = useMemo(() => (userLocation ? nearestQuays(quays, userLocation, NEARBY_COUNT) : []), [quays, userLocation]);
   const places = useDestinationSearch(searchOpen ? query : "", userLocation);
 
   const quay = selection?.quay ?? null;
   // Multi-crossing quays fetch more so each crossing still has departures when filtered.
-  const departures = useQuayDepartures(quay, userLocation, quay && quay.relatedQuayIds.length > 1 ? 12 : 4);
+  const departures = useQuayDepartures(
+    quay,
+    userLocation,
+    quay && quay.relatedQuayIds.length > 1 ? 12 : 4,
+    driveTimes.get,
+    driveTimes.put,
+  );
 
   const closeSearch = useCallback(() => {
     setQuery("");
@@ -166,6 +179,8 @@ export default function Home() {
               favorites={favorites}
               quaysById={quaysById}
               favoriteNext={favoriteNext}
+              driveSecondsFor={driveSecondsFor}
+              now={now}
               nearby={nearby}
               onSelectQuay={selectQuay}
               onSelectPlace={selectPlace}
@@ -184,6 +199,8 @@ export default function Home() {
             initialDestination={selection.destination}
             onBack={() => setSelection(null)}
             {...departures}
+            driveSeconds={driveSecondsFor(selection.quay.id)}
+            now={now}
           />
         ) : (
           <p className="mx-auto mt-24 max-w-xs text-center text-[15px]" style={{ color: "var(--text-secondary)" }}>

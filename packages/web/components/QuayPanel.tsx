@@ -6,9 +6,8 @@ import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { useNow } from "@/hooks/useNow";
 import type { QuayDeparturesState } from "@/hooks/useQuayDepartures";
-import { departureKey } from "@/lib/departures";
+import { arrivalFrom, departureKey, servesQuay, withLiveMargins } from "@/lib/departures";
 import { shortQuayName } from "@/lib/quays";
 import Band from "@/components/Band";
 import DepartureCard from "@/components/DepartureCard";
@@ -21,6 +20,10 @@ const VISIBLE_DEPARTURES = 4;
 const BAND_BUTTON = "flex h-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25";
 
 export interface QuayPanelProps extends QuayDeparturesState {
+  /** Shared drive time for this quay (useDriveTimes); null when unknown. */
+  driveSeconds: number | null;
+  /** Shared clock, so margins match the favourites exactly. */
+  now: number;
   quay: Quay;
   quaysById: Map<string, Quay>;
   /** Pre-selected crossing (destination quay id), e.g. from a place search. */
@@ -63,17 +66,16 @@ export default function QuayPanel({
   quaysById,
   initialDestination,
   onBack,
-  route,
+  driveSeconds,
+  now,
   departures,
   loading,
   lastRefreshAt,
   isRefreshing,
-  arrivalAt,
 }: QuayPanelProps) {
   const t = useTranslation();
   const { language } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
-  const now = useNow();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const [destination, setDestination] = useState<string | null>(initialDestination);
 
@@ -81,7 +83,12 @@ export default function QuayPanel({
   const crossings = quay.relatedQuayIds
     .map((id) => ({ id, name: quaysById.get(id)?.name }))
     .filter((c): c is { id: string; name: string } => !!c.name);
-  const filtered = destination ? departures.filter((d) => d.destinationQuayId === destination) : departures;
+  // Margins are recomputed from the shared drive time and clock, so they match the
+  // favourites and tick with the clock rather than jumping at each poll.
+  const arrivalAt = arrivalFrom(now, driveSeconds);
+  const live = withLiveMargins(departures, arrivalAt);
+  // A crossing filter keeps departures that end there or call there on the way.
+  const filtered = destination ? live.filter((d) => servesQuay(d, destination)) : live;
   const visible = filtered.slice(0, VISIBLE_DEPARTURES);
 
   // Departures are re-fetched on a poll, so track the pick by identity, not index.
@@ -145,9 +152,9 @@ export default function QuayPanel({
           <DriveMode key={selectedKey} departure={selected} departures={filtered} arrivalAt={arrivalAt} now={now} onSelect={select} />
         ) : (
           <>
-            {route && (
+            {driveSeconds != null && (
               <div className="flex flex-wrap gap-2">
-                <Chip label={t("driveTime")} value={formatDuration(route.durationSeconds, language)} />
+                <Chip label={t("driveTime")} value={formatDuration(driveSeconds, language)} />
                 {arrivalAt && <Chip label={t("arrive")} value={formatTime(arrivalAt.toISOString())} />}
               </div>
             )}

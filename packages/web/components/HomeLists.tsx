@@ -5,7 +5,7 @@ import type { FavoriteNext } from "@/hooks/useFavoriteNext";
 import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, destinationLabel, splitMargin, tierOf } from "@/lib/departures";
+import { TIER_COLOR, arrivalFrom, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
 import { destinationNames } from "@/lib/quays";
 import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
 
@@ -20,8 +20,21 @@ export function SectionTitle({ children }: { children: React.ReactNode }) {
 export const LIST_CARD = "overflow-hidden rounded-[20px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]";
 export const ROW = "flex min-h-[60px] w-full cursor-pointer items-center gap-3 py-2.5 pl-4 pr-3 text-left transition-colors hover:bg-[var(--surface-tint)]";
 
-/** The favourite's next reachable departure as a tier-coloured block. */
-function NextBlock({ next, loaded }: { next: QuayNext | undefined; loaded: boolean }) {
+/**
+ * The favourite's next reachable departure as a tier-coloured block. The margin is computed
+ * here from the shared drive time and clock — the same inputs the quay view uses.
+ */
+function NextBlock({
+  next,
+  loaded,
+  driveSeconds,
+  now,
+}: {
+  next: QuayNext | undefined;
+  loaded: boolean;
+  driveSeconds: number | null;
+  now: number;
+}) {
   const t = useTranslation();
   const { language } = useLanguage();
   const base = "flex min-w-[132px] flex-shrink-0 flex-col rounded-[14px] px-3 py-2";
@@ -29,7 +42,7 @@ function NextBlock({ next, loaded }: { next: QuayNext | undefined; loaded: boole
   if (!next && !loaded) {
     return <span className={`${base} h-[58px] animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
   }
-  const dep = next?.departure;
+  const dep = next ? nextReachable(withLiveMargins(next.departures, arrivalFrom(now, driveSeconds))) : null;
   if (!dep) {
     return (
       <span className={`${base} justify-center text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
@@ -39,14 +52,14 @@ function NextBlock({ next, loaded }: { next: QuayNext | undefined; loaded: boole
   }
   const margin = dep.marginMinutes === null ? null : splitMargin(dep.marginMinutes, language);
   const time = formatTime(dep.expectedDepartureTime);
-  const dest = destinationLabel(dep);
+  const dest = destinationText(dep, t("via"));
   return (
     <span className={`${base} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
       <span className="text-[22px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
         {margin ? margin.value : time}
         {margin?.unit && <span className="text-[13px]"> {margin.unit}</span>}
       </span>
-      <span className="whitespace-nowrap text-xs">
+      <span className="max-w-[180px] truncate text-xs">
         {margin && <b style={{ fontFamily: "var(--font-mono)" }}>{time} </b>}
         {dest}
       </span>
@@ -62,6 +75,8 @@ export default function HomeLists({
   favorites,
   quaysById,
   favoriteNext,
+  driveSecondsFor,
+  now,
   nearby,
   onSelectQuay,
   onSelectPlace,
@@ -69,6 +84,10 @@ export default function HomeLists({
   favorites: SavedDestination[];
   quaysById: Map<string, Quay>;
   favoriteNext: FavoriteNext;
+  /** Shared drive time per quay (useDriveTimes); null when unknown. */
+  driveSecondsFor: (quayId: string) => number | null;
+  /** Shared clock, so margins match the quay view exactly. */
+  now: number;
   nearby: Quay[];
   onSelectQuay: (quay: Quay) => void;
   onSelectPlace: (place: SavedDestination) => void;
@@ -103,6 +122,7 @@ export default function HomeLists({
               );
             }
             const next = favoriteNext.byId.get(quay.id);
+            const drive = driveSecondsFor(quay.id);
             return (
               <button
                 key={f.id}
@@ -113,13 +133,13 @@ export default function HomeLists({
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                   <span className="truncate text-[17px] font-bold">{quay.name}</span>
-                  {next?.driveSeconds != null && (
+                  {drive != null && (
                     <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                      {t("driveAway", { time: formatDuration(next.driveSeconds, language) })}
+                      {t("driveAway", { time: formatDuration(drive, language) })}
                     </span>
                   )}
                 </span>
-                <NextBlock next={next} loaded={favoriteNext.loaded} />
+                <NextBlock next={next} loaded={favoriteNext.loaded} driveSeconds={drive} now={now} />
               </button>
             );
           })}

@@ -4,11 +4,12 @@ import type { DepartureOption } from "@shared/types";
 import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, destinationLabel, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
+import { TIER_COLOR, departureKey, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
+import { rushMessage } from "@/lib/rushMessages";
+import DestinationName from "@/components/DestinationName";
 import { ChevronRightIcon } from "@/components/icons";
 import TimelineTrack from "@/components/TimelineTrack";
 
-const SENTENCE_KEY = { safe: "sentenceSafe", tight: "sentenceTight", missed: "sentenceMissed" } as const;
 
 /**
  * Glanceable view of one departure for a driver: the margin, big, on the tier colour; a bar
@@ -53,7 +54,7 @@ export default function DriveMode({
         style={{ backgroundColor: color, fontFamily: "var(--font-dm-sans)" }}
       >
         <span className="text-2xl font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>
-          {destinationLabel(departure)}
+          <DestinationName departure={departure} />
         </span>
 
         <div className="grid flex-shrink-0 grid-cols-2 gap-2.5">
@@ -80,7 +81,7 @@ export default function DriveMode({
               {margin.value}
               {margin.unit && <span className="text-[30px] tracking-normal"> {margin.unit}</span>}
             </span>
-            <span className="mt-1.5 text-[19px] font-semibold leading-snug">{t(SENTENCE_KEY[tier])}</span>
+            <span className="mt-1.5 text-[19px] font-semibold leading-snug">{rushMessage(t, departure.marginMinutes ?? 0, departureKey(departure))}</span>
           </div>
         )}
 
@@ -114,7 +115,7 @@ export default function DriveMode({
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[13px]">{t("planB")}</span>
             <span className="truncate text-[17px] font-bold">
-              {destinationLabel(alt)}{" "}
+              <DestinationName departure={alt} />{" "}
               <span style={{ fontFamily: "var(--font-mono)" }}>{formatTime(alt.expectedDepartureTime)}</span>
             </span>
           </span>

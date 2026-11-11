@@ -4,9 +4,8 @@ from journey_planner import (
     get_departures_from_entur,
     get_departures_from_nsr_id,
     _compute_margin_minutes,
-    _extract_via_names,
 )
-from quays import related_quay_ids, quay_name
+from quays import quay_name
 from util import format_datetime_for_api
 
 # Departures with margin below this threshold are excluded from the response.
@@ -71,32 +70,29 @@ def _call_name(call: dict[str, Any]) -> str | None:
     return ((call.get("quay") or {}).get("stopPlace") or {}).get("name")
 
 
-def _resolve_destination(
-    sequence: list[dict[str, Any]], from_quay_id: str, related: set[str]
-) -> tuple[str | None, str | None]:
-    """Pick the destination quay a departure serves: the first downstream call that is a
-    related (connected) quay, falling back to the service journey's terminal stop."""
+def _resolve_route(
+    sequence: list[dict[str, Any]], from_quay_id: str
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    """Where a departure actually ends (the service journey's terminal stop) and the stops it
+    calls at on the way, after `from_quay_id`. E.g. from Gjermundshamn on
+    Gjermundshamn → Varaldsøy → Årsnes: terminal Årsnes, via [Varaldsøy]."""
     from_index = next(
         (i for i, c in enumerate(sequence) if _call_id(c) == from_quay_id), -1
     )
-    downstream = sequence[from_index + 1 :] if from_index >= 0 else sequence
+    downstream = [c for c in sequence[from_index + 1 :] if _call_id(c)]
     if not downstream:
-        return None, None
-    for call in downstream:
-        if _call_id(call) in related:
-            return _call_id(call), _call_name(call)
-    terminal = downstream[-1]
-    return _call_id(terminal), _call_name(terminal)
+        return None, []
+    return downstream[-1], downstream[:-1]
 
 
 def _build_labeled_departures(
     raw_stop_places: list[dict[str, Any]],
     from_quay_id: str,
-    related: set[str],
     arrival_time_iso: str | None,
 ) -> list[dict[str, Any]]:
-    """Turn raw EnTur stop-place data into departures labeled with the destination quay
-    they serve. Used for the quay-centric view where a quay may have several crossings."""
+    """Turn raw EnTur stop-place data into departures labeled with their end destination
+    and the stops called at on the way (via). A quay may have several crossings; clients
+    filter by crossing using destinationQuayId plus viaQuayIds."""
     if not raw_stop_places:
         return []
     estimated_calls = (raw_stop_places[0] or {}).get("estimatedCalls") or []
@@ -110,9 +106,10 @@ def _build_labeled_departures(
         if not sequence:
             continue
 
-        dest_id, dest_name = _resolve_destination(sequence, from_quay_id, related)
-        if not dest_id:
+        terminal, via = _resolve_route(sequence, from_quay_id)
+        if not terminal:
             continue
+        dest_id = _call_id(terminal)
 
         dep_time = departure.get("expectedDepartureTime")
         margin = (
@@ -126,8 +123,9 @@ def _build_labeled_departures(
                 "realtime": departure.get("realtime", False),
                 "marginMinutes": margin,
                 "destinationQuayId": dest_id,
-                "destinationName": quay_name(dest_id) or dest_name,
-                "viaNames": _extract_via_names(passing_times, from_quay_id, dest_id),
+                "destinationName": quay_name(dest_id) or _call_name(terminal),
+                "viaQuayIds": [_call_id(c) for c in via],
+                "viaNames": [quay_name(_call_id(c)) or _call_name(c) for c in via],
             }
         )
 
@@ -142,7 +140,6 @@ def evaluate_quay_departures(
     if not from_quay_id:
         return {"departures": [], "selectedDeparture": None}
 
-    related = set(related_quay_ids(from_quay_id))
     start_time = (
         format_datetime_for_api(arrival_time_iso, subtract_minutes=5)
         if arrival_time_iso
@@ -151,7 +148,7 @@ def evaluate_quay_departures(
     raw = get_departures_from_nsr_id(
         from_quay_id, start_time, number_of_departures=max(limit * 3, 12)
     )
-    labeled = _build_labeled_departures(raw, from_quay_id, related, arrival_time_iso)
+    labeled = _build_labeled_departures(raw, from_quay_id, arrival_time_iso)
 
     visible = [
         d

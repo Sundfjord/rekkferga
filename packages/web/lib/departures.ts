@@ -15,8 +15,48 @@ export const TIER_COLOR: Record<Tier, string> = {
   none: "var(--margin-none)",
 };
 
-/** Where a departure goes, without the redundant "ferjekai" ("Hareid ferjekai" → "Hareid"). */
-export const destinationLabel = (d: DepartureOption) => (d.destinationName ? shortQuayName(d.destinationName) : "");
+/**
+ * Where a departure ends and what it calls at on the way, without the redundant "ferjekai":
+ * Gjermundshamn → Varaldsøy → Årsnes gives { name: "Årsnes", via: ["Varaldsøy"] }.
+ */
+export function destinationParts(d: DepartureOption): { name: string; via: string[] } {
+  return {
+    name: d.destinationName ? shortQuayName(d.destinationName) : "",
+    via: (d.viaNames ?? []).map(shortQuayName),
+  };
+}
+
+/** "Årsnes via Varaldsøy" — `viaWord` is the localised "via". */
+export function destinationText(d: DepartureOption, viaWord: string): string {
+  const { name, via } = destinationParts(d);
+  return via.length ? `${name} ${viaWord} ${via.join(", ")}` : name;
+}
+
+/** Whether a departure serves a crossing: it ends there or calls there on the way. */
+export const servesQuay = (d: DepartureOption, quayId: string) =>
+  d.destinationQuayId === quayId || (d.viaQuayIds ?? []).includes(quayId);
+
+/** When you reach the quay if you leave now, from the shared drive time; null without one. */
+export const arrivalFrom = (now: number, driveSeconds: number | null | undefined) =>
+  driveSeconds == null ? null : new Date(now + driveSeconds * 1000);
+
+/**
+ * Margins recomputed in the browser from one arrival time, so every view shows the same
+ * number and it moves with the clock instead of jumping at each poll. Whole minutes,
+ * rounded down (a 30-second miss shows −1, never 0). Without an arrival the server's
+ * values (null without a position) are kept.
+ */
+export function withLiveMargins(departures: DepartureOption[], arrivalAt: Date | null): DepartureOption[] {
+  if (!arrivalAt) return departures;
+  return departures.map((d) => ({
+    ...d,
+    marginMinutes: Math.floor((Date.parse(d.expectedDepartureTime) - arrivalAt.getTime()) / 60_000),
+  }));
+}
+
+/** The next departure you can make (margin ≥ 0), else the first — mirrors the API's pick. */
+export const nextReachable = (departures: DepartureOption[]) =>
+  departures.find((d) => d.marginMinutes !== null && d.marginMinutes >= 0) ?? departures[0] ?? null;
 
 /** Stable identity across polls (the list is re-fetched, so array indexes shift). */
 export const departureKey = (d: DepartureOption) =>

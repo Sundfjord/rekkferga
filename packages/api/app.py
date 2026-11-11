@@ -98,7 +98,8 @@ def get_quay_route():
         seconds = get_drive_seconds((from_lat, from_lng), (quay["latitude"], quay["longitude"]))
         if seconds is None:
             return {"error": "Routing unavailable"}, 502
-        return cache({"durationSeconds": seconds, "quay": quay}, 300)
+        # Short cache: drive time is traffic-aware and shared with /quays/next (also 60 s).
+        return cache({"durationSeconds": seconds, "quay": quay}, 60)
     except Exception:
         logger.exception("Error in get_quay_route")
         return {"error": "Internal server error"}, 500
@@ -150,9 +151,9 @@ def _parse_coords(raw: str | None) -> tuple[float, float] | None:
         return None
 
 
-def _next_departure(quay_id: str, origin: tuple[float, float] | None) -> dict:
-    """The next departure the user can make from one quay (or simply the next one,
-    without a position), plus the drive time it was computed with."""
+def _next_departures(quay_id: str, origin: tuple[float, float] | None) -> dict:
+    """The next few departures from one quay, plus the drive time to it. Clients recompute
+    margins live and pick the first they can still make, so several are returned."""
     quay = get_quay(quay_id)
     drive = None
     if origin and quay:
@@ -161,23 +162,23 @@ def _next_departure(quay_id: str, origin: tuple[float, float] | None) -> dict:
     if drive is not None:
         arrival = (datetime.now(timezone.utc) + timedelta(seconds=drive)).isoformat().replace("+00:00", "Z")
     try:
-        departure = evaluate_quay_departures(quay_id, arrival)["selectedDeparture"]
+        departures = evaluate_quay_departures(quay_id, arrival)["departures"]
     except Exception:
-        logger.exception("next departure failed for %s", quay_id)
-        departure = None
-    return {"quayId": quay_id, "driveSeconds": drive, "departure": departure}
+        logger.exception("next departures failed for %s", quay_id)
+        departures = []
+    return {"quayId": quay_id, "driveSeconds": drive, "departures": departures}
 
 
 @app.get("/quays/next")
 def get_quays_next():
-    """Batch: next reachable departure for several quays (the user's favourites) in one call."""
+    """Batch: next departures + drive time for several quays (the user's favourites) in one call."""
     ids = [i for i in (request.args.get("ids") or "").split(",") if i]
     ids = [i for i in dict.fromkeys(ids) if is_valid_nsr_id(i) and get_quay(i)][:MAX_NEXT_QUAYS]
     if not ids:
         return cache([], 60)
     origin = _parse_coords(request.args.get("from"))
     with ThreadPoolExecutor(max_workers=6) as pool:
-        results = list(pool.map(lambda qid: _next_departure(qid, origin), ids))
+        results = list(pool.map(lambda qid: _next_departures(qid, origin), ids))
     return cache(results, 60)
 
 
