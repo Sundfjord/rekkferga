@@ -2,12 +2,12 @@ name: Deploy API to Railway
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master]
     paths:
       - "packages/api/**"
       - ".github/workflows/api-deploy.yml"
   pull_request:
-    branches: [main]
+    branches: [master]
     paths:
       - "packages/api/**"
 
@@ -39,8 +39,6 @@ jobs:
           else
             echo "No tests found, skipping test execution"
           fi
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
       - name: Run linting
         run: |
@@ -53,7 +51,7 @@ jobs:
   deploy:
     needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/master'
     defaults:
       run:
         working-directory: packages/api

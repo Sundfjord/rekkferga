@@ -97,10 +97,10 @@ rekkferga/
 
 ## 🌐 Hosting
 
-- **API**: Railway (`api.rekkferga.com`)
-- **Web**: Vercel (`rekkferga.com`)
-- **Cron**: Azure Functions
-- **Mobile**: Expo EAS Build
+- **Web**: Cloudflare Pages, static export of `packages/web` (`https://rekkferga.no`)
+- **API**: Railway, Docker (`https://api.rekkferga.no`)
+- **DNS**: Cloudflare (domain registered at GoDaddy)
+- **Quay data refresh**: GitHub Actions (`refresh-quays.yml`, monthly)
 
 ## 📚 Documentation
 

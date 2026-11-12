@@ -1,276 +1,54 @@
-# GitHub Secrets Setup Guide
+# Deployment & secrets
 
-This guide explains how to set up all the required GitHub secrets for the Rekkferga deployment workflows.
+Production runs on two services, both deploying from the `master` branch:
 
-## 🔐 Required Secrets
+| Part | Host | Address | How it deploys |
+|---|---|---|---|
+| Web (`packages/web`) | Cloudflare Pages | `https://rekkferga.no` | Cloudflare's Git integration builds on every push |
+| API (`packages/api`) | Railway (Docker) | `https://api.rekkferga.no` | `.github/workflows/api-deploy.yml` runs `railway up` |
 
-### API Deployment (Railway)
+DNS for `rekkferga.no` is on Cloudflare (the domain stays registered at GoDaddy; only its
+nameservers point to Cloudflare). The only other workflow is `refresh-quays.yml`, the monthly
+quay-snapshot refresh, which needs no secrets beyond the built-in `GITHUB_TOKEN`.
 
-#### `RAILWAY_TOKEN`
+## GitHub repository secrets
 
-**Description**: Railway authentication token
-**How to get it**:
+Set under **Settings → Secrets and variables → Actions**, or with the `gh` CLI.
 
-1. Go to [Railway Dashboard](https://railway.app/dashboard)
-2. Click on your profile → Settings → Tokens
-3. Create a new token with "Full Access"
-4. Copy the token value
-
-#### `RAILWAY_PROJECT_ID`
-
-**Description**: Your Railway project ID
-**How to get it**:
-
-1. Go to your Railway project
-2. Click on Settings → General
-3. Copy the Project ID
-
-#### `DATABASE_URL`
-
-**Description**: PostgreSQL connection string (Railway Postgres addon)
-**How to get it**:
-
-1. Go to your Railway project
-2. Click on the Postgres addon
-3. Go to the "Connect" tab
-4. Copy the value of `DATABASE_URL` (format: `postgresql://user:pass@host:port/dbname`)
-
-### Web Deployment (Vercel)
-
-#### `VERCEL_TOKEN`
-
-**Description**: Vercel authentication token
-**How to get it**:
-
-1. Go to [Vercel Dashboard](https://vercel.com/account/tokens)
-2. Click "Create Token"
-3. Give it a name (e.g., "Rekkferga Deploy")
-4. Select "Full Account" scope
-5. Copy the token
-
-#### `VERCEL_ORG_ID`
-
-**Description**: Your Vercel organization ID
-**How to get it**:
-
-1. Go to Vercel Dashboard → Settings → General
-2. Copy the Team ID (this is your org ID)
-
-#### `VERCEL_PROJECT_ID`
-
-**Description**: Your Vercel project ID
-**How to get it**:
-
-1. Go to your Vercel project
-2. Click Settings → General
-3. Copy the Project ID
-
-#### `NEXT_PUBLIC_API_URL`
-
-**Description**: Public API URL for the web app
-**Value**: `https://api.rekkferga.com`
-
-### API Geocoding (OpenRouteService)
-
-#### `ORS_API_KEY`
-
-**Description**: OpenRouteService API key (used as fallback geocoding in the API)
-**How to get it**:
-
-1. Go to [OpenRouteService](https://openrouteservice.org/dev/#/signup)
-2. Sign up for a free account
-3. Go to Dashboard → Request a Token
-4. Copy the API key
-
-### Cron Deployment (Azure Functions)
-
-#### `AZURE_FUNCTIONAPP_PUBLISH_PROFILE`
-
-**Description**: Azure Functions publish profile
-**How to get it**:
-
-1. Go to Azure Portal → Function App
-2. Select your function app
-3. Click "Get publish profile"
-4. Download the file and copy its contents
-
-### Mobile App Build (EAS)
-
-#### `EXPO_TOKEN`
-
-**Description**: Expo authentication token
-**How to get it**:
-
-1. Install EAS CLI: `npm install -g @expo/eas-cli`
-2. Login: `eas login`
-3. Go to [Expo Dashboard](https://expo.dev/accounts/[username]/settings/access-tokens)
-4. Create a new access token
-5. Copy the token
-
-#### `EXPO_PUBLIC_API_URL`
-
-**Description**: Public API URL for the mobile app
-**Value**: `https://api.rekkferga.com`
-
-## 🛠️ Setting Up Secrets
-
-### Method 1: GitHub Web Interface
-
-1. Go to your GitHub repository
-2. Click Settings → Secrets and variables → Actions
-3. Click "New repository secret"
-4. Add each secret with the name and value
-
-### Method 2: GitHub CLI
+| Secret | Used by | Where to get it |
+|---|---|---|
+| `RAILWAY_TOKEN` | `api-deploy.yml` | Railway project → Settings → Tokens → create a **project token** for the production environment |
+| `RAILWAY_PROJECT_ID` | `api-deploy.yml` | Railway project → Settings → General → Project ID |
 
 ```bash
-# Install GitHub CLI
-gh auth login
-
-# Add secrets
-gh secret set RAILWAY_TOKEN --body "your-railway-token"
-gh secret set RAILWAY_PROJECT_ID --body "your-project-id"
-gh secret set DATABASE_URL --body "your-database-url"
-gh secret set ORS_API_KEY --body "your-ors-api-key"
-gh secret set VERCEL_TOKEN --body "your-vercel-token"
-gh secret set VERCEL_ORG_ID --body "your-org-id"
-gh secret set VERCEL_PROJECT_ID --body "your-project-id"
-gh secret set NEXT_PUBLIC_API_URL --body "https://api.rekkferga.com"
-gh secret set AZURE_FUNCTIONAPP_PUBLISH_PROFILE --body "your-publish-profile"
-gh secret set EXPO_TOKEN --body "your-expo-token"
-gh secret set EXPO_PUBLIC_API_URL --body "https://api.rekkferga.com"
+gh secret set RAILWAY_TOKEN
+gh secret set RAILWAY_PROJECT_ID
 ```
 
-## 🔧 Environment-Specific Secrets
+## Railway service variables
 
-### Development Environment
+Set on the API service in Railway (not in GitHub):
 
-```bash
-NEXT_PUBLIC_API_URL=http://localhost:5000
-EXPO_PUBLIC_API_URL=http://localhost:5000
-```
+| Variable | Value |
+|---|---|
+| `HERE_API_KEY` | HERE Routing API key (server-side only — never expose it to the web build) |
 
-### Staging Environment
+Custom domain: add `api.rekkferga.no` on the service, then create the CNAME Railway shows in
+Cloudflare DNS. With the record proxied, set Cloudflare SSL/TLS mode to **Full (strict)**.
 
-```bash
-NEXT_PUBLIC_API_URL=https://staging-api.rekkferga.com
-EXPO_PUBLIC_API_URL=https://staging-api.rekkferga.com
-```
+## Cloudflare Pages project
 
-### Production Environment
+Connect the GitHub repository and use:
 
-```bash
-NEXT_PUBLIC_API_URL=https://api.rekkferga.com
-EXPO_PUBLIC_API_URL=https://api.rekkferga.com
-```
+| Setting | Value |
+|---|---|
+| Production branch | `master` |
+| Root directory | `packages/web` |
+| Build command | `npm run build` |
+| Build output directory | `out` |
+| Environment variable | `NEXT_PUBLIC_API_URL` = `https://api.rekkferga.no` |
 
-## 🚨 Security Best Practices
-
-### 1. Token Permissions
-
-- Use the minimum required permissions for each token
-- Regularly rotate tokens (every 90 days)
-- Never commit tokens to your repository
-
-### 2. Environment Variables
-
-- Use different tokens for different environments
-- Keep production tokens separate from development
-- Use environment-specific API URLs
-
-### 3. Access Control
-
-- Limit who has access to repository secrets
-- Use organization-level secrets when possible
-- Audit secret access regularly
-
-## 🔍 Troubleshooting
-
-### Common Issues
-
-#### "Invalid Railway Token"
-
-- Check if the token has expired
-- Verify the token has the correct permissions
-- Ensure the token is for the right Railway account
-
-#### "Vercel Project Not Found"
-
-- Verify the project ID is correct
-- Check if the token has access to the project
-- Ensure the project exists in the specified organization
-
-#### "Azure Functions Deploy Failed"
-
-- Check if the publish profile is valid
-- Verify the function app exists
-- Ensure the Azure subscription is active
-
-#### "EAS Build Failed"
-
-- Verify the Expo token is valid
-- Check if the project is configured correctly
-- Ensure the EAS project exists
-
-### Debugging Workflows
-
-1. **Check workflow logs**:
-
-   - Go to Actions tab in your repository
-   - Click on the failed workflow
-   - Review the step-by-step logs
-
-2. **Test secrets locally**:
-
-   ```bash
-   # Test Railway
-   railway login
-   railway up
-
-   # Test Vercel
-   vercel login
-   vercel --prod
-
-   # Test EAS
-   eas login
-   eas build --platform all
-   ```
-
-3. **Verify environment variables**:
-   - Check if all required secrets are set
-   - Verify the values are correct
-   - Ensure no extra spaces or characters
-
-## 📋 Checklist
-
-- [ ] Railway token and project ID
-- [ ] Vercel token, org ID, and project ID
-- [ ] Azure Functions publish profile
-- [ ] Expo token
-- [ ] Railway DATABASE_URL
-- [ ] ORS API key
-- [ ] API URLs for different environments
-- [ ] Test all deployment workflows
-- [ ] Verify secrets are working correctly
-
-## 🆘 Support
-
-If you encounter issues:
-
-1. Check the [GitHub Actions documentation](https://docs.github.com/en/actions)
-2. Review the [Railway documentation](https://docs.railway.app)
-3. Check the [Vercel documentation](https://vercel.com/docs)
-4. Review the [Azure Functions documentation](https://docs.microsoft.com/en-us/azure/azure-functions/)
-5. Check the [Expo documentation](https://docs.expo.dev)
-
-## 🔄 Updating Secrets
-
-To update a secret:
-
-1. Go to repository Settings → Secrets and variables → Actions
-2. Find the secret you want to update
-3. Click "Update"
-4. Enter the new value
-5. Click "Update secret"
-
-The new value will be used in the next workflow run.
+`NEXT_PUBLIC_API_URL` is inlined at build time, so changing it requires a new build. Pages
+clones the whole repository, so the `../../shared` imports resolve; dependencies install from
+`packages/web/package-lock.json`. Add `rekkferga.no` (and `www.rekkferga.no`) under the
+project's **Custom domains**.

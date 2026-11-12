@@ -22,7 +22,7 @@ def get_locations_nominatim(query: str | None, size: int = 5):
         response = requests.get(
             url,
             params=params,
-            headers={"User-Agent": "Rekkferga/1.0 (https://rekkferga.com)"},
+            headers={"User-Agent": "Rekkferga/1.0 (https://rekkferga.no)"},
             timeout=5,
         )
 

@@ -4,8 +4,8 @@ Rekkferga is a ferry journey planner for Norway. npm-workspaces monorepo:
 
 | Package | Stack | Deploys to |
 |---|---|---|
-| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map) | Vercel |
-| `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind | EAS Build |
+| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map), static export | Cloudflare Pages (`rekkferga.no`) |
+| `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind | — (not deployed yet) |
 | `packages/api` | Flask (Python, `.venv`) | Railway (Docker) |
 | `packages/cron` | Azure Functions skeleton — unused; quay refresh runs in GitHub Actions | Azure |
 | `shared/` | TS `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | — |
@@ -58,4 +58,4 @@ Mobile (`packages/app`, alias `@/*` → `packages/app/*`) is **not yet migrated*
 
 - Prefer types from `shared/types/index.ts` over local definitions.
 - User-facing strings go in all three `shared/locales/*.json`, nested by group (`general`, `favorites`, `search`, `home`, `quay`, `drive`, `trip` = legacy mobile) and addressed by dotted path: `t("quay.driveTime")`; lists via `t.list("drive.rush.4to6")` (web) / `i18n.list(...)` (app). Fallback nn → no → en per key (`translate`/`translateList` in `shared/utils`). Put broadly reusable words in `general`. Locale-aware formatting helpers take a `Language` argument (e.g. `formatDuration(seconds, language)`).
-- CI/CD secrets: `.github/SETUP_GITHUB_SECRETS.md`.
+- Deployment and secrets: `.github/SETUP_GITHUB_SECRETS.md`. Main branch is `master`. The web build is a static export (`output: "export"` in `next.config.ts`) — no server-only Next.js features (API routes, server actions, image optimisation).
