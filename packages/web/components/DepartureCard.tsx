@@ -17,7 +17,7 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
   const { language } = useLanguage();
   const tier = tierOf(departure);
   const time = formatTime(departure.expectedDepartureTime);
-  const destination = destinationText(departure, t("via"));
+  const destination = destinationText(departure, t("general.via"));
   const margin = departure.marginMinutes === null ? null : splitMargin(departure.marginMinutes, language);
 
   const body = (
@@ -55,7 +55,7 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
     <button
       type="button"
       onClick={onSelect}
-      aria-label={t("departureAria", { destination, time, margin: margin.value })}
+      aria-label={t("quay.departureAria", { destination, time, margin: margin.value })}
       className={`${className} cursor-pointer transition-transform active:scale-[0.99]`}
       style={style}
     >

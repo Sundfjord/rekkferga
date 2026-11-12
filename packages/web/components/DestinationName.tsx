@@ -14,7 +14,7 @@ export default function DestinationName({ departure }: { departure: DepartureOpt
       {via.length > 0 && (
         <span className="font-normal">
           {" "}
-          {t("via")} {via.join(", ")}
+          {t("general.via")} {via.join(", ")}
         </span>
       )}
     </>

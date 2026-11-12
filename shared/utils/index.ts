@@ -4,25 +4,58 @@ import type { DepartureOption } from '../types';
 
 export type Language = "en" | "no" | "nn";
 
+/** A locale file: nested groups of strings and string lists, addressed by dotted paths. */
+export type TranslationTree = { [key: string]: string | string[] | TranslationTree };
+export type Translations = Record<Language, TranslationTree>;
+
+// Nynorsk falls back to Bokmål, everything falls back to English.
+const fallbackChain = (language: Language): Language[] =>
+  language === "nn" ? ["nn", "no", "en"] : language === "en" ? ["en"] : [language, "en"];
+
+function resolve(tree: TranslationTree | undefined, path: string): unknown {
+  let node: unknown = tree;
+  for (const part of path.split(".")) {
+    if (node === null || typeof node !== "object" || Array.isArray(node)) return undefined;
+    node = (node as TranslationTree)[part];
+  }
+  return node;
+}
+
+/**
+ * A string by dotted path ("quay.driveTime"), with `{name}` variables filled in. Falls back
+ * through the language chain; returns the key itself when no language has a string there
+ * (a path to a group or a list counts as missing).
+ */
 export function translate(
-  translations: Record<string, Record<string, string>>,
+  translations: Translations,
   language: Language,
   key: string,
   variables?: Record<string, string | number>
 ): string {
-  let str = translations[language]?.[key];
-  if (!str) {
-    str = language === "nn"
-      ? (translations["no"]?.[key] ?? translations["en"]?.[key])
-      : translations["en"]?.[key];
+  let str: string | undefined;
+  for (const lang of fallbackChain(language)) {
+    const value = resolve(translations[lang], key);
+    if (typeof value === "string" && value) { str = value; break; }
   }
-  if (!str) return key;
+  if (str === undefined) return key;
   if (variables) {
     for (const [k, v] of Object.entries(variables)) {
       str = str.replace(new RegExp(`\\{${k}\\}`, "g"), String(v));
     }
   }
   return str;
+}
+
+/**
+ * A list of strings by dotted path ("drive.rush.4to6"). The whole list comes from the first
+ * language in the fallback chain that has a non-empty one — lists are never merged.
+ */
+export function translateList(translations: Translations, language: Language, key: string): string[] {
+  for (const lang of fallbackChain(language)) {
+    const value = resolve(translations[lang], key);
+    if (Array.isArray(value) && value.length) return value.filter((v): v is string => typeof v === "string");
+  }
+  return [];
 }
 
 const DURATION_UNITS: Record<Language, { hour: string; minute: string }> = {

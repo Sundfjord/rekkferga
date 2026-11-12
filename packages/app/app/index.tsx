@@ -140,7 +140,7 @@ export default function HomeScreen() {
 
     const { status } = await requestForegroundPermissionsAsync();
     if (status !== "granted") {
-      setError(t("unavailable"));
+      setError(t("general.unavailable"));
       setIsLoading(false);
       return;
     }
@@ -151,10 +151,10 @@ export default function HomeScreen() {
       const userLng = coords.longitude;
       setUserLocation({ latitude: userLat, longitude: userLng });
 
-      if (!API_URL) { setError(t("error")); setIsLoading(false); return; }
+      if (!API_URL) { setError(t("general.error")); setIsLoading(false); return; }
       const journeys = await fetchJourney(API_URL, userLat, userLng, result.latitude, result.longitude);
       if (!journeys.length) {
-        setError(t("noRouteQuays"));
+        setError(t("search.noRouteQuays"));
         return;
       }
 
@@ -163,7 +163,7 @@ export default function HomeScreen() {
       setJourney(serverJourney);
       setFitBoundsSignal((s) => s + 1);
     } catch {
-      setError(t("error"));
+      setError(t("general.error"));
     } finally {
       setIsLoading(false);
     }
@@ -210,7 +210,7 @@ export default function HomeScreen() {
           }}>
             <ActivityIndicator size="small" color={colors.primary} />
             <Text style={{ color: colors.onSurface, fontSize: 14, fontFamily: "DMSans-Regular", opacity: 0.7 }}>
-              {t("searchingForQuays")}
+              {t("search.searchingForQuays")}
             </Text>
           </View>
         )}

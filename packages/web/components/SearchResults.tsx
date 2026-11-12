@@ -55,7 +55,7 @@ export default function SearchResults({
     <div className="flex flex-col gap-2.5" style={{ fontFamily: "var(--font-dm-sans)" }}>
       {quayHits.length > 0 && (
         <>
-          <SectionTitle>{t("ferryQuays")}</SectionTitle>
+          <SectionTitle>{t("search.ferryQuays")}</SectionTitle>
           <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
             {quayHits.map((quay, i) => {
               const dests = destinationNames(quay, quaysById);
@@ -74,7 +74,7 @@ export default function SearchResults({
                     </span>
                     {dests.length > 0 && (
                       <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                        {t("toDestinations", { destinations: dests.join(", ") })}
+                        {t("home.toDestinations", { destinations: dests.join(", ") })}
                       </span>
                     )}
                   </span>
@@ -88,7 +88,7 @@ export default function SearchResults({
 
       {places.length > 0 && (
         <>
-          <SectionTitle>{t("places")}</SectionTitle>
+          <SectionTitle>{t("search.places")}</SectionTitle>
           <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
             {places.map((place, i) => (
               <button
@@ -118,7 +118,7 @@ export default function SearchResults({
 
       {noResults && (
         <p className="mx-1 text-[15px]" style={{ color: "var(--text-secondary)" }}>
-          {t("noResultsFor", { query: q })}
+          {t("search.noResults", { query: q })}
         </p>
       )}
     </div>

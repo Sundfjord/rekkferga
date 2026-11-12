@@ -112,7 +112,7 @@ export default function QuayPanel({
   const updated = lastRefreshAt && !loading && (
     <div className="flex items-center justify-center gap-2 pt-1 text-[13px]" style={{ color: "var(--text-secondary)" }}>
       {isRefreshing ? <Spinner className="h-2.5 w-2.5" /> : <span className="h-2 w-2 rounded-full" style={{ backgroundColor: "var(--margin-safe)" }} />}
-      <span>{t("updatedAt", { time: formatTime(lastRefreshAt.toISOString()) })}</span>
+      <span>{t("general.updatedAt", { time: formatTime(lastRefreshAt.toISOString()) })}</span>
     </div>
   );
 
@@ -122,21 +122,21 @@ export default function QuayPanel({
         {selected ? (
           <div className="flex items-center gap-3">
             {/* In drive mode, back means back to this quay's overview, not out of the quay. */}
-            <button type="button" onClick={() => setSelectedKey(null)} aria-label={t("allDepartures")} className={`${BAND_BUTTON} w-11`}>
+            <button type="button" onClick={() => setSelectedKey(null)} aria-label={t("drive.allDepartures")} className={`${BAND_BUTTON} w-11`}>
               <ChevronLeftIcon />
             </button>
-            <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{t("departure")}</h1>
+            <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{t("general.departure")}</h1>
           </div>
         ) : (
           <div className="flex items-center gap-1.5">
-            <button type="button" onClick={onBack} aria-label={t("back")} className={`${BAND_BUTTON} w-11`}>
+            <button type="button" onClick={onBack} aria-label={t("general.back")} className={`${BAND_BUTTON} w-11`}>
               <ChevronLeftIcon />
             </button>
             <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{quay.name}</h1>
             <button
               type="button"
               onClick={() => toggleFavorite(favoritePayload)}
-              aria-label={isFav ? t("removeFavorite") : t("addFavorite")}
+              aria-label={isFav ? t("favorites.remove") : t("favorites.add")}
               aria-pressed={isFav}
               className="flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
             >
@@ -154,8 +154,8 @@ export default function QuayPanel({
           <>
             {driveSeconds != null && (
               <div className="flex flex-wrap gap-2">
-                <Chip label={t("driveTime")} value={formatDuration(driveSeconds, language)} />
-                {arrivalAt && <Chip label={t("arrive")} value={formatTime(arrivalAt.toISOString())} />}
+                <Chip label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
+                {arrivalAt && <Chip label={t("general.arrive")} value={formatTime(arrivalAt.toISOString())} />}
               </div>
             )}
 
@@ -166,8 +166,8 @@ export default function QuayPanel({
             )}
 
             {crossings.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("showDeparturesTo")}>
-                {[{ id: null, name: t("allDestinations") }, ...crossings.map((c) => ({ id: c.id as string | null, name: shortQuayName(c.name) }))].map(
+              <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("quay.showDeparturesTo")}>
+                {[{ id: null, name: t("quay.allDestinations") }, ...crossings.map((c) => ({ id: c.id as string | null, name: shortQuayName(c.name) }))].map(
                   (c) => {
                     const on = destination === c.id;
                     return (
@@ -192,10 +192,10 @@ export default function QuayPanel({
             )}
 
             {loading ? (
-              <LoadingState label={t("loadingDepartures")} />
+              <LoadingState label={t("quay.loading")} />
             ) : visible.length === 0 ? (
               <div className="px-1 py-2 text-sm" style={{ color: "var(--text-secondary)" }}>
-                {t("noDepartures")}
+                {t("quay.noDepartures")}
               </div>
             ) : (
               <div className="grid gap-2.5 xl:grid-cols-2">

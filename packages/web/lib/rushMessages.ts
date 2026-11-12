@@ -2,9 +2,9 @@
  * The sentence under the big margin in drive mode, chosen by how much of a rush you're in.
  *
  * Stages get coarser as the margin grows: 3-minute steps from the overview's cut-off (−5,
- * see _VISIBILITY_THRESHOLD_MINUTES in the API) to 15, 10-minute steps to 60, then hours.
- * Each stage's messages live in shared/locales as `rush.<stage>.<n>`, numbered from 1 with
- * no gaps — add or remove lines there freely; the picker uses however many exist.
+ * see _VISIBILITY_THRESHOLD_MINUTES in the API) to 15, 10-minute steps until 60.
+ * Each stage's messages are a list in shared/locales at `drive.rush.<stage>` — add or remove
+ * lines there freely; the picker uses however many exist.
  */
 const STAGES: { id: string; upTo: number }[] = [
   { id: "-5to-3", upTo: -3 }, // also anything below −5 that a live margin reaches before the next poll
@@ -18,13 +18,8 @@ const STAGES: { id: string; upTo: number }[] = [
   { id: "26to35", upTo: 35 },
   { id: "36to45", upTo: 45 },
   { id: "46to60", upTo: 60 },
-  { id: "61to120", upTo: 120 },
-  { id: "121to180", upTo: 180 },
-  { id: "181to240", upTo: 240 },
-  { id: "241plus", upTo: Infinity },
+  { id: "61plus", upTo: Infinity },
 ];
-
-const MAX_MESSAGES = 20;
 
 export const rushStage = (marginMinutes: number) => STAGES.find((s) => marginMinutes <= s.upTo)!.id;
 
@@ -38,18 +33,11 @@ function hash(s: string): number {
 
 /**
  * The message for a margin. `seed` should identify the departure (e.g. its departureKey);
- * `t` is the translator — missing keys come back unchanged, which is how the number of
- * messages per stage is discovered.
+ * `list` is the translator's list lookup (useTranslation's `t.list`).
  */
-export function rushMessage(t: (key: string) => string, marginMinutes: number, seed: string): string {
+export function rushMessage(list: (key: string) => string[], marginMinutes: number, seed: string): string {
   const stage = rushStage(marginMinutes);
-  const messages: string[] = [];
-  for (let n = 1; n <= MAX_MESSAGES; n++) {
-    const key = `rush.${stage}.${n}`;
-    const text = t(key);
-    if (text === key) break;
-    messages.push(text);
-  }
+  const messages = list(`drive.rush.${stage}`);
   if (messages.length === 0) return "";
   return messages[hash(`${seed}|${stage}`) % messages.length];
 }

@@ -32,17 +32,17 @@ export default function DepartureTimeline({
 
   // Drawn in order, so the arrival marker (last) sits on top of a departure at the same spot.
   const markers: TimelineMarker[] = [
-    { key: "now", at: 0, color: "var(--water-light)", action: t("now"), time: formatTime(new Date(now).toISOString()) },
+    { key: "now", at: 0, color: "var(--water-light)", action: t("general.now"), time: formatTime(new Date(now).toISOString()) },
     ...departures.map((d) => ({
       key: departureKey(d),
       at: frac(minutesUntil(d.expectedDepartureTime, now)),
       color: TIER_COLOR[tierOf(d)],
-      action: t("departure"),
+      action: t("general.departure"),
       time: formatTime(d.expectedDepartureTime),
     })),
   ];
   if (arrivalMin !== null) {
-    markers.push({ key: "arrival", at: frac(arrivalMin), color: "var(--text-primary)", action: t("arrive"), time: arrivalTime });
+    markers.push({ key: "arrival", at: frac(arrivalMin), color: "var(--text-primary)", action: t("general.arrive"), time: arrivalTime });
   }
 
   return (
@@ -52,7 +52,7 @@ export default function DepartureTimeline({
       trackColor="var(--timeline-track)"
       tooltipBg="var(--text-primary)"
       tooltipText="var(--surface)"
-      ariaLabel={t("timelineAria", { arrival: arrivalTime || "–", times: departures.map((d) => formatTime(d.expectedDepartureTime)).join(", ") })}
+      ariaLabel={t("quay.timelineAria", { arrival: arrivalTime || "–", times: departures.map((d) => formatTime(d.expectedDepartureTime)).join(", ") })}
     />
   );
 }

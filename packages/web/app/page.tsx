@@ -94,7 +94,7 @@ export default function Home() {
     async (place: ResultItem) => {
       if (!API_URL) return;
       if (!userLocation) {
-        setDestinationStatus({ kind: "error", messageKey: "locationRequired" });
+        setDestinationStatus({ kind: "error", messageKey: "search.locationRequired" });
         return;
       }
       const token = ++selectionTokenRef.current;
@@ -106,7 +106,7 @@ export default function Home() {
         const q = ferry?.fromQuayId ? quaysById.get(ferry.fromQuayId) : undefined;
         if (q) return selectQuay(q, ferry?.toQuayId ?? null);
       }
-      setDestinationStatus({ kind: "error", messageKey: "noRouteQuays" });
+      setDestinationStatus({ kind: "error", messageKey: "search.noRouteQuays" });
     },
     [userLocation, quaysById, selectQuay],
   );
@@ -131,8 +131,8 @@ export default function Home() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setSearchOpen(true)}
                 onKeyDown={(e) => e.key === "Escape" && closeSearch()}
-                aria-label={t("searchUnified")}
-                placeholder={t("searchUnified")}
+                aria-label={t("search.placeholder")}
+                placeholder={t("search.placeholder")}
                 className="min-w-0 flex-1 bg-transparent text-[17px] outline-none"
                 style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}
               />
@@ -140,7 +140,7 @@ export default function Home() {
             </label>
             {searchOpen && (
               <button type="button" onClick={closeSearch} className="h-11 cursor-pointer px-1 text-[15px]">
-                {t("cancel")}
+                {t("general.cancel")}
               </button>
             )}
           </div>
@@ -157,7 +157,7 @@ export default function Home() {
               {destinationStatus.kind === "resolving" ? (
                 <>
                   <Spinner />
-                  <span className="truncate">{t("findingQuayFor", { place: destinationStatus.name })}</span>
+                  <span className="truncate">{t("search.findingQuay", { place: destinationStatus.name })}</span>
                 </>
               ) : (
                 <span>{t(destinationStatus.messageKey)}</span>
@@ -204,7 +204,7 @@ export default function Home() {
           />
         ) : (
           <p className="mx-auto mt-24 max-w-xs text-center text-[15px]" style={{ color: "var(--text-secondary)" }}>
-            {t("selectQuayHint")}
+            {t("home.selectQuayHint")}
           </p>
         )}
       </div>

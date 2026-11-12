@@ -46,13 +46,13 @@ function NextBlock({
   if (!dep) {
     return (
       <span className={`${base} justify-center text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
-        {t("noNextDeparture")}
+        {t("home.noNextDeparture")}
       </span>
     );
   }
   const margin = dep.marginMinutes === null ? null : splitMargin(dep.marginMinutes, language);
   const time = formatTime(dep.expectedDepartureTime);
-  const dest = destinationText(dep, t("via"));
+  const dest = destinationText(dep, t("general.via"));
   return (
     <span className={`${base} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
       <span className="text-[22px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
@@ -99,7 +99,7 @@ export default function HomeLists({
     <div className="flex flex-col gap-2.5" style={{ fontFamily: "var(--font-dm-sans)" }}>
       {favorites.length > 0 && (
         <>
-          <SectionTitle>{t("favorites")}</SectionTitle>
+          <SectionTitle>{t("favorites.title")}</SectionTitle>
           {favorites.map((f) => {
             const quay = quaysById.get(f.id);
             if (!quay) {
@@ -135,7 +135,7 @@ export default function HomeLists({
                   <span className="truncate text-[17px] font-bold">{quay.name}</span>
                   {drive != null && (
                     <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                      {t("driveAway", { time: formatDuration(drive, language) })}
+                      {t("home.driveAway", { time: formatDuration(drive, language) })}
                     </span>
                   )}
                 </span>
@@ -148,7 +148,7 @@ export default function HomeLists({
 
       {nearby.length > 0 && (
         <>
-          <SectionTitle>{t("nearbyQuays")}</SectionTitle>
+          <SectionTitle>{t("home.nearby")}</SectionTitle>
           <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
             {nearby.map((quay, i) => {
               const dests = destinationNames(quay, quaysById);
@@ -164,7 +164,7 @@ export default function HomeLists({
                     <span className="truncate text-base font-bold">{quay.name}</span>
                     {dests.length > 0 && (
                       <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                        {t("toDestinations", { destinations: dests.join(", ") })}
+                        {t("home.toDestinations", { destinations: dests.join(", ") })}
                       </span>
                     )}
                   </span>

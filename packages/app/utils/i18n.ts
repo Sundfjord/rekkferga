@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import type { Language } from "@shared/utils";
+import { translate, translateList, type Language, type Translations } from "@shared/utils";
 
 interface Option {
   value: string;
@@ -12,11 +12,7 @@ import nn from "@shared/locales/nn.json";
 
 export type { Language };
 
-interface Translations {
-  [key: string]: string;
-}
-
-const translations: Record<Language, Translations> = { en, no, nn };
+const translations: Translations = { en, no, nn };
 
 class I18n {
   private currentLanguage: Language = "no"; // Default to Norwegian (Bokmål)
@@ -66,54 +62,22 @@ class I18n {
     this.listeners.forEach((callback) => callback());
   }
 
+  /** A string by dotted path ("trip.arrived"); nn → no → en fallback (shared translate). */
   t(key: string, variables?: Record<string, string | number>): string {
-    let translation = translations[this.currentLanguage]?.[key];
-
-    // If translation not found, try fallback logic
-    if (!translation) {
-      // Nynorsk falls back to Bokmål, then English, then key
-      if (this.currentLanguage === "nn") {
-        translation = translations.no[key] || translations.en[key] || key;
-      } else {
-        // Other languages fall back to English, then key
-        translation = translations.en[key] || key;
-      }
-
-      if (translation === key) {
-        console.warn(
-          `Translation missing for key: ${key} in language: ${this.currentLanguage}`
-        );
-      }
+    const translation = translate(translations, this.currentLanguage, key, variables);
+    if (translation === key) {
+      console.warn(`Translation missing for key: ${key} in language: ${this.currentLanguage}`);
     }
-
-    // Replace variables if provided
-    if (variables) {
-      Object.entries(variables).forEach(([key, value]) => {
-        translation = translation.replace(
-          new RegExp(`{${key}}`, "g"),
-          String(value)
-        );
-      });
-    }
-
     return translation;
+  }
+
+  /** A list of strings by dotted path ("drive.rush.4to6"). */
+  list(key: string): string[] {
+    return translateList(translations, this.currentLanguage, key);
   }
 
   getCurrentLanguage(): Language {
     return this.currentLanguage;
-  }
-
-  getLanguageName(language: Language): string {
-    const names = {
-      en: "english",
-      no: "bokmal",
-      nn: "nynorsk",
-    };
-    return names[language];
-  }
-
-  getLanguageCode(language: Language): string {
-    return language;
   }
 
   getAllLanguages(): Option[] {
@@ -122,26 +86,6 @@ class I18n {
       { value: "no", name: "bokmal", icon: "🇩🇰" },
       { value: "en", name: "english", icon: "🇬🇧" },
     ];
-  }
-
-  // Debug method to check fallback behavior
-  debugTranslation(key: string): {
-    current: string | undefined;
-    fallback: string | undefined;
-    final: string;
-  } {
-    const current = translations[this.currentLanguage]?.[key];
-    let fallback: string | undefined;
-
-    if (this.currentLanguage === "nn" && !current) {
-      fallback = translations.no[key];
-    } else if (!current) {
-      fallback = translations.en[key];
-    }
-
-    const final = this.t(key);
-
-    return { current, fallback, final };
   }
 }
 
@@ -153,6 +97,3 @@ export const t = (
   key: string,
   variables?: Record<string, string | number>
 ): string => i18n.t(key, variables);
-
-// Debug function to check fallback behavior
-export const debugTranslation = (key: string) => i18n.debugTranslation(key);

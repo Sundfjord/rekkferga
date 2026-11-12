@@ -106,7 +106,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
     <View>
       {showTagline && (
         <Text style={[styles.tagline, { color: "rgba(255,255,255,0.65)", fontFamily: "Syne-SemiBold" }]}>
-          {t("searchTagline").toUpperCase()}
+          {t("search.tagline").toUpperCase()}
         </Text>
       )}
 
@@ -120,7 +120,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
       >
         <TextInput
           style={[styles.input, { color: colors.onSurface, fontFamily: "DMSans-Regular" }]}
-          placeholder={t("searchPlaceholder")}
+          placeholder={t("search.destinationPlaceholder")}
           placeholderTextColor={colors.onSurface + "55"}
           value={searchPhrase}
           onChangeText={setSearchPhrase}
@@ -143,7 +143,7 @@ export default function Search({ onSelect, showTagline = false }: SearchProps) {
               <>
                 {!hasResults && !searchPhrase.trim() && (
                   <Text style={[styles.sectionLabel, { color: colors.onSurface + "88" }]}>
-                    {t("favorites").toUpperCase()}
+                    {t("favorites.title").toUpperCase()}
                   </Text>
                 )}
                 {filteredFavorites.map((fav, index) => (

@@ -59,8 +59,8 @@ export default function DriveMode({
 
         <div className="grid flex-shrink-0 grid-cols-2 gap-2.5">
           {[
-            { label: t("remainingDrive"), value: formatDuration(toQuay * 60, language) },
-            { label: t("departure"), value: depTime },
+            { label: t("drive.remainingDrive"), value: formatDuration(toQuay * 60, language) },
+            { label: t("general.departure"), value: depTime },
           ].map((s) => (
             <div key={s.label} className="flex flex-col gap-0.5 rounded-[14px] bg-white/15 px-3.5 py-3">
               <span className="text-[13px]">{s.label}</span>
@@ -73,7 +73,7 @@ export default function DriveMode({
 
         {margin && tier !== "none" && (
           <div className="flex flex-col gap-1">
-            <span className="text-sm">{t("marginOnArrival")}</span>
+            <span className="text-sm">{t("drive.marginOnArrival")}</span>
             <span
               className="text-[clamp(64px,24vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums"
               style={{ fontFamily: "var(--font-mono)" }}
@@ -81,7 +81,7 @@ export default function DriveMode({
               {margin.value}
               {margin.unit && <span className="text-[30px] tracking-normal"> {margin.unit}</span>}
             </span>
-            <span className="mt-1.5 text-[19px] font-semibold leading-snug">{rushMessage(t, departure.marginMinutes ?? 0, departureKey(departure))}</span>
+            <span className="mt-1.5 text-[19px] font-semibold leading-snug">{rushMessage(t.list, departure.marginMinutes ?? 0, departureKey(departure))}</span>
           </div>
         )}
 
@@ -89,9 +89,9 @@ export default function DriveMode({
         <div className="mt-auto">
           <TimelineTrack
             markers={[
-              { key: "now", at: 0, color: "#fff", action: t("now"), time: formatTime(new Date(now).toISOString()) },
-              { key: "arrival", at: arr, color: "var(--water-dark)", action: t("arrive"), time: arrTime },
-              { key: "ferry", at: dep, color: "#fff", action: t("departure"), time: depTime },
+              { key: "now", at: 0, color: "#fff", action: t("general.now"), time: formatTime(new Date(now).toISOString()) },
+              { key: "arrival", at: arr, color: "var(--water-dark)", action: t("general.arrive"), time: arrTime },
+              { key: "ferry", at: dep, color: "#fff", action: t("general.departure"), time: depTime },
             ]}
             segments={[
               { key: "road", from: 0, to: Math.min(arr, dep), color: "#fff" },
@@ -100,7 +100,7 @@ export default function DriveMode({
             trackColor="rgba(255,255,255,0.25)"
             tooltipBg="#fff"
             tooltipText={color}
-            ariaLabel={t("progressAria", { minutes: Math.round(toQuay), arrival: arrTime, departure: depTime })}
+            ariaLabel={t("drive.progressAria", { minutes: Math.round(toQuay), arrival: arrTime, departure: depTime })}
           />
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function DriveMode({
           style={{ backgroundColor: TIER_COLOR[altTier], fontFamily: "var(--font-dm-sans)" }}
         >
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[13px]">{t("planB")}</span>
+            <span className="text-[13px]">{t("drive.planB")}</span>
             <span className="truncate text-[17px] font-bold">
               <DestinationName departure={alt} />{" "}
               <span style={{ fontFamily: "var(--font-mono)" }}>{formatTime(alt.expectedDepartureTime)}</span>

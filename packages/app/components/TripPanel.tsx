@@ -36,11 +36,11 @@ export default function TripPanel({
   const remainingLegs = journey.legs.slice(currentLegIndex);
 
   const STATE_LABELS: Record<TripState, string> = {
-    driving_to_quay: t("tripStateDrivingToQuay"),
-    at_quay: t("tripStateAtQuay"),
-    crossing: t("tripStateCrossing"),
-    crossing_complete: t("tripStateCrossingComplete"),
-    arrived: t("tripStateArrived"),
+    driving_to_quay: t("trip.drivingToQuay"),
+    at_quay: t("trip.atQuay"),
+    crossing: t("trip.crossing"),
+    crossing_complete: t("trip.crossingComplete"),
+    arrived: t("trip.arrived"),
   };
 
   return (
@@ -53,7 +53,7 @@ export default function TripPanel({
           activeOpacity={0.7}
         >
           <Text style={[styles.staleText, { fontFamily: "DMSans-Regular" }]}>
-            ⚠ {t("stalePosition")}
+            ⚠ {t("trip.stalePosition")}
           </Text>
         </TouchableOpacity>
       )}
@@ -70,7 +70,7 @@ export default function TripPanel({
           </View>
           <TouchableOpacity
             onPress={() => toggleFavorite(destination)}
-            accessibilityLabel={isFav ? t("removeFavorite") : t("addFavorite")}
+            accessibilityLabel={isFav ? t("favorites.remove") : t("favorites.add")}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Ionicons
@@ -85,7 +85,7 @@ export default function TripPanel({
         {tripState === 'arrived' ? (
           <View style={styles.arrivedContainer}>
             <Text style={[styles.arrivedText, { color: colors.onSurface, fontFamily: "DMSans-Regular" }]}>
-              {t("arrivedAt", { destination: destination.name })}
+              {t("trip.arrivedAt", { destination: destination.name })}
             </Text>
           </View>
         ) : (
@@ -126,12 +126,12 @@ export default function TripPanel({
                         <MarginBadge marginMinutes={dep.marginMinutes} />
                         <Text style={[styles.depTime, { color: colors.onSurface, fontFamily: "JetBrainsMono-Medium" }]}
                           numberOfLines={1}>
-                          {t("departures")} {formatTime(dep.expectedDepartureTime)}
+                          {t("general.departures")} {formatTime(dep.expectedDepartureTime)}
                         </Text>
                       </View>
                     ) : (
                       <Text style={[styles.noData, { color: colors.onSurface, fontFamily: "DMSans-Regular", opacity: 0.4 }]}>
-                        {t("unavailable")}
+                        {t("general.unavailable")}
                       </Text>
                     )}
                   </View>
@@ -155,7 +155,7 @@ export default function TripPanel({
                         { color: colors.onSurface, fontFamily: "DMSans-Regular" },
                         !isActive && { opacity: 0.55 },
                       ]}>
-                        {t("car")} → {leg.toPlace.name}
+                        {t("general.car")} → {leg.toPlace.name}
                       </Text>
                       <Text style={[styles.carDuration, { color: colors.onSurface, fontFamily: "JetBrainsMono-Medium", opacity: 0.5 }]}>
                         {formatDuration(leg.duration, currentLanguage)}

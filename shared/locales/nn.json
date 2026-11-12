@@ -1,88 +1,123 @@
 {
-  "settings": "Innstillingar",
-  "searchDestinationPlaceholder": "Søk etter destinasjon",
-  "searchQuayPlaceholder": "Søk etter fergekai",
-  "searchTagline": "Kvar skal du?",
-  "selectedDestination": "Valt destinasjon",
-  "journeyViews": "Reisevising",
-  "detailsTab": "Detaljar",
-  "mapTab": "Kart",
-  "favorites": "Favorittar",
-  "addFavorite": "Legg til i favorittar",
-  "removeFavorite": "Fjern frå favorittar",
-  "departures": "Avgang",
-  "arrivals": "Ankomstar",
-  "noResults": "Ingen resultat funne",
-  "loading": "Lastar...",
-  "error": "Det oppstod ein feil",
-  "showMore": "Vis meir",
-  "showLess": "Vis mindre",
-  "showMostRelevant": "Vis mest relevante avgangar",
-  "showMoreDepartures": "Vis fleire avgangar",
-  "noRouteQuays": "Ingen fergekaier funne langs den raskaste ruta til denne destinasjonen",
-  "duration": "Varigheit",
-  "delayed": "Forseinka",
-  "early": "Tidleg",
-  "late": "Sein",
-  "unavailable": "Utilgjengeleg",
-  "viewDetails": "Vis detaljar",
-  "loadingDetails": "Lastar detaljar...",
-  "errorLoadingDetails": "Feil ved lasting av detaljar",
-  "hours": "timar",
-  "back": "Attende",
-  "directions": "Vegbeskrivelse",
-  "trafficDisclaimer": "Reisetid til kaia tek ikkje hensyn til trafikk.",
-  "realtimeDisclaimer": "Avgangar med blå farge nyttar sanntidsdata.",
-  "driveFrom": "Køyr frå {place}",
-  "takeFerryFrom": "Ta ferge frå {place}",
-  "travelTo": "Reis frå {place}",
-  "afterArrival": "etter ankomst i dag",
-  "system": "Bruk systeminnstillingar",
-  "tomorrow": "I morgon",
-  "quayNotFoundDescription": "Fergekaien du leitar etter finst ikkje.",
-  "tripStateDrivingToQuay": "Køyrer til ferge",
-  "tripStateAtQuay": "Ved fergekaien",
-  "tripStateCrossing": "Om bord på ferja",
-  "tripStateCrossingComplete": "Ferje fullført",
-  "tripStateArrived": "Ankomme",
-  "exitTrip": "Avslutt tur",
-  "driveStep": "Køyring",
-  "ferryTripStep": "Ferjetur",
-  "waitStep": "Ventetid",
-  "driveToQuay": "Køyring til kai",
-  "viewFullJourney": "Sjå heile reisa",
-  "noDepartures": "Ingen avgangar tilgjengeleg",
-  "departure": "Avgang",
-  "margin": "Margin",
-  "totalTravelTime": "Total reisetid",
-  "arrivedAt": "Du har ankomme {destination}.",
-  "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere",
-  "nextDeparture": "Neste:",
-  "yourLocation": "Di plassering",
-  "updatedAt": "Oppdatert {time}",
-  "loadingDepartures": "Hentar rute og avgangar…",
-  "findingQuayFor": "Finn første ferjerute på vegen til {place}…",
-  "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon.",
-  "driveTime": "Køyretid",
-  "allDepartures": "Alle avgangar frå {quay}",
-  "marginOnArrival": "Margin ved ankomst",
-  "remainingDrive": "Att å køyre",
-  "planB": "Plan B",
-  "departureAria": "{destination} {time}, margin {margin} minutt",
-  "timelineAria": "Tidslinje: framme {arrival}. Avgangar {times}.",
-  "progressAria": "{minutes} minutt att til kaia, framme {arrival}. Ferja går {departure}.",
-  "arrive": "Framme",
-  "now": "No",
-  "searchUnified": "Søk etter kai eller stad",
-  "cancel": "Avbryt",
-  "nearbyQuays": "I nærleiken",
-  "toDestinations": "Til {destinations}",
-  "ferryQuays": "Ferjekaiar",
-  "places": "Stader",
-  "allDestinations": "Alle",
-  "showDeparturesTo": "Vis avgangar til",
-  "driveAway": "{time} unna",
-  "selectQuayHint": "Vel ein kai for å sjå avgangane og marginen din.",
-  "noResultsFor": "Ingen treff på «{query}»",
-  "noNextDeparture": "Ingen avgangar"
+  "general": {
+    "back": "Attende",
+    "cancel": "Avbryt",
+    "now": "No",
+    "error": "Det oppstod ein feil",
+    "unavailable": "Utilgjengeleg",
+    "updatedAt": "Oppdatert {time}",
+    "departure": "Avgang",
+    "departures": "Avgangar",
+    "arrive": "Framme"
+  },
+  "favorites": {
+    "title": "Favorittar",
+    "add": "Legg til i favorittar",
+    "remove": "Fjern frå favorittar"
+  },
+  "search": {
+    "placeholder": "Søk etter kai eller stad",
+    "destinationPlaceholder": "Søk etter destinasjon",
+    "tagline": "Kvar skal du?",
+    "ferryQuays": "Ferjekaiar",
+    "places": "Stader",
+    "noResults": "Ingen treff på «{query}»",
+    "findingQuay": "Finn første ferjerute på vegen til {place}…",
+    "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon.",
+    "noRouteQuays": "Ingen fergekaier funne langs den raskaste ruta til denne destinasjonen"
+  },
+  "home": {
+    "nearby": "I nærleiken",
+    "toDestinations": "Til {destinations}",
+    "driveAway": "{time} unna",
+    "noNextDeparture": "Ingen avgangar",
+    "selectQuayHint": "Vel ein kai for å sjå avgangane og marginen din."
+  },
+  "quay": {
+    "driveTime": "Køyretid",
+    "allDestinations": "Alle",
+    "showDeparturesTo": "Vis avgangar til",
+    "noDepartures": "Ingen avgangar tilgjengeleg",
+    "loading": "Hentar rute og avgangar…",
+    "timelineAria": "Tidslinje: framme {arrival}. Avgangar {times}.",
+    "departureAria": "{destination} {time}, margin {margin} minutt"
+  },
+  "drive": {
+    "allDepartures": "Alle avgangar frå {quay}",
+    "marginOnArrival": "Margin ved ankomst",
+    "remainingDrive": "Att å køyre",
+    "planB": "Plan B",
+    "progressAria": "{minutes} minutt att til kaia, framme {arrival}. Ferja går {departure}.",
+    "rush": {
+      "-5to-3": [
+        "Denne går nok utan deg.",
+        "Her må det skje eit mirakel.",
+        "Her er det berre å ta i bruk plan B."
+      ],
+      "-2to0": [
+        "Her står det om sekund, kryss fingrane.",
+        "Du får håpe kapteinen ser at du kjem køyrande.",
+        "Stå på fløyta på veg inn på kaien og håp på det beste."
+      ],
+      "1to3": [
+        "Dette kan gå!",
+        "Dette er ikkje tida for lusekøyring.",
+        "Det blir tett, dette her."
+      ],
+      "4to6": [
+        "Skal gå greit dette, så lenge du ikkje somlar",
+        "Det skal gå fint å rekke denne.",
+        "Ser bra ut, med mindre nokon må tisse."
+      ],
+      "7to9": [
+        "Dette bør gå med grei margin.",
+        "Du rekker den lett dersom alt går som normalt.",
+        "Tid til ein kjapp tissepause på vegen."
+      ],
+      "10to12": [
+        "Dette ser veldig bra ut.",
+        "Du ligg veldig godt an.",
+        "Blir ganske passeleg, dette."
+      ],
+      "13to15": [
+        "Ikkje behov for noko råkjøring her.",
+        "Senk skuldrane, du har mykje å gå på.",
+        "Du rekk ein kaffitår på kaia."
+      ],
+      "16to25": [
+        "Null stress, du når det med glans.",
+        "Nesten litt for god tid, dette.",
+        "Ingenting å stresse over her, denne når du garantert."
+      ],
+      "26to35": [
+        "Blir fort ein halvtime venting på kaien.",
+        "Nesten litt lenge å vente, eller?",
+        "Du har tid til å få deg ei pølse i nebbet på vegen."
+      ],
+      "36to45": [
+        "Over ein halvtime å gå på.",
+        "Kanskje du når ein tidlegare avgang?",
+        "Tid til eit kjapt ladestopp."
+      ],
+      "46to60": [
+        "Nesten ein time til gode.",
+        "Her kan du få unna handleturen først.",
+        "Du kan sjå ein episode av serien din på kaien."
+      ],
+      "61plus": [
+        "Veldig lenge å vente. Keisamt.",
+        "Blir seigt på kaien dette.",
+        "Du må vere over gjennomsnittet glad i ferjekaiar om du skal ta denne."
+      ]
+    }
+  },
+  "trip": {
+    "drivingToQuay": "Køyrer til ferge",
+    "atQuay": "Ved fergekaien",
+    "crossing": "Om bord på ferja",
+    "crossingComplete": "Ferje fullført",
+    "arrived": "Ankomme",
+    "arrivedAt": "Du har ankomme {destination}.",
+    "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere"
+  }
 }
