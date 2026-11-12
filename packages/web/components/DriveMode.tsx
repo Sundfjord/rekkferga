@@ -4,8 +4,8 @@ import type { DepartureOption } from "@shared/types";
 import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, departureKey, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
-import { rushMessage } from "@/lib/rushMessages";
+import { TIER_COLOR, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures"; // add departureKey back with the rush messages
+// import { rushMessage } from "@/lib/rushMessages"; // rush messages temporarily disabled
 import DestinationName from "@/components/DestinationName";
 import { ChevronRightIcon } from "@/components/icons";
 import TimelineTrack from "@/components/TimelineTrack";
@@ -63,7 +63,7 @@ export default function DriveMode({
             { label: t("general.departure"), value: depTime },
           ].map((s) => (
             <div key={s.label} className="flex flex-col gap-0.5 rounded-[14px] bg-white/15 px-3.5 py-3">
-              <span className="text-[13px]">{s.label}</span>
+              <span className="text-[19px] leading-snug">{s.label}</span>
               <span className="text-[30px] font-bold tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
                 {s.value}
               </span>
@@ -72,8 +72,9 @@ export default function DriveMode({
         </div>
 
         {margin && tier !== "none" && (
-          <div className="flex flex-col gap-1">
-            <span className="text-sm">{t("drive.marginOnArrival")}</span>
+          // Same box as the two figures above, so all three read as one family.
+          <div className="flex flex-col gap-1 rounded-[14px] bg-white/15 px-3.5 py-3">
+            <span className="text-[19px] leading-snug">{t("drive.marginOnArrival")}</span>
             <span
               className="text-[clamp(64px,24vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums"
               style={{ fontFamily: "var(--font-mono)" }}
@@ -81,12 +82,17 @@ export default function DriveMode({
               {margin.value}
               {margin.unit && <span className="text-[30px] tracking-normal"> {margin.unit}</span>}
             </span>
+            {/* Rush messages temporarily disabled — restore this line and the rushMessage import.
             <span className="mt-1.5 text-[19px] font-semibold leading-snug">{rushMessage(t.list, departure.marginMinutes ?? 0, departureKey(departure))}</span>
+            */}
           </div>
         )}
 
-        {/* What's ahead: car (now) → quay → slack/overrun → ferry */}
-        <div className="mt-auto">
+        {/* What's ahead: car (now) → quay → slack/overrun → ferry — in the same box as the figures.
+            Inside the lightened box, the unfilled track is a dark tint (not faint white) and the
+            slack a stronger white, so neither drowns in the box background. */}
+        <div className="flex flex-col gap-2 rounded-[14px] bg-white/15 px-3.5 pb-3 pt-3">
+          <span className="text-[19px] leading-snug">{t("drive.timelineTitle")}</span>
           <TimelineTrack
             markers={[
               { key: "now", at: 0, color: "#fff", action: t("general.now"), time: formatTime(new Date(now).toISOString()), priority: 3 },
@@ -95,9 +101,9 @@ export default function DriveMode({
             ]}
             segments={[
               { key: "road", from: 0, to: Math.min(arr, dep), color: "#fff" },
-              { key: "slack", from: Math.min(arr, dep), to: Math.max(arr, dep), color: "rgba(255,255,255,0.3)" },
+              { key: "slack", from: Math.min(arr, dep), to: Math.max(arr, dep), color: "rgba(255,255,255,0.55)" },
             ]}
-            trackColor="rgba(255,255,255,0.25)"
+            trackColor="rgba(1,22,56,0.3)"
             textColor="#fff"
             ariaLabel={t("drive.progressAria", { minutes: Math.round(toQuay), arrival: arrTime, departure: depTime })}
           />

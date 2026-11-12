@@ -20,7 +20,7 @@ import type { Quay, ResultItem, FerryLeg } from "@shared/types";
 import { fetchJourney } from "@shared/services/journey";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const NEARBY_COUNT = 5;
+const NEARBY_PAGE = 10; // nearby quays shown initially and added per "Vis flere"
 
 type DestinationStatus = { kind: "resolving"; name: string } | { kind: "error"; messageKey: string } | null;
 type Selection = { quay: Quay; destination: string | null } | null;
@@ -59,7 +59,12 @@ export default function Home() {
   const driveTimes = useDriveTimes(userLocation);
   const driveSecondsFor = useCallback((id: string) => driveTimes.get(id)?.seconds ?? null, [driveTimes]);
   const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, driveTimes.put);
-  const nearby = useMemo(() => (userLocation ? nearestQuays(quays, userLocation, NEARBY_COUNT) : []), [quays, userLocation]);
+  // All quays sorted by distance once per position; the list shows a growing slice of it.
+  const nearbySorted = useMemo(() => (userLocation ? nearestQuays(quays, userLocation, quays.length) : []), [quays, userLocation]);
+  const [nearbyCount, setNearbyCount] = useState(NEARBY_PAGE);
+  useEffect(() => setNearbyCount(NEARBY_PAGE), [userLocation]);
+  const nearby = nearbySorted.slice(0, nearbyCount);
+  const showMoreNearby = nearbyCount < nearbySorted.length ? () => setNearbyCount((c) => c + NEARBY_PAGE) : undefined;
   const places = useDestinationSearch(searchOpen ? query : "", userLocation);
 
   const quay = selection?.quay ?? null;
@@ -67,7 +72,7 @@ export default function Home() {
   const departures = useQuayDepartures(
     quay,
     userLocation,
-    quay && quay.relatedQuayIds.length > 1 ? 12 : 4,
+    quay && quay.relatedQuayIds.length > 1 ? 12 : 5,
     driveTimes.get,
     driveTimes.put,
   );
@@ -182,6 +187,7 @@ export default function Home() {
               driveSecondsFor={driveSecondsFor}
               now={now}
               nearby={nearby}
+              onShowMoreNearby={showMoreNearby}
               onSelectQuay={selectQuay}
               onSelectPlace={selectPlace}
             />

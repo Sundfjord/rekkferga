@@ -78,6 +78,7 @@ export default function HomeLists({
   driveSecondsFor,
   now,
   nearby,
+  onShowMoreNearby,
   onSelectQuay,
   onSelectPlace,
 }: {
@@ -89,6 +90,8 @@ export default function HomeLists({
   /** Shared clock, so margins match the quay view exactly. */
   now: number;
   nearby: Quay[];
+  /** Shows the next batch of nearby quays; absent when all are shown. */
+  onShowMoreNearby?: () => void;
   onSelectQuay: (quay: Quay) => void;
   onSelectPlace: (place: SavedDestination) => void;
 }) {
@@ -173,6 +176,16 @@ export default function HomeLists({
               );
             })}
           </div>
+          {onShowMoreNearby && (
+            <button
+              type="button"
+              onClick={onShowMoreNearby}
+              className="h-12 w-full cursor-pointer rounded-[16px] border-[1.5px] text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
+              style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
+            >
+              {t("home.showMore")}
+            </button>
+          )}
         </>
       )}
     </div>

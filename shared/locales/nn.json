@@ -31,7 +31,8 @@
     "toDestinations": "Til {destinations}",
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avgangar",
-    "selectQuayHint": "Vel ein kai for å sjå avgangane og marginen din."
+    "selectQuayHint": "Vel ein kai for å sjå avgangane og marginen din.",
+    "showMore": "Vis fleire"
   },
   "quay": {
     "driveTime": "Køyretid",

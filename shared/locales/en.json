@@ -34,7 +34,8 @@
     "toDestinations": "To {destinations}",
     "driveAway": "{time} away",
     "noNextDeparture": "No departures",
-    "selectQuayHint": "Pick a quay to see its departures and your margin."
+    "selectQuayHint": "Pick a quay to see its departures and your margin.",
+    "showMore": "Show more"
   },
   "quay": {
     "driveTime": "Drive time",
@@ -47,6 +48,7 @@
   "drive": {
     "allDepartures": "All departures",
     "marginOnArrival": "Margin on arrival",
+    "timelineTitle": "From here to the ferry",
     "remainingDrive": "Drive remaining",
     "planB": "Plan B",
     "progressAria": "{minutes} minutes to the quay, arriving {arrival}. Ferry leaves {departure}.",

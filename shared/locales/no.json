@@ -34,7 +34,8 @@
     "toDestinations": "Til {destinations}",
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avganger",
-    "selectQuayHint": "Velg en kai for å se avgangene og marginen din."
+    "selectQuayHint": "Velg en kai for å se avgangene og marginen din.",
+    "showMore": "Vis flere"
   },
   "quay": {
     "driveTime": "Kjøretid",
@@ -47,6 +48,7 @@
   "drive": {
     "allDepartures": "Alle avganger fra {quay}",
     "marginOnArrival": "Margin ved ankomst",
+    "timelineTitle": "Herfra til ferja",
     "remainingDrive": "Igjen å kjøre",
     "planB": "Plan B",
     "progressAria": "{minutes} minutter igjen til kaia, fremme {arrival}. Ferja går {departure}.",

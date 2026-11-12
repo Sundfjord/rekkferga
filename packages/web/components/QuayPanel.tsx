@@ -15,7 +15,7 @@ import DriveMode from "@/components/DriveMode";
 import Spinner from "@/components/Spinner";
 import { ChevronLeftIcon, HeartIcon } from "@/components/icons";
 
-const VISIBLE_DEPARTURES = 4;
+const VISIBLE_DEPARTURES = 5;
 const BAND_BUTTON = "flex h-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/15 transition-colors hover:bg-white/25";
 
 export interface QuayPanelProps extends QuayDeparturesState {
