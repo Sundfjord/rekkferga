@@ -89,17 +89,16 @@ export default function DriveMode({
         <div className="mt-auto">
           <TimelineTrack
             markers={[
-              { key: "now", at: 0, color: "#fff", action: t("general.now"), time: formatTime(new Date(now).toISOString()) },
-              { key: "arrival", at: arr, color: "var(--water-dark)", action: t("general.arrive"), time: arrTime },
-              { key: "ferry", at: dep, color: "#fff", action: t("general.departure"), time: depTime },
+              { key: "now", at: 0, color: "#fff", action: t("general.now"), time: formatTime(new Date(now).toISOString()), priority: 3 },
+              { key: "arrival", at: arr, color: "var(--water-dark)", action: t("general.arrive"), time: arrTime, priority: 2 },
+              { key: "ferry", at: dep, color: "#fff", action: t("general.departure"), time: depTime, priority: 2.5 },
             ]}
             segments={[
               { key: "road", from: 0, to: Math.min(arr, dep), color: "#fff" },
-              { key: "slack", from: Math.min(arr, dep), to: Math.max(arr, dep), color: "rgba(255,255,255,0.6)" },
+              { key: "slack", from: Math.min(arr, dep), to: Math.max(arr, dep), color: "rgba(255,255,255,0.3)" },
             ]}
             trackColor="rgba(255,255,255,0.25)"
-            tooltipBg="#fff"
-            tooltipText={color}
+            textColor="#fff"
             ariaLabel={t("drive.progressAria", { minutes: Math.round(toQuay), arrival: arrTime, departure: depTime })}
           />
         </div>

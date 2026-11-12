@@ -39,7 +39,6 @@
     "showDeparturesTo": "Vis avgangar til",
     "noDepartures": "Ingen avgangar tilgjengeleg",
     "loading": "Hentar rute og avgangar…",
-    "timelineAria": "Tidslinje: framme {arrival}. Avgangar {times}.",
     "departureAria": "{destination} {time}, margin {margin} minutt"
   },
   "drive": {

@@ -11,7 +11,6 @@ import { arrivalFrom, departureKey, servesQuay, withLiveMargins } from "@/lib/de
 import { shortQuayName } from "@/lib/quays";
 import Band from "@/components/Band";
 import DepartureCard from "@/components/DepartureCard";
-import DepartureTimeline from "@/components/DepartureTimeline";
 import DriveMode from "@/components/DriveMode";
 import Spinner from "@/components/Spinner";
 import { ChevronLeftIcon, HeartIcon } from "@/components/icons";
@@ -45,20 +44,23 @@ function LoadingState({ label }: { label: string }) {
   );
 }
 
-function Chip({ label, value }: { label: string; value: string }) {
+/** Label + big value, the same shape as the figures in DriveMode, on the light surface. */
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded-xl px-3 py-2 text-sm" style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
-      {label}{" "}
-      <b className="text-[15px]" style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>
+    <div className="flex flex-col gap-0.5 rounded-[14px] px-3.5 py-3" style={{ backgroundColor: "var(--surface-variant)" }}>
+      <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
+        {label}
+      </span>
+      <span className="text-[30px] font-bold tabular-nums" style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>
         {value}
-      </b>
-    </span>
+      </span>
+    </div>
   );
 }
 
 /**
- * A selected quay: the band becomes its header (back, name, favourite); below it the drive
- * time, arrival, timeline, an optional crossing filter and the departure cards. Tapping a
+ * A selected quay: the band becomes its header (back, name, favourite); below it a card with
+ * the drive time and arrival, an optional crossing filter and the departure cards. Tapping a
  * card switches the same surface to Drive mode.
  */
 export default function QuayPanel({
@@ -152,16 +154,13 @@ export default function QuayPanel({
           <DriveMode key={selectedKey} departure={selected} departures={filtered} arrivalAt={arrivalAt} now={now} onSelect={select} />
         ) : (
           <>
-            {driveSeconds != null && (
-              <div className="flex flex-wrap gap-2">
-                <Chip label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
-                {arrivalAt && <Chip label={t("general.arrive")} value={formatTime(arrivalAt.toISOString())} />}
-              </div>
-            )}
-
-            {!loading && visible.length > 0 && (
-              <div className="py-2">
-                <DepartureTimeline departures={visible} arrivalAt={arrivalAt} now={now} />
+            {driveSeconds != null && arrivalAt && (
+              <div
+                className="grid grid-cols-2 gap-2.5 rounded-[22px] p-2.5 shadow-[0_1px_3px_rgba(1,22,56,0.08)]"
+                style={{ backgroundColor: "var(--surface)" }}
+              >
+                <Stat label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
+                <Stat label={t("general.arrive")} value={formatTime(arrivalAt.toISOString())} />
               </div>
             )}
 

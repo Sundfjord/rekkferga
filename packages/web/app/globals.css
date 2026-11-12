@@ -19,7 +19,6 @@
   --surface: #ffffff;
   --surface-tint: #F2F8FF;
   --surface-variant: #E8F2FB;
-  --timeline-track: #A9C4DD; /* unfilled timeline, visible on the page background */
 
   /* ── Text ────────────────────────────────────────────────── */
   --text-primary: #0D1B2A;
@@ -60,7 +59,6 @@
   --surface: #111B27;
   --surface-tint: #1A2740;
   --surface-variant: #1A2740;
-  --timeline-track: #33496A;
 
   --text-primary: #E8F0F8;
   --text-secondary: #8AAECE;

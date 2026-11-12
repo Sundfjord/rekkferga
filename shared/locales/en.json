@@ -42,7 +42,6 @@
     "showDeparturesTo": "Show departures to",
     "noDepartures": "No departures available",
     "loading": "Fetching route and departures…",
-    "timelineAria": "Timeline: arrive {arrival}. Departures {times}.",
     "departureAria": "{destination} {time}, margin {margin} minutes"
   },
   "drive": {

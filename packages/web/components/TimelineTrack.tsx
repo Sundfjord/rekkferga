@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-
 const LINE_W = 4; // every marker is the same vertical line
 const LINE_H = 28;
-const HIT = 32; // invisible tap/hover target around each line
+const GAP = 4; // between a label row and the line
 
 export interface TimelineMarker {
   key: string;
   /** Position along the track, 0 (left edge) – 1 (right edge). */
   at: number;
   color: string;
-  /** Tooltip: the action (normal weight) and its time (bold). */
+  /** Shown above the marker (normal weight). */
   action: string;
+  /** Shown below the marker (bold). */
   time: string;
+  /** Higher wins when labels would collide; the loser's labels fade out. */
+  priority: number;
 }
 
 export interface TimelineSegment {
@@ -23,87 +24,94 @@ export interface TimelineSegment {
   color: string;
 }
 
+// Every moving part animates position/size changes (each clock tick or poll moves things),
+// except for users who prefer reduced motion.
+const MOTION = "transition-[left,width,transform,opacity] duration-700 ease-out motion-reduce:transition-none";
+
 // Centre of a marker line, keeping the whole line inside the track at both ends.
 const centre = (f: number) => `calc((100% - ${LINE_W}px) * ${f.toFixed(4)} + ${LINE_W / 2}px)`;
 
-// Keep tooltips near the edges from spilling out of the track.
-const tooltipPos = (f: number): React.CSSProperties =>
-  f < 0.12 ? { left: HIT / 2 - LINE_W } : f > 0.88 ? { right: HIT / 2 - LINE_W } : { left: "50%", transform: "translateX(-50%)" };
+// Labels are always positioned with `left` + `transform` (both animatable): centred on the
+// marker, but pulled inwards near the edges so they never spill outside the track.
+const labelShift = (f: number) =>
+  f < 0.12 ? `translateX(-${LINE_W / 2}px)` : f > 0.88 ? `translateX(calc(-100% + ${LINE_W / 2}px))` : "translateX(-50%)";
+
+/** Keys whose labels are shown: closer than `gap` to a higher-priority marker → hidden. */
+function visibleLabels(markers: TimelineMarker[], gap: number): Set<string> {
+  const shown: TimelineMarker[] = [];
+  for (const m of [...markers].sort((a, b) => b.priority - a.priority)) {
+    if (shown.every((s) => Math.abs(s.at - m.at) >= gap)) shown.push(m);
+  }
+  return new Set(shown.map((m) => m.key));
+}
 
 /**
- * Full-width horizontal timeline: coloured track segments and equal vertical line markers.
- * Each marker's action + time shows in a tooltip on hover (pointer devices), keyboard focus,
- * or tap (touch; tap elsewhere to dismiss). Later markers draw on top of earlier ones.
+ * Full-width horizontal timeline: coloured track segments and equal vertical line markers,
+ * each with its action above and time below. Positions animate as the values change.
  */
 export default function TimelineTrack({
   markers,
   segments,
   trackColor,
-  tooltipBg,
-  tooltipText,
+  textColor,
+  labelSize = 13,
+  labelGap = 0.2,
   ariaLabel,
 }: {
   markers: TimelineMarker[];
   segments: TimelineSegment[];
   trackColor: string;
-  tooltipBg: string;
-  tooltipText: string;
+  textColor: string;
+  labelSize?: number;
+  /** Minimum distance (fraction of the width) between two markers' labels. */
+  labelGap?: number;
   ariaLabel: string;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState<string | null>(null);
-
-  // A tapped tooltip stays until the next tap outside the timeline.
-  useEffect(() => {
-    if (!active) return;
-    const dismiss = (e: PointerEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setActive(null);
-    };
-    document.addEventListener("pointerdown", dismiss);
-    return () => document.removeEventListener("pointerdown", dismiss);
-  }, [active]);
+  const row = Math.round(labelSize * 1.3);
+  const lineTop = row + GAP;
+  const trackTop = lineTop + LINE_H / 2 - 3;
+  const labeled = visibleLabels(markers, labelGap);
+  // Higher-priority markers draw last, so they sit on top when they overlap.
+  const ordered = [...markers].sort((a, b) => a.priority - b.priority);
 
   return (
-    <div ref={ref} role="group" aria-label={ariaLabel} className="relative w-full flex-shrink-0" style={{ height: LINE_H }}>
-      <div className="absolute inset-x-0 h-1.5 rounded-full" style={{ top: LINE_H / 2 - 3, backgroundColor: trackColor }} />
+    <div
+      role="img"
+      aria-label={ariaLabel}
+      className="relative w-full flex-shrink-0"
+      style={{ height: lineTop + LINE_H + GAP + row, color: textColor, fontSize: labelSize }}
+    >
+      <div className="absolute inset-x-0 h-1.5 rounded-full" style={{ top: trackTop, backgroundColor: trackColor }} />
       {segments.map((s) => (
         <div
           key={s.key}
-          className="absolute h-1.5 rounded-full"
+          className={`absolute h-1.5 rounded-full ${MOTION}`}
           style={{
-            top: LINE_H / 2 - 3,
+            top: trackTop,
             left: `${Math.min(s.from, s.to) * 100}%`,
             width: `${Math.abs(s.to - s.from) * 100}%`,
             backgroundColor: s.color,
           }}
         />
       ))}
-      {markers.map((m) => {
-        const isActive = active === m.key;
+      {ordered.map((m) => {
+        const label = { left: centre(m.at), transform: labelShift(m.at), opacity: labeled.has(m.key) ? 1 : 0 };
         return (
-          <button
-            key={m.key}
-            type="button"
-            aria-label={`${m.action} ${m.time}`}
-            aria-expanded={isActive}
-            onClick={() => setActive(isActive ? null : m.key)}
-            className={`group absolute top-0 flex cursor-pointer justify-center rounded-sm outline-offset-2 hover:z-10 focus-visible:z-10 ${isActive ? "z-10" : ""}`}
-            style={{ left: centre(m.at), width: HIT, height: LINE_H, marginLeft: -HIT / 2 }}
-          >
-            <span className="h-full rounded-full shadow-sm" style={{ width: LINE_W, backgroundColor: m.color }} />
-            <span
-              role="tooltip"
-              className={`pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-lg px-2.5 py-1.5 text-[13px] leading-none shadow-md transition-opacity duration-150 ${
-                isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
-              }`}
-              style={{ backgroundColor: tooltipBg, color: tooltipText, ...tooltipPos(m.at) }}
-            >
-              {m.action}{" "}
-              <span className="font-bold tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-                {m.time}
-              </span>
+          <div key={m.key} aria-hidden>
+            <span className={`absolute top-0 whitespace-nowrap leading-none ${MOTION}`} style={label}>
+              {m.action}
             </span>
-          </button>
+            <span
+              className={`absolute rounded-full shadow-sm ${MOTION}`}
+              style={{ top: lineTop, left: centre(m.at), width: LINE_W, height: LINE_H, marginLeft: -LINE_W / 2, backgroundColor: m.color }}
+            />
+            <span
+              className={`absolute whitespace-nowrap font-bold leading-none tabular-nums ${MOTION}`}
+              style={{ top: lineTop + LINE_H + GAP, fontFamily: "var(--font-mono)", ...label }}
+            >
+              {m.time}
+            </span>
+          </div>
         );
       })}
     </div>
