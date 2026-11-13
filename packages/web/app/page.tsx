@@ -15,14 +15,19 @@ import HomeLists from "@/components/HomeLists";
 import SearchResults from "@/components/SearchResults";
 import QuayPanel from "@/components/QuayPanel";
 import Spinner from "@/components/Spinner";
+import ErrorNotice from "@/components/ErrorNotice";
 import { SearchIcon } from "@/components/icons";
 import type { Quay, ResultItem, FerryLeg } from "@shared/types";
-import { fetchJourney } from "@shared/services/journey";
+import { requestJourney } from "@shared/services/journey";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const NEARBY_PAGE = 10; // nearby quays shown initially and added per "Vis flere"
 
-type DestinationStatus = { kind: "resolving"; name: string } | { kind: "error"; messageKey: string } | null;
+type DestinationStatus =
+  | { kind: "resolving"; name: string }
+  | { kind: "error"; messageKey: string } // an answer, e.g. no ferry on the route
+  | { kind: "failed"; retry: () => void } // the request itself failed
+  | null;
 type Selection = { quay: Quay; destination: string | null } | null;
 
 /**
@@ -31,7 +36,7 @@ type Selection = { quay: Quay; destination: string | null } | null;
  */
 export default function Home() {
   const t = useTranslation();
-  const { quays } = useQuays();
+  const { quays, error: quaysError, retry: retryQuays } = useQuays();
   const { favorites } = useFavorites();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
@@ -104,7 +109,14 @@ export default function Home() {
       }
       const token = ++selectionTokenRef.current;
       setDestinationStatus({ kind: "resolving", name: place.name });
-      const journeys = await fetchJourney(API_URL, userLocation[0], userLocation[1], place.latitude, place.longitude);
+      let journeys;
+      try {
+        journeys = await requestJourney(API_URL, userLocation[0], userLocation[1], place.latitude, place.longitude);
+      } catch {
+        // The request failed — say so (with a retry), rather than "no ferry on this route".
+        if (token === selectionTokenRef.current) setDestinationStatus({ kind: "failed", retry: () => selectPlace(place) });
+        return;
+      }
       if (token !== selectionTokenRef.current) return;
       for (const journey of journeys) {
         const ferry = journey.legs.find((l): l is FerryLeg => l.mode === "water" && !!l.fromQuayId);
@@ -152,7 +164,9 @@ export default function Home() {
         </Band>
 
         <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0">
-          {destinationStatus && (
+          {quaysError && <ErrorNotice message={t("search.quaysError")} onRetry={retryQuays} />}
+          {destinationStatus?.kind === "failed" && <ErrorNotice message={t("general.loadError")} onRetry={destinationStatus.retry} />}
+          {destinationStatus && destinationStatus.kind !== "failed" && (
             <div
               role="status"
               aria-live="polite"
@@ -176,6 +190,8 @@ export default function Home() {
               quaysById={quaysById}
               places={places.results}
               placesSettled={places.settled}
+              placesError={places.error}
+              onRetryPlaces={places.retry}
               onSelectQuay={selectQuay}
               onSelectPlace={selectPlace}
             />

@@ -1,5 +1,6 @@
 import type { JourneyResult, FerryLeg, CarLeg, DepartureOption } from '../types';
 import { calculateDistance } from '../utils';
+import { getJson } from './api';
 
 export function estimateRemainingSeconds(leg: CarLeg, currentLat: number, currentLng: number): number {
   const geometry = leg.geometry;
@@ -24,12 +25,16 @@ export function estimateRemainingSeconds(leg: CarLeg, currentLat: number, curren
   return totalKm > 0 ? leg.duration * (remainingKm / totalKm) : leg.duration;
 }
 
+/** Journeys from → to. Throws ApiError when the request fails (used by the web app). */
+export async function requestJourney(apiUrl: string, fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<JourneyResult[]> {
+  const data = await getJson<JourneyResult[]>(`${apiUrl}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
+  return Array.isArray(data) ? data : [];
+}
+
+/** Like requestJourney, but a failure resolves to [] (legacy behaviour the mobile app relies on). */
 export async function fetchJourney(apiUrl: string, fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<JourneyResult[]> {
   try {
-    const res = await fetch(`${apiUrl}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    return await requestJourney(apiUrl, fromLat, fromLng, toLat, toLng);
   } catch {
     return [];
   }

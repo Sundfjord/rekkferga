@@ -6,6 +6,7 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { destinationNames } from "@/lib/quays";
 import { HeartIcon, PlaceIcon } from "@/components/icons";
 import { LIST_CARD, ROW, SectionTitle } from "@/components/HomeLists";
+import ErrorNotice from "@/components/ErrorNotice";
 
 const MAX_QUAY_HITS = 8;
 
@@ -28,6 +29,8 @@ export default function SearchResults({
   quaysById,
   places,
   placesSettled,
+  placesError,
+  onRetryPlaces,
   onSelectQuay,
   onSelectPlace,
 }: {
@@ -36,6 +39,9 @@ export default function SearchResults({
   quaysById: Map<string, Quay>;
   places: SearchResult[];
   placesSettled: boolean;
+  /** The place search request failed — shown as an error, never as "no results". */
+  placesError: boolean;
+  onRetryPlaces: () => void;
   onSelectQuay: (quay: Quay) => void;
   onSelectPlace: (place: SearchResult) => void;
 }) {
@@ -49,7 +55,7 @@ export default function SearchResults({
     .filter((quay) => quay.name.toLowerCase().includes(ql) || quay.subName?.toLowerCase().includes(ql))
     .sort((a, b) => Number(isFavorite(b.id)) - Number(isFavorite(a.id)))
     .slice(0, MAX_QUAY_HITS);
-  const noResults = quayHits.length === 0 && places.length === 0 && placesSettled;
+  const noResults = quayHits.length === 0 && places.length === 0 && placesSettled && !placesError;
 
   return (
     <div className="flex flex-col gap-2.5" style={{ fontFamily: "var(--font-dm-sans)" }}>
@@ -115,6 +121,8 @@ export default function SearchResults({
           </div>
         </>
       )}
+
+      {placesError && <ErrorNotice message={t("search.placesError")} onRetry={onRetryPlaces} />}
 
       {noResults && (
         <p className="mx-1 text-[15px]" style={{ color: "var(--text-secondary)" }}>

@@ -10,7 +10,9 @@
     "departure": "Avgang",
     "departures": "Avganger",
     "arrive": "Fremme",
-    "car": "Bil"
+    "car": "Bil",
+    "loadError": "Kunne ikke hente data. Sjekk nettforbindelsen og prøv igjen.",
+    "retry": "Prøv igjen"
   },
   "favorites": {
     "title": "Favoritter",
@@ -27,7 +29,9 @@
     "findingQuay": "Finner første fergerute på veien til {place}…",
     "searchingForQuays": "Søker etter fergekaier...",
     "locationRequired": "Gi tilgang til posisjon for å søke etter destinasjon.",
-    "noRouteQuays": "Ingen fergekaier funnet langs den raskeste ruten til denne destinasjonen"
+    "noRouteQuays": "Ingen fergekaier funnet langs den raskeste ruten til denne destinasjonen",
+    "quaysError": "Kunne ikke laste fergekaiene.",
+    "placesError": "Kunne ikke søke etter steder akkurat nå."
   },
   "home": {
     "nearby": "I nærheten",
@@ -35,7 +39,8 @@
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avganger",
     "selectQuayHint": "Velg en kai for å se avgangene og marginen din.",
-    "showMore": "Vis flere"
+    "showMore": "Vis flere",
+    "favoritesError": "Kunne ikke hente neste avganger for favorittene dine."
   },
   "quay": {
     "driveTime": "Kjøretid",
@@ -43,7 +48,10 @@
     "showDeparturesTo": "Vis avganger til",
     "noDepartures": "Ingen avganger tilgjengelig",
     "loading": "Henter rute og avganger…",
-    "departureAria": "{destination} {time}, margin {margin} minutter"
+    "departureAria": "{destination} {time}, margin {margin} minutter",
+    "departuresError": "Kunne ikke hente avgangene.",
+    "departuresStale": "Kunne ikke oppdatere avgangene – de kan være utdaterte.",
+    "routeError": "Kunne ikke beregne kjøretiden, så avgangene vises uten margin."
   },
   "drive": {
     "allDepartures": "Alle avganger fra {quay}",

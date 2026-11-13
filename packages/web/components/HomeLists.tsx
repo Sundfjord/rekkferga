@@ -8,6 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { TIER_COLOR, arrivalFrom, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
 import { destinationNames } from "@/lib/quays";
 import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
+import ErrorNotice from "@/components/ErrorNotice";
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
@@ -27,11 +28,14 @@ export const ROW = "flex min-h-[60px] w-full cursor-pointer items-center gap-3 p
 function NextBlock({
   next,
   loaded,
+  failed,
   driveSeconds,
   now,
 }: {
   next: QuayNext | undefined;
   loaded: boolean;
+  /** The favourites request failed and there is no earlier data for this quay. */
+  failed: boolean;
   driveSeconds: number | null;
   now: number;
 }) {
@@ -46,7 +50,7 @@ function NextBlock({
   if (!dep) {
     return (
       <span className={`${base} justify-center text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
-        {t("home.noNextDeparture")}
+        {t(failed ? "general.unavailable" : "home.noNextDeparture")}
       </span>
     );
   }
@@ -103,6 +107,7 @@ export default function HomeLists({
       {favorites.length > 0 && (
         <>
           <SectionTitle>{t("favorites.title")}</SectionTitle>
+          {favoriteNext.error && <ErrorNotice message={t("home.favoritesError")} onRetry={favoriteNext.retry} />}
           {favorites.map((f) => {
             const quay = quaysById.get(f.id);
             if (!quay) {
@@ -142,7 +147,13 @@ export default function HomeLists({
                     </span>
                   )}
                 </span>
-                <NextBlock next={next} loaded={favoriteNext.loaded} driveSeconds={drive} now={now} />
+                <NextBlock
+                  next={next}
+                  loaded={favoriteNext.loaded}
+                  failed={favoriteNext.error && !next}
+                  driveSeconds={drive}
+                  now={now}
+                />
               </button>
             );
           })}

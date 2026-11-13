@@ -1,33 +1,16 @@
 import type { Quay, QuayRoute, QuayDepartures, QuayNext } from '../types';
+import { getJson } from './api';
 
-const EMPTY_DEPARTURES: QuayDepartures = { departures: [], selectedDeparture: null };
-
-// Network failures resolve to the empty value instead of throwing, so callers can always
-// leave their loading state.
-async function getJson<T>(url: string, fallback: T): Promise<T> {
-  try {
-    const res = await fetch(url);
-    return res.ok ? ((await res.json()) as T) : fallback;
-  } catch {
-    return fallback;
-  }
-}
+// All functions throw ApiError (./api) when the request fails, so the UI can show an error
+// instead of presenting a failure as "no results".
 
 export async function fetchQuays(apiUrl: string): Promise<Quay[]> {
-  const data = await getJson<Quay[]>(`${apiUrl}/quays`, []);
+  const data = await getJson<Quay[]>(`${apiUrl}/quays`);
   return Array.isArray(data) ? data : [];
 }
 
-export function fetchQuayRoute(
-  apiUrl: string,
-  fromLat: number,
-  fromLng: number,
-  quayId: string,
-): Promise<QuayRoute | null> {
-  return getJson<QuayRoute | null>(
-    `${apiUrl}/quay/route?from=${fromLat},${fromLng}&quayId=${encodeURIComponent(quayId)}`,
-    null,
-  );
+export function fetchQuayRoute(apiUrl: string, fromLat: number, fromLng: number, quayId: string): Promise<QuayRoute> {
+  return getJson<QuayRoute>(`${apiUrl}/quay/route?from=${fromLat},${fromLng}&quayId=${encodeURIComponent(quayId)}`);
 }
 
 /** `arrivalTime` omitted → departures without margins (e.g. no user location). */
@@ -40,7 +23,6 @@ export async function fetchQuayDepartures(
   const arrival = arrivalTime ? `&arrivalTime=${encodeURIComponent(arrivalTime)}` : '';
   const data = await getJson<Partial<QuayDepartures>>(
     `${apiUrl}/quay/departures?quayId=${encodeURIComponent(quayId)}${arrival}&limit=${limit}`,
-    EMPTY_DEPARTURES,
   );
   return {
     departures: Array.isArray(data.departures) ? data.departures : [],
@@ -56,9 +38,6 @@ export async function fetchQuaysNext(
 ): Promise<QuayNext[]> {
   if (quayIds.length === 0) return [];
   const origin = from ? `&from=${from[0]},${from[1]}` : '';
-  const data = await getJson<QuayNext[]>(
-    `${apiUrl}/quays/next?ids=${quayIds.map(encodeURIComponent).join(',')}${origin}`,
-    [],
-  );
+  const data = await getJson<QuayNext[]>(`${apiUrl}/quays/next?ids=${quayIds.map(encodeURIComponent).join(',')}${origin}`);
   return Array.isArray(data) ? data : [];
 }

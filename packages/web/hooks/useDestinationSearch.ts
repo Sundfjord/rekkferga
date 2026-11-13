@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SearchResult } from "@shared/types";
+import { getJson } from "@shared/services/api";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const MIN_QUERY = 2;
@@ -13,6 +14,10 @@ export function useDestinationSearch(query: string, focus: [number, number] | nu
   // The query `results` belong to — tells "no hits" apart from "not searched yet".
   const [resultsFor, setResultsFor] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  // The latest search request failed (network/server) — not the same as "no hits".
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => setAttempt((n) => n + 1), []);
   const q = query.trim();
 
   useEffect(() => {
@@ -20,6 +25,7 @@ export function useDestinationSearch(query: string, focus: [number, number] | nu
       setResults([]);
       setResultsFor(null);
       setIsSearching(false);
+      setError(false);
       return;
     }
     const controller = new AbortController();
@@ -31,12 +37,13 @@ export function useDestinationSearch(query: string, focus: [number, number] | nu
         params.set("lon", focus[1].toFixed(3));
       }
       try {
-        const res = await fetch(`${API_URL}/search?${params}`, { signal: controller.signal });
-        const data = res.ok ? await res.json() : [];
+        const data = await getJson<SearchResult[]>(`${API_URL}/search?${params}`, { signal: controller.signal });
         setResults(Array.isArray(data) ? data : []);
+        setError(false);
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setResults([]);
+        setError(true);
       }
       setResultsFor(q);
       setIsSearching(false);
@@ -45,7 +52,7 @@ export function useDestinationSearch(query: string, focus: [number, number] | nu
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q, focus]);
+  }, [q, focus, attempt]);
 
-  return { results, isSearching, settled: resultsFor === q && !isSearching };
+  return { results, isSearching, settled: resultsFor === q && !isSearching, error, retry };
 }

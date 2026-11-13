@@ -13,6 +13,7 @@ import Band from "@/components/Band";
 import DepartureCard from "@/components/DepartureCard";
 import DriveMode from "@/components/DriveMode";
 import Spinner from "@/components/Spinner";
+import ErrorNotice from "@/components/ErrorNotice";
 import { ChevronLeftIcon, HeartIcon } from "@/components/icons";
 
 const VISIBLE_DEPARTURES = 5;
@@ -74,6 +75,9 @@ export default function QuayPanel({
   loading,
   lastRefreshAt,
   isRefreshing,
+  departuresError,
+  routeError,
+  retry,
 }: QuayPanelProps) {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -149,6 +153,8 @@ export default function QuayPanel({
       </Band>
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0">
+        {/* A failed refresh keeps the last good departures, so say they may be stale. */}
+        {departuresError && departures.length > 0 && <ErrorNotice message={t("quay.departuresStale")} onRetry={retry} />}
         {selected ? (
           // Re-keyed per departure so the hero's grow animation replays on every pick (incl. Plan B).
           <DriveMode key={selectedKey} departure={selected} departures={filtered} arrivalAt={arrivalAt} now={now} onSelect={select} />
@@ -163,6 +169,7 @@ export default function QuayPanel({
                 <Stat label={t("general.arrive")} value={formatTime(arrivalAt.toISOString())} />
               </div>
             )}
+            {routeError && <ErrorNotice message={t("quay.routeError")} onRetry={retry} />}
 
             {crossings.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("quay.showDeparturesTo")}>
@@ -192,6 +199,8 @@ export default function QuayPanel({
 
             {loading ? (
               <LoadingState label={t("quay.loading")} />
+            ) : departuresError && departures.length === 0 ? (
+              <ErrorNotice message={t("quay.departuresError")} onRetry={retry} />
             ) : visible.length === 0 ? (
               <div className="px-1 py-2 text-sm" style={{ color: "var(--text-secondary)" }}>
                 {t("quay.noDepartures")}

@@ -10,7 +10,9 @@
     "departure": "Departure",
     "departures": "Departures",
     "arrive": "Arrive",
-    "car": "Car"
+    "car": "Car",
+    "loadError": "Couldn't fetch data. Check your connection and try again.",
+    "retry": "Try again"
   },
   "favorites": {
     "title": "Favorites",
@@ -27,7 +29,9 @@
     "findingQuay": "Finding the ferry quay on the way to {place}…",
     "searchingForQuays": "Searching for ferry quays...",
     "locationRequired": "Allow location access to search by destination.",
-    "noRouteQuays": "No ferry quays found along the fastest route to this destination"
+    "noRouteQuays": "No ferry quays found along the fastest route to this destination",
+    "quaysError": "Couldn't load the ferry quays.",
+    "placesError": "Couldn't search for places right now."
   },
   "home": {
     "nearby": "Nearby",
@@ -35,7 +39,8 @@
     "driveAway": "{time} away",
     "noNextDeparture": "No departures",
     "selectQuayHint": "Pick a quay to see its departures and your margin.",
-    "showMore": "Show more"
+    "showMore": "Show more",
+    "favoritesError": "Couldn't fetch the next departures for your favourites."
   },
   "quay": {
     "driveTime": "Drive time",
@@ -43,7 +48,10 @@
     "showDeparturesTo": "Show departures to",
     "noDepartures": "No departures available",
     "loading": "Fetching route and departures…",
-    "departureAria": "{destination} {time}, margin {margin} minutes"
+    "departureAria": "{destination} {time}, margin {margin} minutes",
+    "departuresError": "Couldn't fetch the departures.",
+    "departuresStale": "Couldn't update the departures — they may be out of date.",
+    "routeError": "Couldn't calculate the drive time, so departures are shown without margins."
   },
   "drive": {
     "allDepartures": "All departures",
