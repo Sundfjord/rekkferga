@@ -1,128 +1,70 @@
-# Rekkferga 🚢
+# Rekkferga
 
-A comprehensive ferry information and journey planning platform for Norway.
+Ferry departures for Norway, shown against your drive time. Pick a ferry quay (or a place,
+which resolves to the first ferry quay on the route there) and see how much margin you have
+for each upcoming departure.
 
-## 🎯 Product Overview
+Production address: **https://rekkferga.no**.
 
-Rekkferga provides real-time ferry information, journey planning, and departure schedules across Norway's ferry network.
+## Repository
 
-### Components
+npm-workspaces monorepo:
 
-- **rekkferga-api** - Backend API service (Flask)
-- **rekkferga-cron** - Scheduled data processing (Azure Functions)
-- **rekkferga-app** - Mobile application (React Native/Expo)
-- **rekkferga-web** - Web application (Next.js)
+| Path | What | Stack |
+|---|---|---|
+| `packages/web` | Web app | Next.js 15 (static export), React 19, Tailwind CSS v4 |
+| `packages/api` | API | Flask (Python), served by gunicorn in production |
+| `packages/app` | Mobile app — not yet updated to the current design, not deployed | Expo / React Native |
+| `shared/` | Code shared by web and app: `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | TypeScript |
+| `docs/business-rules.md` | Business rules, e.g. which departures are shown | |
 
-## 🚀 Quick Start
+### Data sources
 
-### Prerequisites
+- **Quays** — a committed snapshot of Vegvesen NVDB (`packages/api/data/quays.json`), refreshed
+  monthly by the `refresh-quays.yml` workflow (`packages/api/scripts/refresh_quays.py`).
+- **Departures** — live from Entur.
+- **Drive times** — HERE Routing API (traffic-aware).
+- **Place search** — Entur geocoder, with Nominatim as fallback.
 
-- Node.js 18+
-- Python 3.11+
-- Docker (optional)
-- Expo CLI (for mobile development)
+There is no database.
 
-### Installation
+## Local development
+
+Requires Node.js 18.18+ and Python 3.11+.
 
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/rekkferga.git
-cd rekkferga
-
-# Install dependencies
 npm install
 
-# Set up environment variables
-cp packages/api/.env.example packages/api/.env
-cp packages/app/env.example packages/app/.env
-cp packages/web/.env.example packages/web/.env
+# API
+cd packages/api
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # then set HERE_API_KEY
+cd ../..
 
-# Start development servers
-npm run dev:all
+npm run dev:api             # Flask on http://localhost:5000 (no auto-reload)
+npm run dev:web             # Next.js on http://localhost:3000
 ```
 
-### Development
+The web app reads the API address from `NEXT_PUBLIC_API_URL` in `packages/web/.env.local`
+(`http://localhost:5000` locally). It is read when the dev server starts.
+
+Checks:
 
 ```bash
-# Start all services
-npm run dev:all
-
-# Start individual services
-npm run dev:api    # API server on http://localhost:5000
-npm run dev:web    # Web app on http://localhost:3000
-npm run dev:app    # Mobile app (Expo)
+npm run test:shared                          # vitest over shared/**/*.test.ts
+npm run lint:web
+cd packages/web && npx tsc --noEmit -p .     # type-check
 ```
 
-### Building
+## Deployment
 
-```bash
-# Build all components
-npm run build:all
+Both parts deploy from the `master` branch.
 
-# Build individual components
-npm run build:api
-npm run build:web
-npm run build:app
-```
+| Part | Host | Address |
+|---|---|---|
+| Web | Cloudflare Pages — builds `packages/web` to static files (`out/`) | https://rekkferga.no |
+| API | Railway — Docker image from `packages/api`, deployed by `.github/workflows/api-deploy.yml` | https://api.rekkferga.no |
 
-### Deployment
-
-```bash
-# Deploy all components
-npm run deploy:all
-
-# Deploy individual components
-npm run deploy:api
-npm run deploy:web
-npm run deploy:cron
-```
-
-## 📁 Project Structure
-
-```
-rekkferga/
-├── packages/
-│   ├── api/          # Flask API backend
-│   ├── cron/         # Azure Functions cron jobs
-│   ├── app/          # React Native mobile app
-│   └── web/          # Next.js web app
-├── shared/
-│   ├── types/        # Shared TypeScript types
-│   ├── utils/        # Shared utilities
-│   └── constants/    # Shared constants
-├── infrastructure/  # Docker, Terraform configs
-├── docs/            # Documentation
-└── scripts/         # Build and deployment scripts
-```
-
-## 🌐 Hosting
-
-- **Web**: Cloudflare Pages, static export of `packages/web` (`https://rekkferga.no`)
-- **API**: Railway, Docker (`https://api.rekkferga.no`)
-- **DNS**: Cloudflare (domain registered at GoDaddy)
-- **Quay data refresh**: GitHub Actions (`refresh-quays.yml`, monthly)
-
-## 📚 Documentation
-
-- [API Documentation](docs/api/)
-- [Deployment Guide](docs/deployment/)
-- [Development Guide](docs/development/)
-- [Architecture Overview](docs/architecture/)
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests
-5. Submit a pull request
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## 🆘 Support
-
-- [Issues](https://github.com/yourusername/rekkferga/issues)
-- [Discussions](https://github.com/yourusername/rekkferga/discussions)
-- [Documentation](docs/)
+DNS is on Cloudflare; the domain is registered at GoDaddy. Required secrets, variables and
+service settings are listed in [`.github/SETUP_GITHUB_SECRETS.md`](.github/SETUP_GITHUB_SECRETS.md).
