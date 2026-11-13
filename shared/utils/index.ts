@@ -1,7 +1,5 @@
 // Shared utilities for Rekkferga platform
 
-import type { DepartureOption } from '../types';
-
 export type Language = "en" | "no" | "nn";
 
 /** A locale file: nested groups of strings and string lists, addressed by dotted paths. */
@@ -98,28 +96,13 @@ export const calculateDistance = (
 };
 
 // ---------------------------------------------------------------------------
-// Trip utilities
+// Margins
 // ---------------------------------------------------------------------------
-
-export const QUAY_PROXIMITY_KM = 0.2;
-export const DESTINATION_PROXIMITY_KM = 0.2;
-export const STALE_THRESHOLD_MS = 5 * 60 * 1000;
-
-export function departureIsRealtime(dep: DepartureOption | undefined): boolean {
-  return dep?.realtime === true;
-}
 
 export function marginTier(minutes: number): "safe" | "tight" | "missed" {
   if (minutes > 10) return "safe";
   if (minutes >= 0) return "tight";
   return "missed";
-}
-
-export function formatMarginLabel(minutes: number): { prefix: string; label: string } {
-  const abs = Math.abs(minutes);
-  const label = abs >= 60 ? `${Math.floor(abs / 60)}h${abs % 60}m` : `${abs}m`;
-  const prefix = minutes > 0 ? "+" : minutes < 0 ? "−" : "";
-  return { prefix, label };
 }
 
 // ---------------------------------------------------------------------------

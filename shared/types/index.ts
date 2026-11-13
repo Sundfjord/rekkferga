@@ -43,7 +43,6 @@ export interface Quay {
 
 export interface QuayRoute {
   durationSeconds: number; // traffic-aware drive time to the quay
-  quay: Quay;
 }
 
 /** Next few departures + drive time for one quay (favourites), from GET /quays/next. */
@@ -64,7 +63,6 @@ export interface JourneyResult {
   travelDurationSeconds?: number; // sum of leg durations
   waitDurationSeconds?: number; // time spent waiting between legs
   totalDurationSeconds?: number; // travel + wait
-  trafficDataAvailable?: boolean;
   legs: JourneyLeg[];
 }
 
@@ -81,15 +79,12 @@ interface BaseLeg {
 
 export interface CarLeg extends BaseLeg {
   mode: 'car';
-  geometry?: [number, number][];                                    // road-snapped [[lat, lng], ...]
 }
 
 export interface FerryLeg extends BaseLeg {
   mode: 'water';
   fromQuayId: string; // NSR stop place ID
   toQuayId: string;
-  departures?: DepartureOption[];
-  selectedDeparture?: DepartureOption; // server-selected departure for canonical timing
 }
 
 export interface LegPlace {
@@ -115,20 +110,4 @@ export interface DepartureOption {
 export interface QuayDepartures {
   departures: DepartureOption[];
   selectedDeparture: DepartureOption | null;
-}
-
-// ---------------------------------------------------------------------------
-// Trip state
-// ---------------------------------------------------------------------------
-
-export type TripState = 'driving_to_quay' | 'at_quay' | 'crossing' | 'crossing_complete' | 'arrived';
-
-// ---------------------------------------------------------------------------
-// Generic
-// ---------------------------------------------------------------------------
-
-export interface ApiResponse<T> {
-  data: T;
-  error?: string;
-  timestamp: string;
 }

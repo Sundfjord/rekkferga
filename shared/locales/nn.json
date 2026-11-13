@@ -3,11 +3,9 @@
     "back": "Attende",
     "cancel": "Avbryt",
     "now": "No",
-    "error": "Det oppstod ein feil",
     "unavailable": "Utilgjengeleg",
     "updatedAt": "Oppdatert {time}",
     "departure": "Avgang",
-    "departures": "Avgangar",
     "arrive": "Framme",
     "loadError": "Kunne ikkje hente data. Sjekk nettilkoplinga og prøv igjen.",
     "retry": "Prøv igjen"
@@ -19,8 +17,6 @@
   },
   "search": {
     "placeholder": "Søk etter kai eller stad",
-    "destinationPlaceholder": "Søk etter destinasjon",
-    "tagline": "Kvar skal du?",
     "ferryQuays": "Ferjekaiar",
     "places": "Stader",
     "noResults": "Ingen treff på «{query}»",
@@ -118,14 +114,5 @@
         "Du må vere over gjennomsnittet glad i ferjekaiar om du skal ta denne."
       ]
     }
-  },
-  "trip": {
-    "drivingToQuay": "Køyrer til ferge",
-    "atQuay": "Ved fergekaien",
-    "crossing": "Om bord på ferja",
-    "crossingComplete": "Ferje fullført",
-    "arrived": "Ankomme",
-    "arrivedAt": "Du har ankomme {destination}.",
-    "stalePosition": "Posisjonen kan vere utdatert — trykk for å oppdatere"
   }
 }

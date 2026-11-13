@@ -1,63 +1,8 @@
-import type { JourneyResult, FerryLeg, CarLeg, DepartureOption } from '../types';
-import { calculateDistance } from '../utils';
+import type { JourneyResult } from '../types';
 import { getJson } from './api';
-
-export function estimateRemainingSeconds(leg: CarLeg, currentLat: number, currentLng: number): number {
-  const geometry = leg.geometry;
-  if (!geometry || geometry.length < 2) {
-    const totalKm = leg.distance / 1000;
-    const remainingKm = calculateDistance(currentLat, currentLng, leg.toPlace.latitude ?? 0, leg.toPlace.longitude ?? 0);
-    return totalKm > 0 ? leg.duration * Math.min(1, remainingKm / totalKm) : leg.duration;
-  }
-  let nearestIdx = 0;
-  let nearestDist = Infinity;
-  for (let i = 0; i < geometry.length; i++) {
-    const d = calculateDistance(currentLat, currentLng, geometry[i][0], geometry[i][1]);
-    if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
-  }
-  let remainingKm = 0;
-  let totalKm = 0;
-  for (let i = 0; i < geometry.length - 1; i++) {
-    const d = calculateDistance(geometry[i][0], geometry[i][1], geometry[i + 1][0], geometry[i + 1][1]);
-    totalKm += d;
-    if (i >= nearestIdx) remainingKm += d;
-  }
-  return totalKm > 0 ? leg.duration * (remainingKm / totalKm) : leg.duration;
-}
 
 /** Journeys from → to. Throws ApiError when the request fails (used by the web app). */
 export async function requestJourney(apiUrl: string, fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<JourneyResult[]> {
   const data = await getJson<JourneyResult[]>(`${apiUrl}/journey?from=${fromLat},${fromLng}&to=${toLat},${toLng}`);
   return Array.isArray(data) ? data : [];
-}
-
-/** Like requestJourney, but a failure resolves to [] (legacy behaviour the mobile app relies on). */
-export async function fetchJourney(apiUrl: string, fromLat: number, fromLng: number, toLat: number, toLng: number): Promise<JourneyResult[]> {
-  try {
-    return await requestJourney(apiUrl, fromLat, fromLng, toLat, toLng);
-  } catch {
-    return [];
-  }
-}
-
-export interface DepartureRefresh {
-  departures: DepartureOption[];
-  selectedDeparture: DepartureOption | null;
-}
-
-export async function fetchDeparturesForLeg(apiUrl: string, ferryLeg: FerryLeg, arrivalTime: string): Promise<DepartureRefresh> {
-  if (!ferryLeg.fromQuayId || !ferryLeg.toQuayId) return { departures: [], selectedDeparture: null };
-  try {
-    const res = await fetch(
-      `${apiUrl}/quay/departures?quayId=${ferryLeg.fromQuayId}&toQuayId=${ferryLeg.toQuayId}&arrivalTime=${encodeURIComponent(arrivalTime)}&mode=refresh`
-    );
-    if (!res.ok) return { departures: [], selectedDeparture: null };
-    const data = await res.json();
-    return {
-      departures: Array.isArray(data.departures) ? data.departures : [],
-      selectedDeparture: data.selectedDeparture ?? null,
-    };
-  } catch {
-    return { departures: [], selectedDeparture: null };
-  }
 }

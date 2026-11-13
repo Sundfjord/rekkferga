@@ -4,13 +4,10 @@
     "cancel": "Avbryt",
     "now": "Nå",
     "via": "via",
-    "error": "Det oppstod en feil",
     "unavailable": "Utilgjengelig",
     "updatedAt": "Oppdatert {time}",
     "departure": "Avgang",
-    "departures": "Avganger",
     "arrive": "Fremme",
-    "car": "Bil",
     "loadError": "Kunne ikke hente data. Sjekk nettforbindelsen og prøv igjen.",
     "retry": "Prøv igjen"
   },
@@ -21,13 +18,10 @@
   },
   "search": {
     "placeholder": "Søk etter kai eller sted",
-    "destinationPlaceholder": "Søk etter destinasjon",
-    "tagline": "Hvor skal du?",
     "ferryQuays": "Fergekaier",
     "places": "Steder",
     "noResults": "Ingen treff på «{query}»",
     "findingQuay": "Finner første fergerute på veien til {place}…",
-    "searchingForQuays": "Søker etter fergekaier...",
     "locationRequired": "Gi tilgang til posisjon for å søke etter destinasjon.",
     "noRouteQuays": "Ingen fergekaier funnet langs den raskeste ruten til denne destinasjonen",
     "quaysError": "Kunne ikke laste fergekaiene.",
@@ -122,14 +116,5 @@
         "Du må være over gjennomsnittet glad i ferjekaier om du skal ta denne."
       ]
     }
-  },
-  "trip": {
-    "drivingToQuay": "Kjører til ferge",
-    "atQuay": "Ved fergekaien",
-    "crossing": "Om bord på fergen",
-    "crossingComplete": "Ferge fullført",
-    "arrived": "Ankommet",
-    "arrivedAt": "Du har ankommet {destination}.",
-    "stalePosition": "Posisjonen kan være utdatert — trykk for å oppdatere"
   }
 }

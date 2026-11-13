@@ -4,13 +4,10 @@
     "cancel": "Cancel",
     "now": "Now",
     "via": "via",
-    "error": "Error occurred",
     "unavailable": "Unavailable",
     "updatedAt": "Updated {time}",
     "departure": "Departure",
-    "departures": "Departures",
     "arrive": "Arrive",
-    "car": "Car",
     "loadError": "Couldn't fetch data. Check your connection and try again.",
     "retry": "Try again"
   },
@@ -21,13 +18,10 @@
   },
   "search": {
     "placeholder": "Search for a quay or place",
-    "destinationPlaceholder": "Where are you going today?",
-    "tagline": "Where to?",
     "ferryQuays": "Ferry quays",
     "places": "Places",
     "noResults": "No results for “{query}”",
     "findingQuay": "Finding the ferry quay on the way to {place}…",
-    "searchingForQuays": "Searching for ferry quays...",
     "locationRequired": "Allow location access to search by destination.",
     "noRouteQuays": "No ferry quays found along the fastest route to this destination",
     "quaysError": "Couldn't load the ferry quays.",
@@ -122,14 +116,5 @@
         "You'd have to be unusually fond of ferry quays to take this one."
       ]
     }
-  },
-  "trip": {
-    "drivingToQuay": "Driving to ferry",
-    "atQuay": "At ferry quay",
-    "crossing": "On the ferry",
-    "crossingComplete": "Ferry complete",
-    "arrived": "Arrived",
-    "arrivedAt": "You have arrived at {destination}.",
-    "stalePosition": "Position may be stale — tap to refresh"
   }
 }

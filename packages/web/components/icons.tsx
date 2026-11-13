@@ -22,12 +22,6 @@ export const HeartIcon = ({ size = 24, className, filled }: IconProps & { filled
   </svg>
 );
 
-export const CloseIcon = ({ size = 22, className }: IconProps) => (
-  <svg {...stroke(size, className, 2)}>
-    <path d="M6 18L18 6M6 6l12 12" />
-  </svg>
-);
-
 export const ChevronRightIcon = ({ size = 22, className }: IconProps) => (
   <svg {...stroke(size, className)}>
     <path d="M9 6l6 6-6 6" />

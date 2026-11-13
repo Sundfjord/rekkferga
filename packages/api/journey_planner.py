@@ -1,48 +1,27 @@
 import logging
 import requests
-import json
 from datetime import datetime
-from util import format_datetime_for_api
 
 logger = logging.getLogger(__name__)
 
 base_url = "https://api.entur.io/journey-planner/v3/graphql"
 headers = {"Content-Type": "application/json", "ET-Client-Name": "rekkferga_app"}
+# Never wait on EnTur indefinitely: a hung call would tie up a gunicorn worker thread.
+TIMEOUT_SECONDS = 10
 
 
-def query_journey_planner(query, variables={}):
+def query_journey_planner(query, variables=None):
     try:
         response = requests.post(
-            base_url, json={"query": query, "variables": variables}, headers=headers
+            base_url,
+            json={"query": query, "variables": variables or {}},
+            headers=headers,
+            timeout=TIMEOUT_SECONDS,
         )
-        result = json.loads(response.text)
-        return result
+        return response.json()
     except Exception as e:
         logger.exception("Error in query_journey_planner")
         return {"errors": [{"message": str(e)}]}
-
-
-def get_departures_from_entur(quay, route=None, to_quay_id=None):
-    """
-    Get departures from a quay using the EnTur API.
-
-    Args:
-        quay: Quay object with an 'id' field
-        route: Route object with 'expectedEndTime' for margin calculation
-
-    Returns:
-        Dictionary of departures grouped by destination
-    """
-    arrival_time = route.get("expectedEndTime") if route else None
-    if arrival_time:
-        # Start 5 min before estimated arrival so departures just before
-        # the arrival window are included. format_datetime_for_api handles
-        # past timestamps gracefully.
-        start_time = format_datetime_for_api(arrival_time, subtract_minutes=5)
-    else:
-        start_time = format_datetime_for_api(None)
-    departures = get_departures_from_nsr_id(quay["id"], start_time)
-    return process_departures(departures, route, to_quay_id, from_quay_id=quay["id"])
 
 
 def get_departures_from_nsr_id(nsr_id, start_time=None, number_of_departures=4):
@@ -205,7 +184,7 @@ def serialise_journey(pattern):
     for leg in pattern.get("legs", []):
         start_time = leg.get("expectedStartTime")
         if previous_end and start_time:
-            margin = _compute_margin_minutes(start_time, previous_end)
+            margin = compute_margin_minutes(start_time, previous_end)
             if margin and margin > 0:
                 wait_duration += margin * 60
         previous_end = leg.get("expectedEndTime") or previous_end
@@ -225,7 +204,7 @@ def serialise_journey(pattern):
     }
 
 
-def _compute_margin_minutes(departure_time_str, arrival_time_str):
+def compute_margin_minutes(departure_time_str, arrival_time_str):
     """
     Signed margin in minutes: positive = arrives before departure (buffer), negative = will miss.
     """
@@ -235,125 +214,3 @@ def _compute_margin_minutes(departure_time_str, arrival_time_str):
         return int((dep - arr).total_seconds() / 60)
     except (ValueError, AttributeError):
         return None
-
-
-def health_check():
-    query = """
-    query Ping {
-        __typename
-    }
-    """
-    result = query_journey_planner(query)
-    return result["data"]["__typename"] == "QueryType"
-
-
-def _extract_via_names(passing_times, from_quay_id, to_quay_id):
-    """Return stop names that fall strictly between from_quay_id and to_quay_id in passing_times."""
-    if not passing_times or not from_quay_id or not to_quay_id:
-        return []
-    get_id = lambda pt: (pt.get("quay") or {}).get("stopPlace", {}).get("id")
-    from_index = next((i for i, pt in enumerate(passing_times) if get_id(pt) == from_quay_id), -1)
-    to_index = next((i for i, pt in enumerate(passing_times) if get_id(pt) == to_quay_id), -1)
-    if from_index < 0 or to_index <= from_index:
-        return []
-    return [
-        (pt.get("quay") or {}).get("stopPlace", {}).get("name")
-        for pt in passing_times[from_index + 1:to_index]
-        if (pt.get("quay") or {}).get("stopPlace", {}).get("name")
-    ]
-
-
-def process_departures(departure_data, route=None, to_quay_id=None, from_quay_id=None):
-    """
-    Process EnTur departure data and return standardized departure objects.
-
-    Args:
-        departure_data: Raw departure data from EnTur API (list of stop places)
-        route: Route information for determining relevant departures
-
-    Returns:
-        List of departures for the requested destination quay.
-    """
-    departures = []
-
-    if (
-        not departure_data
-        or not isinstance(departure_data, list)
-        or len(departure_data) == 0
-    ):
-        return departures
-
-    stop_place = departure_data[0]
-    estimated_calls = stop_place.get("estimatedCalls", [])
-
-    if not estimated_calls:
-        return departures
-
-    for departure in estimated_calls:
-        service_journey = departure.get("serviceJourney") or {}
-        service_journey_calls = service_journey.get("estimatedCalls", [])
-        passing_times = service_journey.get("passingTimes", [])
-
-        # When estimatedCalls is empty (e.g. no realtime data for next-day trips),
-        # fall back to passingTimes (scheduled, always present) to determine destinations.
-        if not service_journey_calls:
-            if not passing_times or not to_quay_id:
-                continue
-            arrival_time = route.get("expectedEndTime") if route else None
-            margin_minutes = (
-                _compute_margin_minutes(departure.get("expectedDepartureTime"), arrival_time)
-                if arrival_time
-                else None
-            )
-            dep_time = departure.get("expectedDepartureTime")
-
-            target_index = next(
-                (
-                    idx for idx, pt in enumerate(passing_times)
-                    if (pt.get("quay") or {}).get("stopPlace", {}).get("id") == to_quay_id
-                ),
-                -1,
-            )
-            if target_index <= 0:
-                continue
-
-            departures.append({
-                "expectedDepartureTime": dep_time,
-                "realtime": departure.get("realtime", False),
-                "marginMinutes": margin_minutes,
-                "viaNames": _extract_via_names(passing_times, from_quay_id, to_quay_id),
-            })
-            continue
-
-        target_index = next(
-            (
-                idx for idx, call in enumerate(service_journey_calls)
-                if (call.get("quay") or {}).get("stopPlace", {}).get("id") == to_quay_id
-            ),
-            -1,
-        )
-
-        if target_index <= 0:
-            continue
-
-        dep_time = departure.get("expectedDepartureTime")
-        arrival_time = route.get("expectedEndTime") if route else None
-        margin_minutes = (
-            _compute_margin_minutes(dep_time, arrival_time)
-            if arrival_time
-            else None
-        )
-
-        departures.append(
-            {
-                "expectedDepartureTime": dep_time,
-                "realtime": departure.get("realtime", False),
-                "marginMinutes": margin_minutes,
-                "viaNames": _extract_via_names(passing_times, from_quay_id, to_quay_id),
-            }
-        )
-
-    departures.sort(key=lambda x: x["expectedDepartureTime"])
-    departures = departures[:2]
-
-    return departures

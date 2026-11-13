@@ -5,7 +5,7 @@ Rekkferga is a ferry journey planner for Norway. npm-workspaces monorepo:
 | Package | Stack | Deploys to |
 |---|---|---|
 | `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map), static export | Cloudflare Worker, static assets (`wrangler.jsonc`, `rekkferga.no`) |
-| `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind | — (not deployed yet) |
+| `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind — outdated, to be rebuilt to match web | — (not deployed) |
 | `packages/api` | Flask (Python, `.venv`) | Railway (Docker) |
 | `packages/cron` | Azure Functions skeleton — unused; quay refresh runs in GitHub Actions | Azure |
 | `shared/` | TS `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | — |
@@ -39,7 +39,7 @@ First-time setup: `./scripts/setup.sh`. The API has no automated tests yet.
 
 API endpoints:
 - `GET /quays` — committed Vegvesen NVDB snapshot (`packages/api/data/quays.json`, ~366 quays). `id` = EnTur NSR stop-place id; `relatedQuayIds` = destination quays. Refreshed monthly by `.github/workflows/refresh-quays.yml` → `scripts/refresh_quays.py`.
-- `GET /quay/route` — HERE Routing traffic-aware drive duration (no geometry).
+- `GET /quay/route` — HERE Routing traffic-aware drive duration only (`{durationSeconds}`).
 - `GET /quays/next?ids=…&from=lat,lng` — batch: next few departures + drive time per quay (the user's favourites), fetched in parallel.
 - `GET /quay/departures` — live from EnTur, margins computed, labeled by destination quay. `arrivalTime` optional (omitted → no margins); `limit` 1–12 (default 4).
 - `GET /search` — EnTur geocoder autocomplete (`geocoder.py`), Nominatim fallback only on zero hits.
@@ -53,10 +53,10 @@ Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*
 - `hooks/useQuayDepartures.ts` — margin-adaptive departure polling for the selected quay; refreshes the shared drive time when stale.
 - `hooks/useQuays.ts` — quay dataset, cached in localStorage.
 
-Mobile (`packages/app`, alias `@/*` → `packages/app/*`) is **not yet migrated** to quay-centric; it still uses `shared/services/{journey,tripStateMachine}.ts` and the legacy `toQuayId`/`mode=refresh` departures path — keep those until mobile is ported.
+Mobile (`packages/app`, alias `@/*` → `packages/app/*`) is **outdated and will be rebuilt to match the web app 1:1**. Nothing in `shared/` or the API is kept for it: code it depended on (the multi-leg trip state machine, legacy single-crossing departures, its strings) has been removed, so it does not currently compile. Don't add app-only code to `shared/` or the API; port the app onto the web's hooks/services instead.
 
 ## Conventions
 
 - Prefer types from `shared/types/index.ts` over local definitions.
-- User-facing strings go in all three `shared/locales/*.json`, nested by group (`general`, `favorites`, `search`, `home`, `quay`, `drive`, `trip` = legacy mobile) and addressed by dotted path: `t("quay.driveTime")`; lists via `t.list("drive.rush.4to6")` (web) / `i18n.list(...)` (app). Fallback nn → no → en per key (`translate`/`translateList` in `shared/utils`). Put broadly reusable words in `general`. Locale-aware formatting helpers take a `Language` argument (e.g. `formatDuration(seconds, language)`).
+- User-facing strings go in all three `shared/locales/*.json`, nested by group (`general`, `favorites`, `search`, `home`, `quay`, `drive`) and addressed by dotted path: `t("quay.driveTime")`; lists via `t.list("drive.rush.4to6")` (web) / `i18n.list(...)` (app). Fallback nn → no → en per key (`translate`/`translateList` in `shared/utils`). Put broadly reusable words in `general`. Locale-aware formatting helpers take a `Language` argument (e.g. `formatDuration(seconds, language)`).
 - Deployment and secrets: `.github/SETUP_GITHUB_SECRETS.md`. Main branch is `master`. The web build is a static export (`output: "export"` in `next.config.ts`) — no server-only Next.js features (API routes, server actions, image optimisation).

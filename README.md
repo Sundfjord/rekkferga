@@ -14,8 +14,8 @@ npm-workspaces monorepo:
 |---|---|---|
 | `packages/web` | Web app | Next.js 15 (static export), React 19, Tailwind CSS v4 |
 | `packages/api` | API | Flask (Python), served by gunicorn in production |
-| `packages/app` | Mobile app — not yet updated to the current design, not deployed | Expo / React Native |
-| `shared/` | Code shared by web and app: `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | TypeScript |
+| `packages/app` | Mobile app — outdated and currently not compiling; to be rebuilt to match the web app. Not deployed | Expo / React Native |
+| `shared/` | Shared TypeScript: `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | TypeScript |
 | `docs/business-rules.md` | Business rules, e.g. which departures are shown | |
 
 ### Data sources

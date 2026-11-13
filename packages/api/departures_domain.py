@@ -1,10 +1,6 @@
 from typing import Any
 
-from journey_planner import (
-    get_departures_from_entur,
-    get_departures_from_nsr_id,
-    _compute_margin_minutes,
-)
+from journey_planner import get_departures_from_nsr_id, compute_margin_minutes
 from quays import quay_name
 from util import format_datetime_for_api
 
@@ -25,41 +21,6 @@ def select_departure(departures: list[dict[str, Any]]) -> dict[str, Any] | None:
         None,
     )
     return reachable or departures[0]
-
-
-def evaluate_ferry_departures(
-    from_quay_id: str | None, to_quay_id: str | None, arrival_time_iso: str
-) -> dict[str, Any]:
-    if not from_quay_id or not to_quay_id:
-        return {
-            "departures": [],
-            "selectedDeparture": None,
-        }
-
-    all_departures = get_departures_from_entur(
-        {"id": from_quay_id},
-        {"expectedEndTime": arrival_time_iso},
-        to_quay_id,
-    )
-
-    # Remove departures that are too far past the visibility window.
-    # Departures with null margin (no timing data) are kept as-is.
-    visible = [
-        d for d in all_departures
-        if d.get("marginMinutes") is None or d.get("marginMinutes") >= _VISIBILITY_THRESHOLD_MINUTES
-    ]
-
-    selected = select_departure(visible)
-
-    # If the selected departure has plenty of margin, only return that one —
-    # there is no need to show an alternative yet.
-    if selected and (selected.get("marginMinutes") or 0) >= 10:
-        visible = [selected]
-
-    return {
-        "departures": visible,
-        "selectedDeparture": selected,
-    }
 
 
 def _call_id(call: dict[str, Any]) -> str | None:
@@ -113,7 +74,7 @@ def _build_labeled_departures(
 
         dep_time = departure.get("expectedDepartureTime")
         margin = (
-            _compute_margin_minutes(dep_time, arrival_time_iso)
+            compute_margin_minutes(dep_time, arrival_time_iso)
             if arrival_time_iso
             else None
         )

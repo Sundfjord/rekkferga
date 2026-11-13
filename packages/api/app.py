@@ -6,14 +6,9 @@ from flask import Flask, request
 from flask_cors import CORS
 from dotenv import load_dotenv
 from util import is_valid_nsr_id, cache
-from journey_planner import (
-    get_journey_with_ferries,
-    get_departures_from_entur,
-    serialise_journey,
-    health_check,
-)
+from journey_planner import get_journey_with_ferries, serialise_journey
 from here_routing import get_drive_seconds
-from departures_domain import evaluate_ferry_departures, evaluate_quay_departures
+from departures_domain import evaluate_quay_departures
 from geocoder import search_locations
 from quays import get_all_quays, get_quay
 
@@ -43,19 +38,17 @@ def _cors_origins() -> list[str] | str:
 CORS(app, origins=_cors_origins())
 
 
+def _parse_coords(raw: str | None) -> tuple[float, float] | None:
+    try:
+        lat, lng = (float(x) for x in (raw or "").split(","))
+        return lat, lng
+    except (ValueError, TypeError):
+        return None
+
+
 @app.get("/")
 def home():
     return "Running"
-
-
-@app.get("/health")
-def health():
-    try:
-        entur_ok = health_check()
-        return {"status": "ok", "entur": entur_ok}
-    except Exception:
-        logger.exception("Health check failed")
-        return {"status": "degraded"}, 503
 
 
 @app.get("/quays")
@@ -98,8 +91,9 @@ def get_quay_route():
     from_coords = request.args.get("from")
     quay_id = request.args.get("quayId")
 
-    if not from_coords:
-        return {"error": "from coordinates are required"}, 400
+    origin = _parse_coords(from_coords)
+    if not origin:
+        return {"error": "Valid from coordinates are required"}, 400
     if not quay_id or not is_valid_nsr_id(quay_id):
         return {"error": "Valid quayId is required"}, 400
 
@@ -108,16 +102,11 @@ def get_quay_route():
         return {"error": "Unknown quay"}, 404
 
     try:
-        from_lat, from_lng = (float(x) for x in from_coords.split(","))
-    except (ValueError, TypeError):
-        return {"error": "Invalid from coordinates"}, 400
-
-    try:
-        seconds = get_drive_seconds((from_lat, from_lng), (quay["latitude"], quay["longitude"]))
+        seconds = get_drive_seconds(origin, (quay["latitude"], quay["longitude"]))
         if seconds is None:
             return {"error": "Routing unavailable"}, 502
         # Short cache: drive time is traffic-aware and shared with /quays/next (also 60 s).
-        return cache({"durationSeconds": seconds, "quay": quay}, 60)
+        return cache({"durationSeconds": seconds}, 60)
     except Exception:
         logger.exception("Error in get_quay_route")
         return {"error": "Internal server error"}, 500
@@ -125,10 +114,10 @@ def get_quay_route():
 
 @app.get("/quay/departures")
 def get_quay_departures():
+    """All upcoming departures from a quay, each labeled with its end destination (and the
+    stops it calls at on the way); margins when `arrivalTime` is given."""
     quay_id = request.args.get("quayId")
-    to_quay_id = request.args.get("toQuayId")
     arrival_time = request.args.get("arrivalTime")
-    mode = request.args.get("mode")
     try:
         limit = min(max(int(request.args.get("limit", 4)), 1), 12)
     except ValueError:
@@ -138,35 +127,13 @@ def get_quay_departures():
         return {"error": "Valid quayId is required"}, 400
 
     try:
-        # Quay-centric path: no toQuayId → all departures from the quay, labeled by
-        # destination across its related crossings.
-        if not to_quay_id:
-            return evaluate_quay_departures(quay_id, arrival_time, limit)
-
-        # Legacy single-destination path (used by the destination-centric journey flow).
-        if not is_valid_nsr_id(to_quay_id):
-            return {"error": "Valid toQuayId is required"}, 400
-        if mode == "refresh":
-            if not arrival_time:
-                return {"error": "arrivalTime is required in refresh mode"}, 400
-            return evaluate_ferry_departures(quay_id, to_quay_id, arrival_time)
-
-        route = {"expectedEndTime": arrival_time} if arrival_time else None
-        return get_departures_from_entur({"id": quay_id}, route, to_quay_id)
+        return evaluate_quay_departures(quay_id, arrival_time, limit)
     except Exception:
         logger.exception("Error in get_quay_departures")
         return {"error": "Internal server error"}, 500
 
 
 MAX_NEXT_QUAYS = 20  # matches MAX_FAVORITES in shared/utils/favorites.ts
-
-
-def _parse_coords(raw: str | None) -> tuple[float, float] | None:
-    try:
-        lat, lng = (float(x) for x in (raw or "").split(","))
-        return lat, lng
-    except (ValueError, TypeError):
-        return None
 
 
 def _next_departures(quay_id: str, origin: tuple[float, float] | None) -> dict:

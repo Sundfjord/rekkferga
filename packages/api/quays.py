@@ -87,11 +87,6 @@ def get_quay(quay_id: str | None) -> dict[str, Any] | None:
     return _QUAYS_BY_ID.get(quay_id)
 
 
-def related_quay_ids(quay_id: str | None) -> list[str]:
-    quay = get_quay(quay_id)
-    return quay["relatedQuayIds"] if quay else []
-
-
 def quay_name(quay_id: str | None) -> str | None:
     quay = get_quay(quay_id)
     return quay["name"] if quay else None
