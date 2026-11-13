@@ -20,12 +20,13 @@ Run from the **repo root** (root `package.json` holds the workspace scripts):
 npm run dev:api    # Flask on :5000 (no auto-reload — restart after API edits)
 npm run dev:web    # Next.js on :3000
 npm run dev:app    # Expo
+npm run check        # shared tests (vitest) + web lint + web type-check
 npm run test:shared  # vitest over shared/**/*.test.ts
-npm run test:api | test:web | test:app | test:all
-npm run lint:web | lint:app
+npm run typecheck:web
+npm run lint:web
 ```
 
-Type-check web: `cd packages/web && npx tsc --noEmit -p .`
+First-time setup: `./scripts/setup.sh`. The API has no automated tests yet.
 
 ## Local setup
 

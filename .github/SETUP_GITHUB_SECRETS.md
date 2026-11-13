@@ -17,12 +17,10 @@ Set under **Settings → Secrets and variables → Actions**, or with the `gh` C
 
 | Secret | Used by | Where to get it |
 |---|---|---|
-| `RAILWAY_TOKEN` | `api-deploy.yml` | Railway project → Settings → Tokens → create a **project token** for the production environment |
-| `RAILWAY_PROJECT_ID` | `api-deploy.yml` | Railway project → Settings → General → Project ID |
+| `RAILWAY_TOKEN` | `api-deploy.yml` | Railway project → Settings → Tokens → create a **project token** for the environment the API service runs in (production). The token alone determines project and environment. |
 
 ```bash
 gh secret set RAILWAY_TOKEN
-gh secret set RAILWAY_PROJECT_ID
 ```
 
 And one repository **variable** (same page, **Variables** tab), because the Railway project

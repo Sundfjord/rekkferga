@@ -33,28 +33,24 @@ There is no database.
 Requires Node.js 18.18+ and Python 3.11+.
 
 ```bash
-npm install
+./scripts/setup.sh          # npm install, API virtualenv, env files from the examples
+# then set HERE_API_KEY in packages/api/.env
 
-# API
-cd packages/api
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # then set HERE_API_KEY
-cd ../..
-
-npm run dev:api             # Flask on http://localhost:5000 (no auto-reload)
-npm run dev:web             # Next.js on http://localhost:3000
+npm run dev:all             # API on http://localhost:5000 (no auto-reload) + web on :3000
+npm run dev:api             # or each on its own
+npm run dev:web
 ```
 
 The web app reads the API address from `NEXT_PUBLIC_API_URL` in `packages/web/.env.local`
-(`http://localhost:5000` locally). It is read when the dev server starts.
+(see `packages/web/.env.example`). It is read when the dev server starts.
+
+To run the API in Docker the way Railway does (gunicorn):
+`HERE_API_KEY=... docker compose -f infrastructure/docker-compose.yml up --build`.
 
 Checks:
 
 ```bash
-npm run test:shared                          # vitest over shared/**/*.test.ts
-npm run lint:web
-cd packages/web && npx tsc --noEmit -p .     # type-check
+npm run check               # shared tests (vitest) + web lint + web type-check
 ```
 
 ## Deployment

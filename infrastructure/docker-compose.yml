@@ -1,23 +1,14 @@
-version: '3.8'
-
+# Runs the API in Docker the same way Railway does (gunicorn), for local testing.
+# The web app runs with `npm run dev:web` — it is a static site, not a container.
+#
+#   HERE_API_KEY=... docker compose -f infrastructure/docker-compose.yml up --build
 services:
   api:
     build: ../packages/api
     ports:
       - "5000:5000"
     environment:
-      - ORS_API_KEY=${ORS_API_KEY}
+      - HERE_API_KEY=${HERE_API_KEY}
       - FLASK_ENV=development
-    volumes:
-      - ../packages/api:/app
-    restart: unless-stopped
-
-  web:
-    build: ../packages/web
-    ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:5000
-    depends_on:
-      - api
+      - PORT=5000
     restart: unless-stopped

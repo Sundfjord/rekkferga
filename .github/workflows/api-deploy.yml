@@ -74,8 +74,9 @@ jobs:
           fi
           railway up --service "$RAILWAY_SERVICE"
         env:
+          # A project token already determines the project and environment; don't also pass
+          # a project ID — a mismatching one makes the upload fail with 404.
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
           RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
 
       - name: Notify deployment

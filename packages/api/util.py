@@ -10,8 +10,7 @@ def is_valid_nsr_id(input):
 
 
 def cache(data, seconds):
-    rsp = Response(json.dumps(data))
-    rsp.headers.add("Content-Type", "application/json")
+    rsp = Response(json.dumps(data), mimetype="application/json")
     rsp.headers.add("Cache-Control", f"public,max-age={seconds}")
     return rsp
 

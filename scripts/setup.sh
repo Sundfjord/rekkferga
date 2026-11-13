@@ -1,23 +1,23 @@
 #!/bin/bash
+# One-time local setup for the web app and the API. Safe to re-run: existing env files and the
+# Python virtualenv are left alone.
+set -e
+cd "$(dirname "$0")/.."
 
-echo "🚢 Rekkferga Setup Script"
-echo "========================="
-
-# Install dependencies
-echo "Installing dependencies..."
+echo "Installing npm dependencies..."
 npm install
 
-# Set up environment files
-echo "Setting up environment files..."
-cp packages/api/.env.example packages/api/.env 2>/dev/null || echo "API .env already exists"
-cp packages/app/env.example packages/app/.env 2>/dev/null || echo "App .env already exists"
-cp packages/web/.env.example packages/web/.env 2>/dev/null || echo "Web .env already exists"
-cp packages/cron/.env.example packages/cron/.env 2>/dev/null || echo "Cron .env already exists"
+echo "Setting up the API's Python environment..."
+if [ ! -d packages/api/.venv ]; then
+  python3 -m venv packages/api/.venv
+fi
+packages/api/.venv/bin/pip install -q -r packages/api/requirements.txt
 
-echo "✅ Setup complete!"
+echo "Creating env files from the examples (existing files are kept)..."
+cp -n packages/api/.env.example packages/api/.env 2>/dev/null || true
+cp -n packages/web/.env.example packages/web/.env.local 2>/dev/null || true
+
 echo ""
-echo "Next steps:"
-echo "1. Edit environment files with your configuration"
-echo "2. Run 'npm run dev:all' to start development servers"
-echo "3. Visit http://localhost:3000 for web app"
-echo "4. Use Expo Go to test mobile app"
+echo "Done. Next:"
+echo "  1. Put your HERE API key in packages/api/.env"
+echo "  2. npm run dev:all   (API on :5000, web on :3000)"

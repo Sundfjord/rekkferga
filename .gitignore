@@ -82,3 +82,6 @@ __queuestorage__
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# Local env overrides (each package commits a .env.example instead)
+.env*.local
