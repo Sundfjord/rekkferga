@@ -1,0 +1,21 @@
+// Cloudflare Worker that serves the static export of the web app (no server code).
+// Workers Builds runs `npm run build` (→ out/) in packages/web, then `npx wrangler deploy`.
+// Docs: https://developers.cloudflare.com/workers/static-assets/
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "rekkferga",
+  "compatibility_date": "2026-11-13",
+  "assets": {
+    "directory": "./out",
+    // Unknown paths get Next.js's exported 404.html with a 404 status.
+    "not_found_handling": "404-page"
+  },
+  // Custom domains: Cloudflare creates their DNS records on deploy. The rekkferga.no zone must
+  // be active on Cloudflare, and no other record may exist for these hostnames.
+  "routes": [
+    { "pattern": "rekkferga.no", "custom_domain": true },
+    { "pattern": "www.rekkferga.no", "custom_domain": true }
+  ],
+  // Keep the *.workers.dev address for checking a deploy without the custom domain.
+  "workers_dev": true
+}

@@ -59,7 +59,7 @@ Both parts deploy from the `master` branch.
 
 | Part | Host | Address |
 |---|---|---|
-| Web | Cloudflare Pages — builds `packages/web` to static files (`out/`) | https://rekkferga.no |
+| Web | Cloudflare Worker serving static assets — Workers Builds runs `npm run build` (→ `out/`) then `wrangler deploy` (`packages/web/wrangler.jsonc`) | https://rekkferga.no |
 | API | Railway — Docker image from `packages/api`, deployed by `.github/workflows/api-deploy.yml` | https://api.rekkferga.no |
 
 DNS is on Cloudflare; the domain is registered at GoDaddy. Required secrets, variables and

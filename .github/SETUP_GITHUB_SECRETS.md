@@ -4,7 +4,7 @@ Production runs on two services, both deploying from the `master` branch:
 
 | Part | Host | Address | How it deploys |
 |---|---|---|---|
-| Web (`packages/web`) | Cloudflare Pages | `https://rekkferga.no` | Cloudflare's Git integration builds on every push |
+| Web (`packages/web`) | Cloudflare Worker (static assets) | `https://rekkferga.no` | Workers Builds (Cloudflare's Git integration) builds and deploys on every push |
 | API (`packages/api`) | Railway (Docker) | `https://api.rekkferga.no` | `.github/workflows/api-deploy.yml` runs `railway up` |
 
 DNS for `rekkferga.no` is on Cloudflare (the domain stays registered at GoDaddy; only its
@@ -49,19 +49,30 @@ allows requests from any origin.
 Custom domain: add `api.rekkferga.no` on the service, then create the CNAME Railway shows in
 Cloudflare DNS. With the record proxied, set Cloudflare SSL/TLS mode to **Full (strict)**.
 
-## Cloudflare Pages project
+## Cloudflare Worker (web app)
 
-Connect the GitHub repository and use:
+The web app is a Worker that only serves the static export — no server code. Its config is
+`packages/web/wrangler.jsonc` (assets from `out/`, custom domains `rekkferga.no` and
+`www.rekkferga.no`, plus the `*.workers.dev` address).
+
+Create it under **Workers & Pages → Create → Import a repository** → `Sundfjord/rekkferga`:
 
 | Setting | Value |
 |---|---|
-| Production branch | `master` |
-| Root directory | `packages/web` |
+| Project name | `rekkferga` (must match `name` in `wrangler.jsonc`) |
 | Build command | `npm run build` |
-| Build output directory | `out` |
-| Environment variable | `NEXT_PUBLIC_API_URL` = `https://api.rekkferga.no` |
+| Deploy command | `npx wrangler deploy` (uses the Wrangler version pinned in `packages/web/package.json`) |
+| Path (advanced) | `packages/web` |
+| API token | Let Cloudflare create a new one |
+| Production branch | `master` (Settings → Build → Branch control) |
 
-`NEXT_PUBLIC_API_URL` is inlined at build time, so changing it requires a new build. Pages
-clones the whole repository, so the `../../shared` imports resolve; dependencies install from
-`packages/web/package-lock.json`. Add `rekkferga.no` (and `www.rekkferga.no`) under the
-project's **Custom domains**.
+Build variable — **Settings → Build → Variables and secrets** (*not* the runtime
+"Variables & Secrets", which the build can't see):
+
+| Variable | Value |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | `https://api.rekkferga.no` |
+
+`NEXT_PUBLIC_API_URL` is inlined at build time, so changing it requires a new build. The
+custom domains are created by `wrangler deploy` and need the `rekkferga.no` zone to be active on
+Cloudflare with no other DNS record for those hostnames.

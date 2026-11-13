@@ -4,7 +4,7 @@ Rekkferga is a ferry journey planner for Norway. npm-workspaces monorepo:
 
 | Package | Stack | Deploys to |
 |---|---|---|
-| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map), static export | Cloudflare Pages (`rekkferga.no`) |
+| `packages/web` | Next.js 15, React 19, App Router, Tailwind v4 (no map), static export | Cloudflare Worker, static assets (`wrangler.jsonc`, `rekkferga.no`) |
 | `packages/app` | Expo 54, React Native 0.81, Expo Router, NativeWind | — (not deployed yet) |
 | `packages/api` | Flask (Python, `.venv`) | Railway (Docker) |
 | `packages/cron` | Azure Functions skeleton — unused; quay refresh runs in GitHub Actions | Azure |
