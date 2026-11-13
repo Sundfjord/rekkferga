@@ -1,4 +1,5 @@
 import logging
+import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from flask import Flask, request
@@ -22,7 +23,24 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)
+
+# Which websites may call this API from a browser. Production allows only the web app's
+# domain; local development (FLASK_ENV=development, as in packages/api/.env) allows any origin
+# so localhost, LAN and Tailscale testing keep working. CORS_ORIGINS (comma-separated)
+# overrides both, e.g. to add a Cloudflare Pages preview URL.
+PRODUCTION_ORIGINS = ["https://rekkferga.no", "https://www.rekkferga.no"]
+
+
+def _cors_origins() -> list[str] | str:
+    override = os.environ.get("CORS_ORIGINS")
+    if override:
+        return [o.strip() for o in override.split(",") if o.strip()]
+    if os.environ.get("FLASK_ENV") == "development" or os.environ.get("FLASK_DEBUG") == "1":
+        return "*"
+    return PRODUCTION_ORIGINS
+
+
+CORS(app, origins=_cors_origins())
 
 
 @app.get("/")

@@ -32,6 +32,10 @@ Set on the API service in Railway (not in GitHub):
 | Variable | Value |
 |---|---|
 | `HERE_API_KEY` | HERE Routing API key (server-side only — never expose it to the web build) |
+| `CORS_ORIGINS` | Optional. Comma-separated origins allowed to call the API from a browser. Unset = `https://rekkferga.no` and `https://www.rekkferga.no` only (see `app.py`). |
+
+Do **not** set `FLASK_ENV=development` or `FLASK_DEBUG=1` on Railway: in development the API
+allows requests from any origin.
 
 Custom domain: add `api.rekkferga.no` on the service, then create the CNAME Railway shows in
 Cloudflare DNS. With the record proxied, set Cloudflare SSL/TLS mode to **Full (strict)**.
