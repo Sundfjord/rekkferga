@@ -134,7 +134,7 @@ export default function Header() {
     : null;
 
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex items-center justify-between px-4 lg:px-6 py-3">
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"

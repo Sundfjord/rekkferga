@@ -225,7 +225,7 @@ export default function Home() {
             now={now}
           />
         ) : (
-          <p className="mx-auto mt-24 max-w-xs text-center text-[15px]" style={{ color: "var(--text-secondary)" }}>
+          <p className="mx-auto mt-24 max-w-s text-center text-[16px]" style={{ color: "var(--text-secondary)" }}>
             {t("home.selectQuayHint")}
           </p>
         )}
