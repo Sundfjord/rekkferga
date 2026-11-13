@@ -10,7 +10,7 @@ Rekkferga is a ferry journey planner for Norway. npm-workspaces monorepo:
 | `packages/cron` | Azure Functions skeleton — unused; quay refresh runs in GitHub Actions | Azure |
 | `shared/` | TS `types/`, `utils/`, `services/`, `locales/` (en, no, nn) | — |
 
-Status, phase plan and resume protocol: `docs/implementation-plan.md` (authoritative).
+Business rules (e.g. the departure visibility window): `docs/business-rules.md`.
 
 ## Commands
 
