@@ -63,11 +63,20 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
+      # The project has more than one service, so the CLI needs to be told which one to
+      # deploy. RAILWAY_SERVICE is a repository *variable* (not a secret): the API service's
+      # name or ID, from Railway → service → Settings.
       - name: Deploy to Railway
-        run: railway up
+        run: |
+          if [ -z "$RAILWAY_SERVICE" ]; then
+            echo "::error::Repository variable RAILWAY_SERVICE is not set (Settings → Secrets and variables → Actions → Variables)."
+            exit 1
+          fi
+          railway up --service "$RAILWAY_SERVICE"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
 
       - name: Notify deployment
         run: |

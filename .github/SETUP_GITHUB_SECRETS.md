@@ -25,6 +25,17 @@ gh secret set RAILWAY_TOKEN
 gh secret set RAILWAY_PROJECT_ID
 ```
 
+And one repository **variable** (same page, **Variables** tab), because the Railway project
+can contain more than one service:
+
+| Variable | Used by | Value |
+|---|---|---|
+| `RAILWAY_SERVICE` | `api-deploy.yml` | The API service's name or ID (Railway → service → Settings) |
+
+```bash
+gh variable set RAILWAY_SERVICE --body "<service name or id>"
+```
+
 ## Railway service variables
 
 Set on the API service in Railway (not in GitHub):
