@@ -43,7 +43,12 @@
     "departuresError": "Kunne ikkje hente avgangane.",
     "departuresStale": "Kunne ikkje oppdatere avgangane – dei kan vere utdaterte.",
     "routeError": "Kunne ikkje rekne ut køyretida, så avgangane blir viste utan margin.",
-    "arrivalAtQuay": "Framme ved kaia"
+    "arrivalAtQuay": "Framme ved kaia",
+    "traffic": {
+      "normal": "Normal trafikk",
+      "moderate": "Meir trafikk enn vanleg · +{delay}",
+      "heavy": "Mykje trafikk · +{delay}"
+    }
   },
   "drive": {
     "allDepartures": "Alle avgangar frå {quay}",

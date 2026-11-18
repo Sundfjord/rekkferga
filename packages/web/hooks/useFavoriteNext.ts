@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { QuayNext } from "@shared/types";
 import { fetchQuaysNext } from "@shared/services/quay";
 import type { DriveTimes } from "@/hooks/useDriveTimes";
+import type { LatLng } from "@/hooks/usePosition";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const REFRESH_MS = 120_000;
@@ -18,12 +19,14 @@ export interface FavoriteNext {
 }
 
 /**
- * Next few departures per favourite quay, keyed by quay id; refreshed every 2 min. Each
- * drive time it gets is written to the shared store, so the quay view reuses it.
+ * Next few departures per favourite quay, keyed by quay id; refreshed every 2 min and when the
+ * coarse `location` changes. Drive times are measured from the latest fix (`getPosition`) and
+ * written to the shared store, so the quay view reuses them.
  */
 export function useFavoriteNext(
   quayIds: string[],
-  userLocation: [number, number] | null,
+  location: LatLng | null,
+  getPosition: () => LatLng | null,
   putDrive: DriveTimes["put"],
 ): FavoriteNext {
   const [state, setState] = useState<Omit<FavoriteNext, "retry">>({ byId: new Map(), loaded: false, error: false });
@@ -40,9 +43,14 @@ export function useFavoriteNext(
     let cancelled = false;
     const load = async () => {
       try {
-        const rows = await fetchQuaysNext(apiUrl, key.split(","), userLocation);
+        const from = getPosition() ?? location;
+        const rows = await fetchQuaysNext(apiUrl, key.split(","), from);
         if (cancelled) return;
-        for (const r of rows) if (r.driveSeconds != null) putDrive(r.quayId, r.driveSeconds);
+        for (const r of rows) {
+          if (r.driveSeconds != null && from) {
+            putDrive(r.quayId, { seconds: r.driveSeconds, typicalSeconds: r.typicalDriveSeconds ?? null, from });
+          }
+        }
         setState({ byId: new Map(rows.map((r) => [r.quayId, r])), loaded: true, error: false });
       } catch {
         if (!cancelled) setState((s) => ({ ...s, loaded: true, error: true }));
@@ -54,7 +62,7 @@ export function useFavoriteNext(
       cancelled = true;
       clearInterval(id);
     };
-  }, [key, userLocation, putDrive, attempt]);
+  }, [key, location, getPosition, putDrive, attempt]);
 
   return { ...state, retry };
 }

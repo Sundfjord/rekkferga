@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import type { DepartureOption, Quay, ResultItem } from "@shared/types";
-import { formatDuration, formatTime } from "@shared/utils";
+import { formatDuration, formatTime, trafficLevel } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import type { QuayDeparturesState } from "@/hooks/useQuayDepartures";
-import { arrivalFrom, departureKey, servesQuay, withLiveMargins } from "@/lib/departures";
+import { departureKey, servesQuay, withLiveMargins } from "@/lib/departures";
+import type { DriveTime } from "@/hooks/useDriveTimes";
+import TrafficStatus from "@/components/TrafficStatus";
 import { withViewTransition } from "@/lib/viewTransition";
 // import { shortQuayName } from "@/lib/quays"; // with the crossing filter
 import Band from "@/components/Band";
@@ -22,7 +24,9 @@ const BAND_BUTTON = "flex h-11 flex-shrink-0 cursor-pointer items-center justify
 
 export interface QuayPanelProps extends QuayDeparturesState {
   /** Shared drive time for this quay (useDriveTimes); null when unknown. */
-  driveSeconds: number | null;
+  drive: DriveTime | null;
+  /** Estimated arrival at the quay (estimateArrival); null without a drive time. */
+  arrivalAt: Date | null;
   /** Shared clock, so margins match the favourites exactly. */
   now: number;
   quay: Quay;
@@ -47,11 +51,11 @@ function LoadingState({ label }: { label: string }) {
 }
 
 /** Label + big value on the band, the same in the overview and in drive mode. */
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-[14px] bg-white/15 px-3.5 py-3">
       <span className="text-[15px] leading-snug">{label}</span>
-      <span className="text-[30px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
+      <span className="text-[30px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)", color }}>
         {value}
       </span>
     </div>
@@ -68,7 +72,8 @@ export default function QuayPanel({
   // quaysById, // with the crossing filter
   initialDestination,
   onBack,
-  driveSeconds,
+  drive,
+  arrivalAt,
   now,
   departures,
   loading,
@@ -92,7 +97,9 @@ export default function QuayPanel({
   //   .filter((c): c is { id: string; name: string } => !!c.name);
   // Margins are recomputed from the shared drive time and clock, so they match the
   // favourites and tick with the clock rather than jumping at each poll.
-  const arrivalAt = arrivalFrom(now, driveSeconds);
+  // Time left to the quay, from the same arrival estimate the margins use.
+  const remainingSeconds = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
+  const traffic = drive ? trafficLevel(drive.seconds, drive.typicalSeconds) : null;
   const live = withLiveMargins(departures, arrivalAt);
   // A crossing filter keeps departures that end there or call there on the way.
   const filtered = destination ? live.filter((d) => servesQuay(d, destination)) : live;
@@ -145,11 +152,19 @@ export default function QuayPanel({
           </button>
         </div>
         {/* Drive time and arrival at the quay hang off the header, in overview and drive mode alike. */}
-        {driveSeconds != null && arrivalAt && (
-          <div className="mt-3.5 grid grid-cols-2 gap-2.5">
-            <Stat label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
-            <Stat label={t("quay.arrivalAtQuay")} value={formatTime(arrivalAt.toISOString())} />
-          </div>
+        {remainingSeconds != null && arrivalAt && (
+          <>
+            <div className="mt-3.5 grid grid-cols-2 gap-2.5">
+              {/* The drive time takes the traffic colour, as in map apps. */}
+              <Stat
+                label={t("quay.driveTime")}
+                value={formatDuration(remainingSeconds, language)}
+                color={traffic ? `var(--traffic-${traffic})` : undefined}
+              />
+              <Stat label={t("quay.arrivalAtQuay")} value={formatTime(arrivalAt.toISOString())} />
+            </div>
+            {drive && traffic && <TrafficStatus level={traffic} delaySeconds={drive.seconds - (drive.typicalSeconds ?? drive.seconds)} />}
+          </>
         )}
       </Band>
 

@@ -44,7 +44,12 @@
     "departuresError": "Kunne ikke hente avgangene.",
     "departuresStale": "Kunne ikke oppdatere avgangene – de kan være utdaterte.",
     "routeError": "Kunne ikke beregne kjøretiden, så avgangene vises uten margin.",
-    "arrivalAtQuay": "Fremme ved kaia"
+    "arrivalAtQuay": "Fremme ved kaia",
+    "traffic": {
+      "normal": "Normal trafikk",
+      "moderate": "Mer trafikk enn vanlig · +{delay}",
+      "heavy": "Mye trafikk · +{delay}"
+    }
   },
   "drive": {
     "allDepartures": "Alle avganger fra {quay}",

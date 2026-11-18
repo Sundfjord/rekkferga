@@ -7,7 +7,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from util import is_valid_nsr_id, cache
 from journey_planner import get_journey_with_ferries, serialise_journey
-from here_routing import get_drive_seconds
+from here_routing import get_drive_time
 from departures_domain import evaluate_quay_departures
 from geocoder import search_locations
 from quays import get_all_quays, get_quay
@@ -87,7 +87,8 @@ def get_journey():
 
 @app.get("/quay/route")
 def get_quay_route():
-    """Traffic-aware drive time from the user's position to a quay."""
+    """Traffic-aware drive time from the user's position to a quay, plus the drive time with
+    usual traffic (null when HERE has none), so clients can say how traffic compares."""
     from_coords = request.args.get("from")
     quay_id = request.args.get("quayId")
 
@@ -102,11 +103,11 @@ def get_quay_route():
         return {"error": "Unknown quay"}, 404
 
     try:
-        seconds = get_drive_seconds(origin, (quay["latitude"], quay["longitude"]))
-        if seconds is None:
+        drive = get_drive_time(origin, (quay["latitude"], quay["longitude"]))
+        if drive is None:
             return {"error": "Routing unavailable"}, 502
         # Short cache: drive time is traffic-aware and shared with /quays/next (also 60 s).
-        return cache({"durationSeconds": seconds}, 60)
+        return cache({"durationSeconds": drive["seconds"], "typicalDurationSeconds": drive["typicalSeconds"]}, 60)
     except Exception:
         logger.exception("Error in get_quay_route")
         return {"error": "Internal server error"}, 500
@@ -142,16 +143,21 @@ def _next_departures(quay_id: str, origin: tuple[float, float] | None) -> dict:
     quay = get_quay(quay_id)
     drive = None
     if origin and quay:
-        drive = get_drive_seconds(origin, (quay["latitude"], quay["longitude"]))
+        drive = get_drive_time(origin, (quay["latitude"], quay["longitude"]))
     arrival = None
     if drive is not None:
-        arrival = (datetime.now(timezone.utc) + timedelta(seconds=drive)).isoformat().replace("+00:00", "Z")
+        arrival = (datetime.now(timezone.utc) + timedelta(seconds=drive["seconds"])).isoformat().replace("+00:00", "Z")
     try:
         departures = evaluate_quay_departures(quay_id, arrival)["departures"]
     except Exception:
         logger.exception("next departures failed for %s", quay_id)
         departures = []
-    return {"quayId": quay_id, "driveSeconds": drive, "departures": departures}
+    return {
+        "quayId": quay_id,
+        "driveSeconds": drive["seconds"] if drive else None,
+        "typicalDriveSeconds": drive["typicalSeconds"] if drive else None,
+        "departures": departures,
+    }
 
 
 @app.get("/quays/next")

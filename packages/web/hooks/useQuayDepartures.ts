@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Quay, DepartureOption } from "@shared/types";
 import { fetchQuayRoute, fetchQuayDepartures } from "@shared/services/quay";
-import { DRIVE_FRESH_MS, type DriveTimes } from "@/hooks/useDriveTimes";
+import { estimateArrival, isFresh, type DriveTimes } from "@/hooks/useDriveTimes";
+import type { LatLng } from "@/hooks/usePosition";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const RETRY_AFTER_ERROR_MS = 30_000;
+/** How often the drive time is checked; it's only re-fetched when stale (isFresh). */
+const DRIVE_CHECK_MS = 20_000;
 
 // Margin-adaptive departure poll: refresh more often as the margin tightens.
 function getRefreshIntervalMs(marginMinutes: number | null): number {
@@ -45,14 +48,18 @@ const INITIAL: LoadState = {
 };
 
 /**
- * For the selected quay: poll departures. The drive time comes from the shared store
- * (`DriveTimes`) and is re-fetched only when older than DRIVE_FRESH_MS — on selection and on
- * every poll — so it stays current while the quay is open and matches the favourites.
- * Without a position (or if routing fails) departures still load, just without margins.
+ * For the selected quay: poll departures, and keep the drive time in the shared store
+ * (`DriveTimes`) current. The drive time is checked every DRIVE_CHECK_MS and re-fetched when
+ * stale — older than 3 min, or older than 1 min after the user moved (isFresh) — so it
+ * follows the user while they drive, at most about once a minute. Position changes are read
+ * through `getPosition`, so they never restart the polls. Without a position (or if routing
+ * fails) departures still load, just without margins.
  */
 export function useQuayDepartures(
   quay: Quay | null,
-  userLocation: [number, number] | null,
+  /** Whether a position is known; the polls restart once when the first fix arrives. */
+  located: boolean,
+  getPosition: () => LatLng | null,
   limit: number,
   getDrive: DriveTimes["get"],
   putDrive: DriveTimes["put"],
@@ -69,15 +76,14 @@ export function useQuayDepartures(
     const apiUrl = API_URL;
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
+    let inFlight: Promise<number | null> | null = null;
     setState({ ...INITIAL, loading: true });
 
-    const driveSeconds = async (): Promise<number | null> => {
-      if (!userLocation) return null;
+    const fetchDrive = async (from: LatLng): Promise<number | null> => {
       const cached = getDrive(quay.id);
-      if (cached && Date.now() - cached.at < DRIVE_FRESH_MS) return cached.seconds;
       try {
-        const route = await fetchQuayRoute(apiUrl, userLocation[0], userLocation[1], quay.id);
-        putDrive(quay.id, route.durationSeconds);
+        const route = await fetchQuayRoute(apiUrl, from[0], from[1], quay.id);
+        putDrive(quay.id, { seconds: route.durationSeconds, typicalSeconds: route.typicalDurationSeconds ?? null, from });
         if (!cancelled) setState((s) => ({ ...s, routeError: false }));
         return route.durationSeconds;
       } catch {
@@ -87,12 +93,26 @@ export function useQuayDepartures(
       }
     };
 
+    // Current drive time in seconds: the stored one while fresh, else a new fetch (shared
+    // between the drive loop and the departures poll, so they never fetch twice at once).
+    const driveSeconds = (): Promise<number | null> => {
+      const position = getPosition();
+      if (!position) return Promise.resolve(null);
+      const cached = getDrive(quay.id);
+      if (isFresh(cached, position)) return Promise.resolve(cached.seconds);
+      inFlight ??= fetchDrive(position).finally(() => {
+        inFlight = null;
+      });
+      return inFlight;
+    };
+    const driveLoop = setInterval(() => void driveSeconds(), DRIVE_CHECK_MS);
+
     const refresh = async () => {
       const drive = await driveSeconds();
       if (cancelled) return;
       // The server still needs an arrival estimate to pick the next reachable departure and
       // to hide clearly missed ones; displayed margins are recomputed live by the views.
-      const arrival = drive === null ? undefined : new Date(Date.now() + drive * 1000).toISOString();
+      const arrival = drive === null ? undefined : estimateArrival(Date.now(), getDrive(quay.id), getPosition())?.toISOString();
       let nextPollMs = RETRY_AFTER_ERROR_MS;
       try {
         const data = await fetchQuayDepartures(apiUrl, quay.id, arrival, limit);
@@ -121,8 +141,10 @@ export function useQuayDepartures(
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
+      clearInterval(driveLoop);
     };
-  }, [quay, userLocation, limit, getDrive, putDrive, attempt]);
+    // `located` restarts the polls once when the first position arrives; later moves don't.
+  }, [quay, located, getPosition, limit, getDrive, putDrive, attempt]);
 
   return { ...state, retry };
 }

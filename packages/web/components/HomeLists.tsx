@@ -5,7 +5,7 @@ import type { FavoriteNext } from "@/hooks/useFavoriteNext";
 import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, arrivalFrom, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
+import { TIER_COLOR, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
 import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
 import ErrorNotice from "@/components/ErrorNotice";
 
@@ -28,15 +28,13 @@ function NextBlock({
   next,
   loaded,
   failed,
-  driveSeconds,
-  now,
+  arrivalAt,
 }: {
   next: QuayNext | undefined;
   loaded: boolean;
   /** The favourites request failed and there is no earlier data for this quay. */
   failed: boolean;
-  driveSeconds: number | null;
-  now: number;
+  arrivalAt: Date | null;
 }) {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -45,7 +43,7 @@ function NextBlock({
   if (!next && !loaded) {
     return <span className={`${base} h-[58px] animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
   }
-  const dep = next ? nextReachable(withLiveMargins(next.departures, arrivalFrom(now, driveSeconds))) : null;
+  const dep = next ? nextReachable(withLiveMargins(next.departures, arrivalAt)) : null;
   if (!dep) {
     return (
       <span className={`${base} justify-center text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
@@ -77,7 +75,7 @@ export default function HomeLists({
   favorites,
   quaysById,
   favoriteNext,
-  driveSecondsFor,
+  arrivalFor,
   now,
   onSelectQuay,
   onSelectPlace,
@@ -85,8 +83,8 @@ export default function HomeLists({
   favorites: SavedDestination[];
   quaysById: Map<string, Quay>;
   favoriteNext: FavoriteNext;
-  /** Shared drive time per quay (useDriveTimes); null when unknown. */
-  driveSecondsFor: (quayId: string) => number | null;
+  /** Estimated arrival per quay from the shared drive time (useDriveTimes); null when unknown. */
+  arrivalFor: (quayId: string) => Date | null;
   /** Shared clock, so margins match the quay view exactly. */
   now: number;
   onSelectQuay: (quay: Quay) => void;
@@ -123,7 +121,8 @@ export default function HomeLists({
               );
             }
             const next = favoriteNext.byId.get(quay.id);
-            const drive = driveSecondsFor(quay.id);
+            const arrivalAt = arrivalFor(quay.id);
+            const drive = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
             return (
               <button
                 key={f.id}
@@ -144,8 +143,7 @@ export default function HomeLists({
                   next={next}
                   loaded={favoriteNext.loaded}
                   failed={favoriteNext.error && !next}
-                  driveSeconds={drive}
-                  now={now}
+                  arrivalAt={arrivalAt}
                 />
               </button>
             );

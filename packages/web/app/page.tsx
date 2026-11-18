@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { useQuays } from "@/hooks/useQuays";
-import { useDriveTimes } from "@/hooks/useDriveTimes";
+import { estimateArrival, useDriveTimes } from "@/hooks/useDriveTimes";
+import { usePosition } from "@/hooks/usePosition";
 import { useNow } from "@/hooks/useNow";
 import { useQuayDepartures } from "@/hooks/useQuayDepartures";
 import { useFavoriteNext } from "@/hooks/useFavoriteNext";
@@ -37,7 +38,6 @@ export default function Home() {
   const t = useTranslation();
   const { quays, error: quaysError, retry: retryQuays } = useQuays();
   const { favorites } = useFavorites();
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [selection, setSelection] = useState<Selection>(null);
   const [query, setQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -46,30 +46,26 @@ export default function Home() {
   // Bumped on every selection so a slow destination lookup can't override a newer choice.
   const selectionTokenRef = useRef(0);
 
-  useEffect(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (p) => setUserLocation([p.coords.latitude, p.coords.longitude]),
-      () => {},
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
-  }, []);
+  // `position` follows every GPS fix; `userLocation` only moves after ~1 km (re-sorts and
+  // re-fetches key off it), and polls read the latest fix through `getPosition`.
+  const { position, location: userLocation, getPosition } = usePosition();
 
   const quaysById = useMemo(() => new Map(quays.map((q) => [q.id, q])), [quays]);
   const favoriteQuayIds = useMemo(() => favorites.filter((f) => quaysById.has(f.id)).map((f) => f.id), [favorites, quaysById]);
   // One drive time per quay and one clock for every view, so favourites and the quay
   // overview always show the same drive time and margin.
   const now = useNow();
-  const driveTimes = useDriveTimes(userLocation);
-  const driveSecondsFor = useCallback((id: string) => driveTimes.get(id)?.seconds ?? null, [driveTimes]);
-  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, driveTimes.put);
+  const driveTimes = useDriveTimes();
+  const arrivalFor = useCallback((id: string) => estimateArrival(now, driveTimes.get(id), position), [now, driveTimes, position]);
+  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, getPosition, driveTimes.put);
   const places = useDestinationSearch(searchOpen ? query : "", userLocation);
 
   const quay = selection?.quay ?? null;
   // Multi-crossing quays fetch more so each crossing still has departures when filtered.
   const departures = useQuayDepartures(
     quay,
-    userLocation,
+    userLocation !== null,
+    getPosition,
     quay && quay.relatedQuayIds.length > 1 ? 12 : 5,
     driveTimes.get,
     driveTimes.put,
@@ -195,7 +191,7 @@ export default function Home() {
               favorites={favorites}
               quaysById={quaysById}
               favoriteNext={favoriteNext}
-              driveSecondsFor={driveSecondsFor}
+              arrivalFor={arrivalFor}
               now={now}
               onSelectQuay={selectQuay}
               onSelectPlace={selectPlace}
@@ -214,7 +210,8 @@ export default function Home() {
             initialDestination={selection.destination}
             onBack={() => setSelection(null)}
             {...departures}
-            driveSeconds={driveSecondsFor(selection.quay.id)}
+            drive={driveTimes.get(selection.quay.id) ?? null}
+            arrivalAt={arrivalFor(selection.quay.id)}
             now={now}
           />
         )}

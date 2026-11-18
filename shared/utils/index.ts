@@ -76,6 +76,16 @@ export const formatTime = (iso: string): string => {
   return new Date(iso).toLocaleTimeString('no-NO', { hour: '2-digit', minute: '2-digit' });
 };
 
+/** Great-circle distance in km (haversine). */
+export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 // ---------------------------------------------------------------------------
 // Margins
 // ---------------------------------------------------------------------------
@@ -84,6 +94,27 @@ export function marginTier(minutes: number): "safe" | "tight" | "missed" {
   if (minutes > 10) return "safe";
   if (minutes >= 0) return "tight";
   return "missed";
+}
+
+// ---------------------------------------------------------------------------
+// Traffic
+// ---------------------------------------------------------------------------
+
+export type TrafficLevel = "normal" | "moderate" | "heavy";
+
+/**
+ * How today's drive compares with the usual traffic for this time. The thresholds scale
+ * with the trip: a delay counts as moderate from 10% of the usual drive time and as heavy
+ * from 25%, but never below 2 and 5 minutes, so short trips don't flip on a few seconds.
+ * (8 min trip: moderate +2, heavy +5 · 1 h: +6, +15 · 3 h: +18, +45.) Null without a usual
+ * drive time to compare with.
+ */
+export function trafficLevel(seconds: number, typicalSeconds: number | null | undefined): TrafficLevel | null {
+  if (typicalSeconds == null || typicalSeconds <= 0) return null;
+  const delay = seconds - typicalSeconds;
+  if (delay >= Math.max(5 * 60, typicalSeconds * 0.25)) return "heavy";
+  if (delay >= Math.max(2 * 60, typicalSeconds * 0.1)) return "moderate";
+  return "normal";
 }
 
 // ---------------------------------------------------------------------------

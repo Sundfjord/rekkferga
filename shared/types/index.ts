@@ -43,12 +43,14 @@ export interface Quay {
 
 export interface QuayRoute {
   durationSeconds: number; // traffic-aware drive time to the quay
+  typicalDurationSeconds: number | null; // with the traffic usual for this weekday and time
 }
 
 /** Next few departures + drive time for one quay (favourites), from GET /quays/next. */
 export interface QuayNext {
   quayId: string;
   driveSeconds: number | null;
+  typicalDriveSeconds: number | null; // with usual traffic; null when unknown
   departures: DepartureOption[];
 }
 

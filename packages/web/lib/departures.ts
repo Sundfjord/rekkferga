@@ -36,10 +36,6 @@ export function destinationText(d: DepartureOption, viaWord: string): string {
 export const servesQuay = (d: DepartureOption, quayId: string) =>
   d.destinationQuayId === quayId || (d.viaQuayIds ?? []).includes(quayId);
 
-/** When you reach the quay if you leave now, from the shared drive time; null without one. */
-export const arrivalFrom = (now: number, driveSeconds: number | null | undefined) =>
-  driveSeconds == null ? null : new Date(now + driveSeconds * 1000);
-
 /**
  * Margins recomputed in the browser from one arrival time, so every view shows the same
  * number and it moves with the clock instead of jumping at each poll. Whole minutes,

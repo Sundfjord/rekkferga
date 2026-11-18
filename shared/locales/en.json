@@ -44,7 +44,12 @@
     "departuresError": "Couldn't fetch the departures.",
     "departuresStale": "Couldn't update the departures — they may be out of date.",
     "routeError": "Couldn't calculate the drive time, so departures are shown without margins.",
-    "arrivalAtQuay": "Arrival at quay"
+    "arrivalAtQuay": "Arrival at quay",
+    "traffic": {
+      "normal": "Normal traffic",
+      "moderate": "More traffic than usual · +{delay}",
+      "heavy": "Heavy traffic · +{delay}"
+    }
   },
   "drive": {
     "allDepartures": "All departures",
