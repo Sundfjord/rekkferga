@@ -34,6 +34,12 @@ export const ChevronLeftIcon = ({ size = 22, className }: IconProps) => (
   </svg>
 );
 
+export const CloseIcon = ({ size = 22, className }: IconProps) => (
+  <svg {...stroke(size, className)}>
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+);
+
 export const SearchIcon = ({ size = 20, className }: IconProps) => (
   <svg {...stroke(size, className)}>
     <circle cx="11" cy="11" r="7" />

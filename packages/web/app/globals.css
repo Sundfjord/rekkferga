@@ -99,17 +99,21 @@ body {
   font-family: var(--font-dm-sans, 'DM Sans', sans-serif);
 }
 
-/* Drive mode: the hero grows up from the bottom when a departure is picked.
-   Replayed by re-keying the element. */
-@keyframes hero-grow {
-  from { clip-path: inset(78% 0 0 0 round 22px); }
-  to   { clip-path: inset(0 0 0 0 round 22px); }
+/* Departure card ↔ drive mode View Transition (lib/viewTransition.ts): only the margin moves
+   (it flies from the card into the big figure); everything else switches instantly. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
 }
 
-@utility animate-hero-grow {
-  animation: hero-grow 360ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+::view-transition-group(*) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-hero-grow { animation: none; }
+/* Text keeps its proportions while it scales (no stretching between differently sized boxes). */
+::view-transition-old(*.morph),
+::view-transition-new(*.morph) {
+  height: 100%;
+  width: auto;
 }

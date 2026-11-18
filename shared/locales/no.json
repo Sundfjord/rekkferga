@@ -45,13 +45,13 @@
     "departureAria": "{destination} {time}, margin {margin} minutter",
     "departuresError": "Kunne ikke hente avgangene.",
     "departuresStale": "Kunne ikke oppdatere avgangene – de kan være utdaterte.",
-    "routeError": "Kunne ikke beregne kjøretiden, så avgangene vises uten margin."
+    "routeError": "Kunne ikke beregne kjøretiden, så avgangene vises uten margin.",
+    "arrivalAtQuay": "Fremme ved kaia"
   },
   "drive": {
     "allDepartures": "Alle avganger fra {quay}",
     "marginOnArrival": "Margin ved ankomst",
     "timelineTitle": "Herfra til ferja",
-    "remainingDrive": "Igjen å kjøre",
     "planB": "Plan B",
     "progressAria": "{minutes} minutter igjen til kaia, fremme {arrival}. Ferja går {departure}.",
     "rush": {

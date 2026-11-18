@@ -8,7 +8,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import type { QuayDeparturesState } from "@/hooks/useQuayDepartures";
 import { arrivalFrom, departureKey, servesQuay, withLiveMargins } from "@/lib/departures";
-import { shortQuayName } from "@/lib/quays";
+import { withViewTransition } from "@/lib/viewTransition";
+// import { shortQuayName } from "@/lib/quays"; // with the crossing filter
 import Band from "@/components/Band";
 import DepartureCard from "@/components/DepartureCard";
 import DriveMode from "@/components/DriveMode";
@@ -45,14 +46,12 @@ function LoadingState({ label }: { label: string }) {
   );
 }
 
-/** Label + big value, the same shape as the figures in DriveMode, on the light surface. */
+/** Label + big value on the band, the same in the overview and in drive mode. */
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-[14px] px-3.5 py-3" style={{ backgroundColor: "var(--surface-variant)" }}>
-      <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-        {label}
-      </span>
-      <span className="text-[30px] font-bold tabular-nums" style={{ color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>
+    <div className="flex flex-col gap-0.5 rounded-[14px] bg-white/15 px-3.5 py-3">
+      <span className="text-[15px] leading-snug">{label}</span>
+      <span className="text-[30px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
         {value}
       </span>
     </div>
@@ -60,13 +59,13 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * A selected quay: the band becomes its header (back, name, favourite); below it a card with
- * the drive time and arrival, an optional crossing filter and the departure cards. Tapping a
- * card switches the same surface to Drive mode.
+ * A selected quay: the band becomes its header (back, name, favourite) with the drive time
+ * and arrival at the quay; below it the departure cards. Tapping a card switches the same
+ * surface to Drive mode, which keeps the band and its figures.
  */
 export default function QuayPanel({
   quay,
-  quaysById,
+  // quaysById, // with the crossing filter
   initialDestination,
   onBack,
   driveSeconds,
@@ -83,12 +82,14 @@ export default function QuayPanel({
   const { language } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [destination, setDestination] = useState<string | null>(initialDestination);
+  // A place search can still pre-select a crossing; the filter buttons are commented out below.
+  const [destination] = useState<string | null>(initialDestination);
 
   // Crossings this quay serves; a filter only makes sense with more than one.
-  const crossings = quay.relatedQuayIds
-    .map((id) => ({ id, name: quaysById.get(id)?.name }))
-    .filter((c): c is { id: string; name: string } => !!c.name);
+  // (Crossing filter buttons temporarily disabled — restore with setDestination and shortQuayName.)
+  // const crossings = quay.relatedQuayIds
+  //   .map((id) => ({ id, name: quaysById.get(id)?.name }))
+  //   .filter((c): c is { id: string; name: string } => !!c.name);
   // Margins are recomputed from the shared drive time and clock, so they match the
   // favourites and tick with the clock rather than jumping at each poll.
   const arrivalAt = arrivalFrom(now, driveSeconds);
@@ -104,7 +105,9 @@ export default function QuayPanel({
     if (selectedKey && !loading && !selected) setSelectedKey(null);
   }, [selectedKey, loading, selected]);
 
-  const select = (d: DepartureOption) => setSelectedKey(departureKey(d));
+  // Card ↔ drive mode (and Plan B) as a View Transition: only the margin morphs.
+  const select = (d: DepartureOption) => withViewTransition(() => setSelectedKey(departureKey(d)));
+  const backToOverview = () => withViewTransition(() => setSelectedKey(null));
   const isFav = isFavorite(quay.id);
   const favoritePayload: ResultItem = {
     id: quay.id,
@@ -125,29 +128,27 @@ export default function QuayPanel({
   return (
     <section aria-label={quay.name} className="flex min-h-0 flex-1 flex-col" style={{ fontFamily: "var(--font-dm-sans)" }}>
       <Band>
-        {selected ? (
-          <div className="flex items-center gap-3">
-            {/* In drive mode, back means back to this quay's overview, not out of the quay. */}
-            <button type="button" onClick={() => setSelectedKey(null)} aria-label={t("drive.allDepartures")} className={`${BAND_BUTTON} w-11`}>
-              <ChevronLeftIcon />
-            </button>
-            <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{t("general.departure")}</h1>
-          </div>
-        ) : (
-          <div className="flex items-center gap-1.5">
-            <button type="button" onClick={onBack} aria-label={t("general.back")} className={`${BAND_BUTTON} w-11`}>
-              <ChevronLeftIcon />
-            </button>
-            <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{quay.name}</h1>
-            <button
-              type="button"
-              onClick={() => toggleFavorite(favoritePayload)}
-              aria-label={isFav ? t("favorites.remove") : t("favorites.add")}
-              aria-pressed={isFav}
-              className="flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
-            >
-              <HeartIcon filled={isFav} />
-            </button>
+        {/* The quay header stays in drive mode too; drive mode closes from its own hero. */}
+        <div className="flex items-center gap-1.5">
+          <button type="button" onClick={onBack} aria-label={t("general.back")} className={`${BAND_BUTTON} w-11`}>
+            <ChevronLeftIcon />
+          </button>
+          <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{quay.name}</h1>
+          <button
+            type="button"
+            onClick={() => toggleFavorite(favoritePayload)}
+            aria-label={isFav ? t("favorites.remove") : t("favorites.add")}
+            aria-pressed={isFav}
+            className="flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full"
+          >
+            <HeartIcon filled={isFav} />
+          </button>
+        </div>
+        {/* Drive time and arrival at the quay hang off the header, in overview and drive mode alike. */}
+        {driveSeconds != null && arrivalAt && (
+          <div className="mt-3.5 grid grid-cols-2 gap-2.5">
+            <Stat label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
+            <Stat label={t("quay.arrivalAtQuay")} value={formatTime(arrivalAt.toISOString())} />
           </div>
         )}
       </Band>
@@ -156,21 +157,22 @@ export default function QuayPanel({
         {/* A failed refresh keeps the last good departures, so say they may be stale. */}
         {departuresError && departures.length > 0 && <ErrorNotice message={t("quay.departuresStale")} onRetry={retry} />}
         {selected ? (
-          // Re-keyed per departure so the hero's grow animation replays on every pick (incl. Plan B).
-          <DriveMode key={selectedKey} departure={selected} departures={filtered} arrivalAt={arrivalAt} now={now} onSelect={select} />
+          // Re-keyed per departure so a Plan B pick mounts a fresh hero.
+          <DriveMode
+            key={selectedKey}
+            departure={selected}
+            departures={filtered}
+            arrivalAt={arrivalAt}
+            now={now}
+            onSelect={select}
+            onClose={backToOverview}
+            closeLabel={t("drive.allDepartures", { quay: quay.name })}
+          />
         ) : (
           <>
-            {driveSeconds != null && arrivalAt && (
-              <div
-                className="grid grid-cols-2 gap-2.5 rounded-[22px] p-2.5 shadow-[0_1px_3px_rgba(1,22,56,0.08)]"
-                style={{ backgroundColor: "var(--surface)" }}
-              >
-                <Stat label={t("quay.driveTime")} value={formatDuration(driveSeconds, language)} />
-                <Stat label={t("general.arrive")} value={formatTime(arrivalAt.toISOString())} />
-              </div>
-            )}
             {routeError && <ErrorNotice message={t("quay.routeError")} onRetry={retry} />}
 
+            {/* Crossing filter temporarily disabled.
             {crossings.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label={t("quay.showDeparturesTo")}>
                 {[{ id: null, name: t("quay.allDestinations") }, ...crossings.map((c) => ({ id: c.id as string | null, name: shortQuayName(c.name) }))].map(
@@ -196,6 +198,7 @@ export default function QuayPanel({
                 )}
               </div>
             )}
+            */}
 
             {loading ? (
               <LoadingState label={t("quay.loading")} />

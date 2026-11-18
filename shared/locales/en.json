@@ -45,13 +45,13 @@
     "departureAria": "{destination} {time}, margin {margin} minutes",
     "departuresError": "Couldn't fetch the departures.",
     "departuresStale": "Couldn't update the departures — they may be out of date.",
-    "routeError": "Couldn't calculate the drive time, so departures are shown without margins."
+    "routeError": "Couldn't calculate the drive time, so departures are shown without margins.",
+    "arrivalAtQuay": "Arrival at quay"
   },
   "drive": {
     "allDepartures": "All departures",
     "marginOnArrival": "Margin on arrival",
     "timelineTitle": "From here to the ferry",
-    "remainingDrive": "Drive remaining",
     "planB": "Plan B",
     "progressAria": "{minutes} minutes to the quay, arriving {arrival}. Ferry leaves {departure}.",
     "rush": {

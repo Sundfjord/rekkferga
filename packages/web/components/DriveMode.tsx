@@ -1,18 +1,21 @@
 "use client";
 
 import type { DepartureOption } from "@shared/types";
-import { formatDuration, formatTime } from "@shared/utils";
+import { formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TIER_COLOR, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures"; // add departureKey back with the rush messages
+import { TIER_COLOR, departureKey, minutesUntil, planB, splitMargin, tierOf } from "@/lib/departures";
+import { transitionName } from "@/lib/viewTransition";
 // import { rushMessage } from "@/lib/rushMessages"; // rush messages temporarily disabled
+import DepartureHeading from "@/components/DepartureHeading";
 import DestinationName from "@/components/DestinationName";
-import { ChevronRightIcon } from "@/components/icons";
+import { ChevronRightIcon, CloseIcon } from "@/components/icons";
 import TimelineTrack from "@/components/TimelineTrack";
 
 
 /**
- * Glanceable view of one departure for a driver: the margin, big, on the tier colour; a bar
+ * Glanceable view of one departure for a driver: the same heading as its card (destination,
+ * time), then the margin, big, on the tier colour; a bar
  * with the car pinned at "now" showing only what's ahead (drive left → quay → slack or
  * overrun → ferry); and a Plan B when the margin is tight or missed.
  */
@@ -22,12 +25,17 @@ export default function DriveMode({
   arrivalAt,
   now,
   onSelect,
+  onClose,
+  closeLabel,
 }: {
   departure: DepartureOption;
   departures: DepartureOption[];
   arrivalAt: Date | null;
   now: number;
   onSelect: (d: DepartureOption) => void;
+  /** Back to the quay's departure overview. */
+  onClose: () => void;
+  closeLabel: string;
 }) {
   const t = useTranslation();
   const { language } = useLanguage();
@@ -50,34 +58,30 @@ export default function DriveMode({
   return (
     <div className="flex flex-1 flex-col">
       <div
-        className="animate-hero-grow flex flex-1 flex-col gap-[18px] rounded-[22px] p-5 text-white"
+        className="flex flex-1 flex-col gap-[18px] rounded-[18px] px-4 py-3.5 text-white"
         style={{ backgroundColor: color, fontFamily: "var(--font-dm-sans)" }}
       >
-        <span className="text-2xl font-bold leading-tight" style={{ fontFamily: "var(--font-display)" }}>
-          <DestinationName departure={departure} />
-        </span>
-
-        <div className="grid flex-shrink-0 grid-cols-2 gap-2.5">
-          {[
-            { label: t("drive.remainingDrive"), value: formatDuration(toQuay * 60, language) },
-            { label: t("general.departure"), value: depTime },
-          ].map((s) => (
-            <div key={s.label} className="flex flex-col gap-0.5 rounded-[14px] bg-white/15 px-3.5 py-3">
-              <span className="text-[19px] leading-snug">{s.label}</span>
-              <span className="text-[30px] font-bold tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-                {s.value}
-              </span>
-            </div>
-          ))}
+        {/* Same padding and radius as DepartureCard, so the heading stays put when a card opens.
+            Drive time and arrival sit in the band above (QuayPanel), as in the overview. */}
+        <div className="flex items-start gap-3">
+          <DepartureHeading departure={departure} className="flex-1" />
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={closeLabel}
+            className="-mr-2 -mt-2 flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-white/15"
+          >
+            <CloseIcon />
+          </button>
         </div>
 
         {margin && tier !== "none" && (
-          // Same box as the two figures above, so all three read as one family.
-          <div className="flex flex-col gap-1 rounded-[14px] bg-white/15 px-3.5 py-3">
+            <div className="flex flex-col gap-1 rounded-[14px] bg-white/15 px-3.5 py-3">
             <span className="text-[19px] leading-snug">{t("drive.marginOnArrival")}</span>
+            {/* Self-sized (not full width) so it morphs cleanly from the card's margin. */}
             <span
-              className="text-[clamp(64px,24vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums"
-              style={{ fontFamily: "var(--font-mono)" }}
+              className="self-start text-[clamp(64px,24vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums [view-transition-class:morph]"
+              style={{ fontFamily: "var(--font-mono)", viewTransitionName: transitionName("margin", departureKey(departure)) }}
             >
               {margin.value}
               {margin.unit && <span className="text-[30px] tracking-normal"> {margin.unit}</span>}
@@ -124,7 +128,10 @@ export default function DriveMode({
               <span style={{ fontFamily: "var(--font-mono)" }}>{formatTime(alt.expectedDepartureTime)}</span>
             </span>
           </span>
-          <span className="text-[22px] font-bold tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
+          <span
+            className="text-[22px] font-bold tabular-nums [view-transition-class:morph]"
+            style={{ fontFamily: "var(--font-mono)", viewTransitionName: transitionName("margin", departureKey(alt)) }}
+          >
             {altMargin.value}
           </span>
           <ChevronRightIcon size={20} />

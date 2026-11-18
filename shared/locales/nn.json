@@ -44,12 +44,12 @@
     "departureAria": "{destination} {time}, margin {margin} minutt",
     "departuresError": "Kunne ikkje hente avgangane.",
     "departuresStale": "Kunne ikkje oppdatere avgangane – dei kan vere utdaterte.",
-    "routeError": "Kunne ikkje rekne ut køyretida, så avgangane blir viste utan margin."
+    "routeError": "Kunne ikkje rekne ut køyretida, så avgangane blir viste utan margin.",
+    "arrivalAtQuay": "Framme ved kaia"
   },
   "drive": {
     "allDepartures": "Alle avgangar frå {quay}",
     "marginOnArrival": "Margin ved ankomst",
-    "remainingDrive": "Att å køyre",
     "planB": "Plan B",
     "progressAria": "{minutes} minutt att til kaia, framme {arrival}. Ferja går {departure}.",
     "rush": {
