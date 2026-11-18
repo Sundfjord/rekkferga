@@ -9,7 +9,6 @@
     "arrive": "Framme",
     "loadError": "Kunne ikkje hente data. Sjekk nettilkoplinga og prøv igjen.",
     "retry": "Prøv igjen",
-    "close": "Lukk",
     "scheduled": "Planlagt",
     "newTime": "ny tid"
   },

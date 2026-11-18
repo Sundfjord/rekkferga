@@ -10,7 +10,6 @@
     "arrive": "Arrive",
     "loadError": "Couldn't fetch data. Check your connection and try again.",
     "retry": "Try again",
-    "close": "Close",
     "scheduled": "Scheduled",
     "newTime": "new time"
   },
