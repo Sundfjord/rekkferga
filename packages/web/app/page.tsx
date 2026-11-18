@@ -120,7 +120,12 @@ export default function Home() {
   const showResults = searchOpen && query.trim().length > 0;
 
   return (
-    <div className="relative isolate flex h-full lg:gap-6 lg:px-6" style={{ backgroundColor: "var(--surface-tint)" }}>
+    // The top 2px are header blue: where the band meets the header on a fractional pixel, the
+    // light page colour would otherwise show through as a thin line (light mode).
+    <div
+      className="relative isolate flex h-full lg:gap-6 lg:px-6"
+      style={{ background: "linear-gradient(var(--background) 2px, var(--surface-tint) 2px)" }}
+    >
       <SeaBackground />
 
       {/* Search pane */}
