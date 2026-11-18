@@ -50,12 +50,15 @@ const HelpIcon = ({ className }: { className?: string }) => (
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
+// On the blue header (the menu buttons).
 const ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px] text-white/70";
+// Inside a dropdown: takes the item's text colour, so it reads on the light and dark menu.
+const MENU_ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px]";
 
 const THEME_OPTIONS = [
-  { value: "light",  label: "Light",  icon: <SunIcon className={ICON_CLS} /> },
-  { value: "dark",   label: "Dark",   icon: <MoonIcon className={ICON_CLS} /> },
-  { value: "system", label: "System", icon: <MonitorIcon className={ICON_CLS} /> },
+  { value: "light",  label: "Light",  icon: <SunIcon className={MENU_ICON_CLS} /> },
+  { value: "dark",   label: "Dark",   icon: <MoonIcon className={MENU_ICON_CLS} /> },
+  { value: "system", label: "System", icon: <MonitorIcon className={MENU_ICON_CLS} /> },
 ];
 
 const LANG_OPTIONS: { value: Language; label: string; flag: string; code: string }[] = [
