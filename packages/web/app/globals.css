@@ -66,8 +66,6 @@
   --deco-wave-3: #CDE2F4;
   --deco-land: #D7E7F6;
   --deco-shape: #BDD5EC;
-  --deco-window: #E6F0FA;
-  --deco-funnel: #F0CB8A;
   --deco-lamp: #F5C06A;
   --deco-beam: rgba(245, 192, 106, 0.30);
   --deco-gull: #B5CEE6;
@@ -100,8 +98,6 @@
   --deco-wave-3: #25395C;
   --deco-land: #1F2F4E;
   --deco-shape: #2B3F67;
-  --deco-window: rgba(245, 192, 106, 0.55);
-  --deco-funnel: #7A5A2A;
   --deco-lamp: #F5C06A;
   --deco-beam: rgba(245, 192, 106, 0.13);
   --deco-gull: #2E4470;
@@ -159,7 +155,7 @@ body {
 /* Page backdrop (SeaBackground): the ferry rides the swell. */
 @keyframes scene-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-1.5px) rotate(-0.6deg); }
+  50%      { transform: translateY(-1px) rotate(-0.4deg); }
 }
 
 .scene-bob {
@@ -170,6 +166,24 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .scene-bob { animation: none; }
+}
+
+/* Page backdrop: the ferry crosses from off-screen left to off-screen right, waits there,
+   then sails back (it's double-ended, so no flip) and waits again. 45 s per leg incl. a ~5 s
+   wait. Animating `left` keeps the off-screen points relative to the backdrop's width;
+   -140px clears the widest ferry (124px). */
+@keyframes ferry-sail {
+  0%      { left: -140px; }
+  44.5%   { left: 100%; }
+  50%     { left: 100%; }
+  94.5%   { left: -140px; }
+  100%    { left: -140px; }
+}
+
+.ferry-sail { animation: ferry-sail 90s linear infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ferry-sail { animation: none; }
 }
 
 /* Lighthouse beam on the page backdrop: a slow sweep of brightness. */

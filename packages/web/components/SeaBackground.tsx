@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { useId } from "react";
 
 /**
@@ -16,7 +17,7 @@ export default function SeaBackground() {
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
       {/* Distant mountains: one wide strip, cropped to the middle on narrow screens */}
       <svg
-        className="absolute inset-x-0 bottom-[66px] h-[120px] w-full lg:bottom-[72px] lg:h-[160px]"
+        className="absolute inset-x-0 bottom-[50px] h-[120px] w-full lg:bottom-[52px] lg:h-[160px]"
         viewBox="0 0 1200 120"
         preserveAspectRatio="xMidYMax slice"
       >
@@ -26,27 +27,18 @@ export default function SeaBackground() {
         />
       </svg>
 
-      {/* Ferry on the horizon */}
-      <svg className="absolute bottom-[92px] left-[14%] w-[64px] lg:bottom-[106px] lg:left-[40%] lg:w-[84px]" viewBox="0 0 64 34">
-        <g className="scene-bob">
-          <rect x="30" y="2" width="5" height="6" fill="var(--deco-funnel)" />
-          <rect x="22" y="7" width="18" height="8" rx="1.5" fill="var(--deco-shape)" />
-          <rect x="12" y="14" width="40" height="10" rx="1.5" fill="var(--deco-shape)" />
-          <g fill="var(--deco-window)">
-            <rect x="24" y="9" width="14" height="2.5" rx="0.6" />
-            <rect x="15" y="17" width="4" height="3" rx="0.5" />
-            <rect x="21" y="17" width="4" height="3" rx="0.5" />
-            <rect x="27" y="17" width="4" height="3" rx="0.5" />
-            <rect x="33" y="17" width="4" height="3" rx="0.5" />
-            <rect x="39" y="17" width="4" height="3" rx="0.5" />
-            <rect x="45" y="17" width="4" height="3" rx="0.5" />
-          </g>
-          <path d="M0 24 L64 24 L58 34 L6 34 Z" fill="var(--deco-shape)" />
-        </g>
-      </svg>
+      {/* Ferry on the horizon: the artwork in public/, one version per theme, faded into the scene.
+          It crosses the sea and back on a loop (.ferry-sail), bobbing on the swell (.scene-bob);
+          with reduced motion it stays parked at the left-* position below. */}
+      <div className="ferry-sail absolute bottom-[75px] left-[16%] w-[96px] opacity-[0.55] lg:bottom-[90px] lg:left-[35%] lg:w-[124px]">
+        <div className="scene-bob">
+          <Image src="/ferge-light.svg" alt="" width={153} height={67} className="h-auto w-full dark:hidden" />
+          <Image src="/ferge-dark.svg" alt="" width={153} height={67} className="hidden h-auto w-full dark:block" />
+        </div>
+      </div>
 
       {/* Headland with lighthouse and boathouse, anchored right */}
-      <svg className="absolute -right-4 bottom-[90px] w-[250px] lg:bottom-[104px] lg:w-[360px]" viewBox="0 0 260 130">
+      <svg className="absolute -right-4 bottom-[74px] w-[250px] lg:bottom-[84px] lg:w-[360px]" viewBox="0 0 260 130">
         <defs>
           <linearGradient id={beam} x1="1" y1="0" x2="0" y2="0">
             <stop offset="0" stopColor="var(--deco-beam)" />
@@ -65,7 +57,7 @@ export default function SeaBackground() {
 
       {/* Gulls */}
       <svg
-        className="absolute bottom-[210px] right-[38%] w-[44px] lg:bottom-[250px] lg:w-[56px]"
+        className="absolute bottom-[194px] right-[38%] w-[44px] lg:bottom-[230px] lg:w-[56px]"
         viewBox="0 0 44 20"
         fill="none"
         stroke="var(--deco-gull)"
@@ -76,17 +68,18 @@ export default function SeaBackground() {
         <path d="M26 5 q4 -4 8 0 q4 -4 8 0" />
       </svg>
 
-      {/* Waves: three tiled layers, back to front */}
-      <svg className="absolute inset-x-0 bottom-0 h-[112px] w-full lg:h-[128px]">
+      {/* Waves: three tiled layers, back to front. A gentle swell: the waterline (top of the
+          back layer) sits 16px below the top, i.e. 80px up (lg: 92px); the scene sits on it. */}
+      <svg className="absolute inset-x-0 bottom-0 h-[96px] w-full lg:h-[108px]">
         <defs>
           <pattern id={far} width="240" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 16 Q60 4 120 16 T240 16 V200 H0 Z" fill="var(--deco-wave-1)" />
+            <path d="M0 16 Q60 11 120 16 T240 16 V200 H0 Z" fill="var(--deco-wave-1)" />
           </pattern>
           <pattern id={mid} x="70" width="180" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 46 Q45 34 90 46 T180 46 V200 H0 Z" fill="var(--deco-wave-2)" />
+            <path d="M0 38 Q45 34 90 38 T180 38 V200 H0 Z" fill="var(--deco-wave-2)" />
           </pattern>
           <pattern id={near} x="20" width="140" height="200" patternUnits="userSpaceOnUse">
-            <path d="M0 78 Q35 68 70 78 T140 78 V200 H0 Z" fill="var(--deco-wave-3)" />
+            <path d="M0 62 Q35 59 70 62 T140 62 V200 H0 Z" fill="var(--deco-wave-3)" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill={`url(#${far})`} />
