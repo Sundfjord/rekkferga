@@ -47,7 +47,7 @@ API endpoints:
 - No database: quays are the snapshot, departures are always live.
 
 Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*`):
-- `app/page.tsx` — map-free "ferry board": a search pane (`Band` with the search field, then `HomeLists` = live favourites + nearest quays, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time on phones, side by side from `lg`. The app `Header` (logo, language, theme) stays above the blue `Band`.
+- `app/page.tsx` — map-free "ferry board": a search pane (`Band` with the search field, then `HomeLists` = live favourites, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time on phones, side by side from `lg`. The app `Header` (logo, language, theme, help → `HelpDialog`) stays above the blue `Band`. `SeaBackground` is a decorative layer behind both panes (`--deco-*` tokens); the start page deliberately has no nearby-quay list so it shows.
 - `components/QuayPanel.tsx` — the band becomes the quay header; below it a card with drive time + arrival, a crossing filter (multi-crossing quays) and `DepartureCard`s; tapping a card switches to `DriveMode`. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
 - `hooks/useDriveTimes.ts` — one drive time per quay shared by all views (favourites write it, the quay view reuses it unless >3 min old). Displayed margins are recomputed client-side from it and one shared `useNow` clock (`withLiveMargins` in `lib/departures.ts`), so every view shows the same numbers.
 - `hooks/useQuayDepartures.ts` — margin-adaptive departure polling for the selected quay; refreshes the shared drive time when stale.

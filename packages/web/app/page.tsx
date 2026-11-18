@@ -9,19 +9,18 @@ import { useFavoriteNext } from "@/hooks/useFavoriteNext";
 import { useDestinationSearch } from "@/hooks/useDestinationSearch";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { nearestQuays } from "@/lib/quays";
 import Band from "@/components/Band";
 import HomeLists from "@/components/HomeLists";
 import SearchResults from "@/components/SearchResults";
 import QuayPanel from "@/components/QuayPanel";
 import Spinner from "@/components/Spinner";
 import ErrorNotice from "@/components/ErrorNotice";
+import SeaBackground from "@/components/SeaBackground";
 import { SearchIcon } from "@/components/icons";
 import type { Quay, ResultItem, FerryLeg } from "@shared/types";
 import { requestJourney } from "@shared/services/journey";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const NEARBY_PAGE = 10; // nearby quays shown initially and added per "Vis flere"
 
 type DestinationStatus =
   | { kind: "resolving"; name: string }
@@ -31,7 +30,7 @@ type DestinationStatus =
 type Selection = { quay: Quay; destination: string | null } | null;
 
 /**
- * Map-free ferry board. Two panes in one responsive layout: search/favourites/nearby, and the
+ * Map-free ferry board. Two panes in one responsive layout: search/favourites, and the
  * selected quay. On a phone only one pane shows at a time; from `lg` they sit side by side.
  */
 export default function Home() {
@@ -64,12 +63,6 @@ export default function Home() {
   const driveTimes = useDriveTimes(userLocation);
   const driveSecondsFor = useCallback((id: string) => driveTimes.get(id)?.seconds ?? null, [driveTimes]);
   const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, driveTimes.put);
-  // All quays sorted by distance once per position; the list shows a growing slice of it.
-  const nearbySorted = useMemo(() => (userLocation ? nearestQuays(quays, userLocation, quays.length) : []), [quays, userLocation]);
-  const [nearbyCount, setNearbyCount] = useState(NEARBY_PAGE);
-  useEffect(() => setNearbyCount(NEARBY_PAGE), [userLocation]);
-  const nearby = nearbySorted.slice(0, nearbyCount);
-  const showMoreNearby = nearbyCount < nearbySorted.length ? () => setNearbyCount((c) => c + NEARBY_PAGE) : undefined;
   const places = useDestinationSearch(searchOpen ? query : "", userLocation);
 
   const quay = selection?.quay ?? null;
@@ -131,9 +124,11 @@ export default function Home() {
   const showResults = searchOpen && query.trim().length > 0;
 
   return (
-    <div className="flex h-full lg:gap-6 lg:px-6" style={{ backgroundColor: "var(--surface-tint)" }}>
+    <div className="relative isolate flex h-full lg:gap-6 lg:px-6" style={{ backgroundColor: "var(--surface-tint)" }}>
+      <SeaBackground />
+
       {/* Search pane */}
-      <div className={`${selection ? "hidden lg:flex" : "flex"} min-h-0 w-full flex-col lg:w-[400px] lg:flex-none`}>
+      <div className={`${selection ? "hidden lg:flex" : "flex"} relative min-h-0 w-full flex-col lg:w-[400px] lg:flex-none`}>
         <Band>
           <div className="flex items-center gap-2.5">
             <label
@@ -202,8 +197,6 @@ export default function Home() {
               favoriteNext={favoriteNext}
               driveSecondsFor={driveSecondsFor}
               now={now}
-              nearby={nearby}
-              onShowMoreNearby={showMoreNearby}
               onSelectQuay={selectQuay}
               onSelectPlace={selectPlace}
             />
@@ -212,8 +205,8 @@ export default function Home() {
       </div>
 
       {/* Quay pane */}
-      <div className={`${selection ? "flex" : "hidden lg:flex"} min-h-0 w-full min-w-0 flex-1 flex-col`}>
-        {selection ? (
+      <div className={`${selection ? "flex" : "hidden lg:flex"} relative min-h-0 w-full min-w-0 flex-1 flex-col`}>
+        {selection && (
           <QuayPanel
             key={`${selection.quay.id}|${selection.destination ?? ""}`}
             quay={selection.quay}
@@ -224,10 +217,6 @@ export default function Home() {
             driveSeconds={driveSecondsFor(selection.quay.id)}
             now={now}
           />
-        ) : (
-          <p className="mx-auto mt-24 max-w-s text-center text-[16px]" style={{ color: "var(--text-secondary)" }}>
-            {t("home.selectQuayHint")}
-          </p>
         )}
       </div>
     </div>

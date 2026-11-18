@@ -9,7 +9,8 @@
     "departure": "Departure",
     "arrive": "Arrive",
     "loadError": "Couldn't fetch data. Check your connection and try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "close": "Close"
   },
   "favorites": {
     "title": "Favorites",
@@ -28,12 +29,9 @@
     "placesError": "Couldn't search for places right now."
   },
   "home": {
-    "nearby": "Nearby",
     "toDestinations": "To {destinations}",
     "driveAway": "{time} away",
     "noNextDeparture": "No departures",
-    "selectQuayHint": "Pick a quay to see its departures and your margin.",
-    "showMore": "Show more",
     "favoritesError": "Couldn't fetch the next departures for your favourites."
   },
   "quay": {
@@ -116,5 +114,13 @@
         "You'd have to be unusually fond of ferry quays to take this one."
       ]
     }
+  },
+  "help": {
+    "open": "How Rekkferga works",
+    "title": "What's the point of Rekkferga?",
+    "intro": "Rekkferga uses traffic data and ferry routes to calculate the time margin from your current location to a given quay.",
+    "step1": "Allow Rekkferga access to your position. It is only used to calculate drive times to quays.",
+    "step2": "Search for and select a ferry quay or your destination.",
+    "step3": "See the departures and your time margin on arrival to the quay."
   }
 }

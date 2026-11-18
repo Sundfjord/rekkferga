@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "@/hooks/useTranslation";
+import HelpDialog from "@/components/HelpDialog";
 import type { Language } from "@shared/utils";
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -35,6 +37,14 @@ const CheckIcon = ({ className }: { className?: string }) => (
 const ChevronIcon = ({ className }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 20 20" aria-hidden>
     <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
+  </svg>
+);
+
+const HelpIcon = ({ className }: { className?: string }) => (
+  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
+    <circle cx="12" cy="12" r="9.25" />
+    <path d="M9.5 9.25a2.6 2.6 0 0 1 5.05.85c0 1.75-2.55 2.3-2.55 3.9" />
+    <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
   </svg>
 );
 
@@ -125,6 +135,8 @@ export default function Header() {
   const { language, setLanguage } = useLanguage();
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState<OpenSection>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
+  const t = useTranslation();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -185,6 +197,18 @@ export default function Header() {
               </DropdownItem>
             ))}
           </DropdownShell>
+
+          <button
+            type="button"
+            onClick={() => setHelpOpen(true)}
+            aria-label={t("help.open")}
+            title={t("help.open")}
+            className="flex h-9 items-center rounded-xl px-2.5 transition-colors"
+            style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
+          >
+            <HelpIcon className="h-5 w-5 text-white/80" />
+          </button>
+          <HelpDialog open={helpOpen} onClose={() => setHelpOpen(false)} />
         </div>
       )}
     </div>

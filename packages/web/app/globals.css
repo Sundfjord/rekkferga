@@ -50,6 +50,43 @@
   --shadow-search-focus: 0 0 0 3px rgba(58, 133, 194, 0.30), 0 2px 8px rgba(0, 0, 0, 0.12);
   --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.14);
+
+  /* ── Page backdrop (SeaBackground): low contrast against --surface-tint ── */
+  --deco-far: #E3EEF9;
+  --deco-wave-1: #E2EFFB;
+  --deco-wave-2: #D8E8F7;
+  --deco-wave-3: #CDE2F4;
+  --deco-land: #D7E7F6;
+  --deco-shape: #BDD5EC;
+  --deco-window: #E6F0FA;
+  --deco-funnel: #F0CB8A;
+  --deco-lamp: #F5C06A;
+  --deco-beam: rgba(245, 192, 106, 0.30);
+  --deco-gull: #B5CEE6;
+
+  /* ── Welcome scene (CoastScene) ──────────────────────────── */
+  --scene-sky-top: #9FD0F2;
+  --scene-sky-bottom: #E6F3FD;
+  --scene-sun: #F5C06A;
+  --scene-star: transparent;
+  --scene-gull: #2F5F8A;
+  --scene-far: #8DB6D8;
+  --scene-snow: #F2F8FF;
+  --scene-mid: #5B8DB8;
+  --scene-near: #2F5F8A;
+  --scene-rock: #1F3F5E;
+  --scene-sea-light: #3A85C2;
+  --scene-sea: #1F5A8E;
+  --scene-foam: rgba(255, 255, 255, 0.75);
+  --scene-beam: rgba(245, 192, 106, 0.30);
+  --scene-lamp: #F5C06A;
+  --scene-white: #ffffff;
+  --scene-red: #C8102E;
+  --scene-boathouse: #A3302A;
+  --scene-roof: #5A1A16;
+  --scene-hull: #011638;
+  --scene-window: #2569A3;
+  --scene-funnel: #E8A020;
 }
 
 .dark {
@@ -68,6 +105,38 @@
 
   --border: #2a2a2a;
   --border-variant: #404040;
+
+  --deco-far: #1D2B47;
+  --deco-wave-1: #1E2E4C;
+  --deco-wave-2: #213353;
+  --deco-wave-3: #25395C;
+  --deco-land: #1F2F4E;
+  --deco-shape: #2B3F67;
+  --deco-window: rgba(245, 192, 106, 0.55);
+  --deco-funnel: #7A5A2A;
+  --deco-lamp: #F5C06A;
+  --deco-beam: rgba(245, 192, 106, 0.13);
+  --deco-gull: #2E4470;
+
+  --scene-sky-top: #050E1F;
+  --scene-sky-bottom: #1A3157;
+  --scene-sun: #E8F0F8;
+  --scene-star: rgba(232, 240, 248, 0.85);
+  --scene-gull: transparent;
+  --scene-far: #1E3A60;
+  --scene-snow: rgba(138, 174, 206, 0.55);
+  --scene-mid: #152B4D;
+  --scene-near: #0D1C34;
+  --scene-rock: #060F20;
+  --scene-sea-light: #163A66;
+  --scene-sea: #0A2242;
+  --scene-foam: rgba(232, 240, 248, 0.35);
+  --scene-beam: rgba(245, 192, 106, 0.32);
+  --scene-white: #C9D6E3;
+  --scene-red: #9E1B2B;
+  --scene-boathouse: #6E2420;
+  --scene-hull: #3A85C2;
+  --scene-window: #F5C06A;
 }
 
 @theme inline {
@@ -116,4 +185,32 @@ body {
 ::view-transition-new(*.morph) {
   height: 100%;
   width: auto;
+}
+
+/* Welcome scene: the ferry rides the swell. */
+@keyframes scene-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-1.5px) rotate(-0.6deg); }
+}
+
+.scene-bob {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: scene-bob 4.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene-bob { animation: none; }
+}
+
+/* Lighthouse beam on the page backdrop: a slow sweep of brightness. */
+@keyframes deco-beam {
+  0%, 100% { opacity: 0.35; }
+  50%      { opacity: 1; }
+}
+
+.deco-beam { animation: deco-beam 7s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .deco-beam { animation: none; }
 }

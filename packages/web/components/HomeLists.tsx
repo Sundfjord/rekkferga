@@ -6,7 +6,6 @@ import { formatDuration, formatTime } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TIER_COLOR, arrivalFrom, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
-import { destinationNames } from "@/lib/quays";
 import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
 import ErrorNotice from "@/components/ErrorNotice";
 
@@ -72,8 +71,7 @@ function NextBlock({
 }
 
 /**
- * Home: favourites with their next reachable departure (live), and the nearest quays
- * (ordered by straight-line distance, which is never shown).
+ * Home: favourites with their next reachable departure (live).
  */
 export default function HomeLists({
   favorites,
@@ -81,8 +79,6 @@ export default function HomeLists({
   favoriteNext,
   driveSecondsFor,
   now,
-  nearby,
-  onShowMoreNearby,
   onSelectQuay,
   onSelectPlace,
 }: {
@@ -93,9 +89,6 @@ export default function HomeLists({
   driveSecondsFor: (quayId: string) => number | null;
   /** Shared clock, so margins match the quay view exactly. */
   now: number;
-  nearby: Quay[];
-  /** Shows the next batch of nearby quays; absent when all are shown. */
-  onShowMoreNearby?: () => void;
   onSelectQuay: (quay: Quay) => void;
   onSelectPlace: (place: SavedDestination) => void;
 }) {
@@ -157,46 +150,6 @@ export default function HomeLists({
               </button>
             );
           })}
-        </>
-      )}
-
-      {nearby.length > 0 && (
-        <>
-          <SectionTitle>{t("home.nearby")}</SectionTitle>
-          <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
-            {nearby.map((quay, i) => {
-              const dests = destinationNames(quay, quaysById);
-              return (
-                <button
-                  key={quay.id}
-                  type="button"
-                  onClick={() => onSelectQuay(quay)}
-                  className={ROW}
-                  style={{ color: "var(--text-primary)", borderTop: i ? "1px solid var(--surface-variant)" : undefined }}
-                >
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-base font-bold">{quay.name}</span>
-                    {dests.length > 0 && (
-                      <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                        {t("home.toDestinations", { destinations: dests.join(", ") })}
-                      </span>
-                    )}
-                  </span>
-                  <ChevronRightIcon size={20} className="text-[var(--text-secondary)]" />
-                </button>
-              );
-            })}
-          </div>
-          {onShowMoreNearby && (
-            <button
-              type="button"
-              onClick={onShowMoreNearby}
-              className="h-12 w-full cursor-pointer rounded-[16px] border-[1.5px] text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
-              style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
-            >
-              {t("home.showMore")}
-            </button>
-          )}
         </>
       )}
     </div>

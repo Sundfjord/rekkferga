@@ -9,7 +9,8 @@
     "departure": "Avgang",
     "arrive": "Fremme",
     "loadError": "Kunne ikke hente data. Sjekk nettforbindelsen og prøv igjen.",
-    "retry": "Prøv igjen"
+    "retry": "Prøv igjen",
+    "close": "Lukk"
   },
   "favorites": {
     "title": "Favoritter",
@@ -28,12 +29,9 @@
     "placesError": "Kunne ikke søke etter steder akkurat nå."
   },
   "home": {
-    "nearby": "I nærheten",
     "toDestinations": "Til {destinations}",
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avganger",
-    "selectQuayHint": "Velg en kai for å se avgangene og marginen din.",
-    "showMore": "Vis flere",
     "favoritesError": "Kunne ikke hente neste avganger for favorittene dine."
   },
   "quay": {
@@ -116,5 +114,13 @@
         "Du må være over gjennomsnittet glad i ferjekaier om du skal ta denne."
       ]
     }
+  },
+  "help": {
+    "open": "Hvordan Rekkferga fungerer",
+    "title": "Hva er poenget med Rekkferga?",
+    "intro": "Rekkferga bruker trafikkdata og ferjeruter til å beregne tidsmarginen du har fra der du er nå til ein gitt ferjeavgang.",
+    "step1": "Gi Rekkferga tilgang til posisjonen din. Posisjonen blir bare brukt til å regne ut kjøretid.",
+    "step2": "Søk etter og velg en ferjekai eller stedet du skal til.",
+    "step3": "Se avgangene og tidsmarginen du har når du ankommer kaien."
   }
 }
