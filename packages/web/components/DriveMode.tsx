@@ -8,6 +8,7 @@ import { TIER_COLOR, departureKey, minutesUntil, planB, splitMargin, tierOf } fr
 import { transitionName } from "@/lib/viewTransition";
 // import { rushMessage } from "@/lib/rushMessages"; // rush messages temporarily disabled
 import DepartureHeading from "@/components/DepartureHeading";
+import DepartureTime from "@/components/DepartureTime";
 import DestinationName from "@/components/DestinationName";
 import { ChevronRightIcon, CloseIcon } from "@/components/icons";
 import TimelineTrack from "@/components/TimelineTrack";
@@ -125,7 +126,7 @@ export default function DriveMode({
             <span className="text-[13px]">{t("drive.planB")}</span>
             <span className="truncate text-[17px] font-bold">
               <DestinationName departure={alt} />{" "}
-              <span style={{ fontFamily: "var(--font-mono)" }}>{formatTime(alt.expectedDepartureTime)}</span>
+              <span style={{ fontFamily: "var(--font-mono)" }}><DepartureTime departure={alt} /></span>
             </span>
           </span>
           <span

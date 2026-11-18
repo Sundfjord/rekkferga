@@ -31,6 +31,7 @@ def get_departures_from_nsr_id(nsr_id, start_time=None, number_of_departures=4):
                 id,
                 estimatedCalls(numberOfDepartures: $numberOfDepartures, startTime: $startTime) {
                     realtime
+                    aimedDepartureTime
                     expectedDepartureTime
                     serviceJourney {
                         estimatedCalls {

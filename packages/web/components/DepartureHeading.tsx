@@ -1,7 +1,7 @@
 "use client";
 
 import type { DepartureOption } from "@shared/types";
-import { formatTime } from "@shared/utils";
+import DepartureTime from "@/components/DepartureTime";
 import DestinationName from "@/components/DestinationName";
 
 /**
@@ -15,7 +15,7 @@ export default function DepartureHeading({ departure, className = "" }: { depart
         <DestinationName departure={departure} />
       </span>
       <span className="text-[26px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-        {formatTime(departure.expectedDepartureTime)}
+        <DepartureTime departure={departure} />
       </span>
     </span>
   );

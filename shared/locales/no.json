@@ -10,7 +10,9 @@
     "arrive": "Fremme",
     "loadError": "Kunne ikke hente data. Sjekk nettforbindelsen og prøv igjen.",
     "retry": "Prøv igjen",
-    "close": "Lukk"
+    "close": "Lukk",
+    "scheduled": "Planlagt",
+    "newTime": "ny tid"
   },
   "favorites": {
     "title": "Favoritter",

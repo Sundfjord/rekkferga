@@ -17,7 +17,7 @@ export default function TrafficStatus({ level, delaySeconds }: { level: TrafficL
     level === "normal" ? t("quay.traffic.normal") : t(`quay.traffic.${level}`, { delay: formatDuration(delaySeconds, language) });
 
   return (
-    <div className="mt-3 flex items-center justify-center gap-2.5 text-[15px]">
+    <div className="mt-3 flex items-center gap-2.5 px-1 text-[15px]">
       <span className="relative flex h-3 w-3 flex-shrink-0" aria-hidden>
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75 motion-reduce:animate-none" style={{ backgroundColor: color }} />
         <span className="relative inline-flex h-3 w-3 rounded-full" style={{ backgroundColor: color }} />

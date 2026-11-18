@@ -2,11 +2,12 @@
 
 import type { Quay, QuayNext, SavedDestination } from "@shared/types";
 import type { FavoriteNext } from "@/hooks/useFavoriteNext";
-import { formatDuration, formatTime } from "@shared/utils";
+import { formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TIER_COLOR, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
 import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
+import DepartureTime from "@/components/DepartureTime";
 import ErrorNotice from "@/components/ErrorNotice";
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -52,16 +53,15 @@ function NextBlock({
     );
   }
   const margin = dep.marginMinutes === null ? null : splitMargin(dep.marginMinutes, language);
-  const time = formatTime(dep.expectedDepartureTime);
   const dest = destinationText(dep, t("general.via"));
   return (
     <span className={`${base} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
       <span className="text-[22px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-        {margin ? margin.value : time}
+        {margin ? margin.value : <DepartureTime departure={dep} />}
         {margin?.unit && <span className="text-[13px]"> {margin.unit}</span>}
       </span>
       <span className="max-w-[180px] truncate text-xs">
-        {margin && <b style={{ fontFamily: "var(--font-mono)" }}>{time} </b>}
+        {margin && <b style={{ fontFamily: "var(--font-mono)" }}><DepartureTime departure={dep} /> </b>}
         {dest}
       </span>
     </span>

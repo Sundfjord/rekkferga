@@ -100,7 +100,8 @@ export interface LegPlace {
 // ---------------------------------------------------------------------------
 
 export interface DepartureOption {
-  expectedDepartureTime: string;
+  expectedDepartureTime: string; // realtime estimate when `realtime`, else the timetable
+  aimedDepartureTime?: string | null; // timetable time
   realtime: boolean;
   marginMinutes: number | null; // positive = buffer (will make it), negative = will miss; null = unavailable
   viaNames?: string[]; // stops called at between the departure quay and the end destination

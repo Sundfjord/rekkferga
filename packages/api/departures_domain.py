@@ -81,6 +81,8 @@ def _build_labeled_departures(
         departures.append(
             {
                 "expectedDepartureTime": dep_time,
+                # Scheduled time; differs from expectedDepartureTime when realtime data moved it.
+                "aimedDepartureTime": departure.get("aimedDepartureTime"),
                 "realtime": departure.get("realtime", False),
                 "marginMinutes": margin,
                 "destinationQuayId": dest_id,
