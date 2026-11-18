@@ -125,7 +125,7 @@
   "help": {
     "open": "Hvordan Rekkferga fungerer",
     "title": "Hva er poenget med Rekkferga?",
-    "intro": "Rekkferga bruker trafikkdata og ferjeruter til å beregne tidsmarginen du har fra der du er nå til ein gitt ferjeavgang.",
+    "intro": "Rekkferga bruker trafikkdata og ferjeruter til å beregne tidsmarginen du har fra der du er nå til en gitt ferjeavgang.",
     "step1": "Gi Rekkferga tilgang til posisjonen din. Posisjonen blir bare brukt til å regne ut kjøretid.",
     "step2": "Søk etter og velg en ferjekai eller stedet du skal til.",
     "step3": "Se avgangene og tidsmarginen du har når du ankommer kaien."

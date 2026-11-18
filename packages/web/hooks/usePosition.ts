@@ -13,7 +13,7 @@ export interface Position {
   position: LatLng | null;
   /**
    * Coarse position: the first fix, then only after a move of LOCATION_STEP_KM. For things
-   * that re-fetch or re-sort when it changes (nearby list, favourites, place search).
+   * that re-fetch or re-sort when it changes (favourites, place search).
    */
   location: LatLng | null;
   /** Latest fix without re-rendering — for polls, which must not restart on every fix. Stable. */

@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import CoastScene from "@/components/CoastScene";
 
 function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (

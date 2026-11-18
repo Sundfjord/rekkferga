@@ -69,29 +69,6 @@
   --deco-beam: rgba(245, 192, 106, 0.30);
   --deco-gull: #B5CEE6;
 
-  /* ── Welcome scene (CoastScene) ──────────────────────────── */
-  --scene-sky-top: #9FD0F2;
-  --scene-sky-bottom: #E6F3FD;
-  --scene-sun: #F5C06A;
-  --scene-star: transparent;
-  --scene-gull: #2F5F8A;
-  --scene-far: #8DB6D8;
-  --scene-snow: #F2F8FF;
-  --scene-mid: #5B8DB8;
-  --scene-near: #2F5F8A;
-  --scene-rock: #1F3F5E;
-  --scene-sea-light: #3A85C2;
-  --scene-sea: #1F5A8E;
-  --scene-foam: rgba(255, 255, 255, 0.75);
-  --scene-beam: rgba(245, 192, 106, 0.30);
-  --scene-lamp: #F5C06A;
-  --scene-white: #ffffff;
-  --scene-red: #C8102E;
-  --scene-boathouse: #A3302A;
-  --scene-roof: #5A1A16;
-  --scene-hull: #011638;
-  --scene-window: #2569A3;
-  --scene-funnel: #E8A020;
 }
 
 .dark {
@@ -126,25 +103,6 @@
   --deco-beam: rgba(245, 192, 106, 0.13);
   --deco-gull: #2E4470;
 
-  --scene-sky-top: #050E1F;
-  --scene-sky-bottom: #1A3157;
-  --scene-sun: #E8F0F8;
-  --scene-star: rgba(232, 240, 248, 0.85);
-  --scene-gull: transparent;
-  --scene-far: #1E3A60;
-  --scene-snow: rgba(138, 174, 206, 0.55);
-  --scene-mid: #152B4D;
-  --scene-near: #0D1C34;
-  --scene-rock: #060F20;
-  --scene-sea-light: #163A66;
-  --scene-sea: #0A2242;
-  --scene-foam: rgba(232, 240, 248, 0.35);
-  --scene-beam: rgba(245, 192, 106, 0.32);
-  --scene-white: #C9D6E3;
-  --scene-red: #9E1B2B;
-  --scene-boathouse: #6E2420;
-  --scene-hull: #3A85C2;
-  --scene-window: #F5C06A;
 }
 
 @theme inline {
@@ -195,7 +153,7 @@ body {
   width: auto;
 }
 
-/* Welcome scene: the ferry rides the swell. */
+/* Page backdrop (SeaBackground): the ferry rides the swell. */
 @keyframes scene-bob {
   0%, 100% { transform: translateY(0) rotate(0deg); }
   50%      { transform: translateY(-1.5px) rotate(-0.6deg); }
