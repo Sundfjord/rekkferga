@@ -18,13 +18,13 @@
     "remove": "Fjern frå favorittar"
   },
   "search": {
-    "placeholder": "Søk etter kai eller stad",
-    "ferryQuays": "Ferjekaiar",
+    "placeholder": "Kai eller stad",
+    "ferryQuays": "ferjekaiar",
     "places": "Stader",
     "noResults": "Ingen treff på «{query}»",
     "findingQuay": "Finn første ferjerute på vegen til {place}…",
     "locationRequired": "Gi tilgang til posisjon for å søkje etter destinasjon.",
-    "noRouteQuays": "Ingen fergekaier funne langs den raskaste ruta til denne destinasjonen",
+    "noRouteQuays": "Ingen ferjekaier funne langs den raskaste ruta til denne destinasjonen",
     "quaysError": "Kunne ikkje laste ferjekaiane.",
     "placesError": "Kunne ikkje søkje etter stader akkurat no."
   },
@@ -33,9 +33,8 @@
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avgangar",
     "favoritesError": "Kunne ikkje hente neste avgangar for favorittane dine.",
-    "heroTitle": "Rekk du ferja?",
-    "heroIntro": "Søk etter ein ferjekai eller staden du skal til, så reknar vi ut marginen din.",
-    "suggestions": "Populære ferjekaiar i nærleiken"
+    "heroTitle": "Kva ferje skal du rekke?",
+    "to": "til {destination}"
   },
   "quay": {
     "driveTime": "Køyretid",
@@ -50,8 +49,8 @@
     "arrivalAtQuay": "Framme ved kaia",
     "traffic": {
       "normal": "Normal trafikk",
-      "moderate": "Meir trafikk enn vanleg · +{delay}",
-      "heavy": "Mykje trafikk · +{delay}"
+      "moderate": "Meir trafikk enn vanleg +{delay}",
+      "heavy": "Mykje trafikk +{delay}"
     }
   },
   "drive": {

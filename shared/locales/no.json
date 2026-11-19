@@ -19,7 +19,7 @@
     "remove": "Fjern fra favoritter"
   },
   "search": {
-    "placeholder": "Søk etter kai eller sted",
+    "placeholder": "Kai eller sted",
     "ferryQuays": "Fergekaier",
     "places": "Steder",
     "noResults": "Ingen treff på «{query}»",
@@ -34,9 +34,8 @@
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avganger",
     "favoritesError": "Kunne ikke hente neste avganger for favorittene dine.",
-    "heroTitle": "Rekker du ferja?",
-    "heroIntro": "Søk etter en ferjekai eller stedet du skal til, så regner vi ut marginen din.",
-    "suggestions": "Populære ferjekaier i nærheten"
+    "heroTitle": "Hvilken ferge skal du rekke?",
+    "to": "til {destination}"
   },
   "quay": {
     "driveTime": "Kjøretid",
@@ -51,8 +50,8 @@
     "arrivalAtQuay": "Fremme ved kaia",
     "traffic": {
       "normal": "Normal trafikk",
-      "moderate": "Mer trafikk enn vanlig · +{delay}",
-      "heavy": "Mye trafikk · +{delay}"
+      "moderate": "Mer trafikk enn vanlig +{delay}",
+      "heavy": "Mye trafikk +{delay}"
     }
   },
   "drive": {
@@ -120,16 +119,16 @@
       "61plus": [
         "Veldig lenge å vente. Kjedelig",
         "Blir seigt på kaien dette.",
-        "Du må være over gjennomsnittet glad i ferjekaier om du skal ta denne."
+        "Du må være over gjennomsnittet glad i fergekaier om du skal ta denne."
       ]
     }
   },
   "help": {
     "open": "Hvordan Rekkferga fungerer",
     "title": "Hva er poenget med Rekkferga?",
-    "intro": "Rekkferga bruker trafikkdata og ferjeruter til å beregne tidsmarginen du har fra der du er nå til en gitt ferjeavgang.",
+    "intro": "Rekkferga bruker trafikkdata og fergeruter til å beregne tidsmarginen du har fra der du er nå til en gitt fergeavgang.",
     "step1": "Gi Rekkferga tilgang til posisjonen din. Posisjonen blir bare brukt til å regne ut kjøretid.",
-    "step2": "Søk etter og velg en ferjekai eller stedet du skal til.",
+    "step2": "Søk etter og velg en fergekai eller stedet du skal til.",
     "step3": "Se avgangene og tidsmarginen du har når du ankommer kaien."
   }
 }

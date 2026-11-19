@@ -4,8 +4,8 @@ import type { Quay, SearchResult } from "@shared/types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { destinationNames } from "@/lib/quays";
-import { HeartIcon, PlaceIcon } from "@/components/icons";
-import { LIST_CARD, ROW, SectionTitle } from "@/components/HomeLists";
+import { FerryIcon, HeartIcon, PlaceIcon } from "@/components/icons";
+import { IconTile, LIST_CARD, ROW, ROW_NAME, ROW_SUB, SectionTitle } from "@/components/HomeLists";
 import ErrorNotice from "@/components/ErrorNotice";
 
 const MAX_QUAY_HITS = 8;
@@ -16,7 +16,8 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return (
     <>
       {text.slice(0, i)}
-      <b>{text.slice(i, i + query.length)}</b>
+      {/* Names are bold already, so the match stands out by colour. */}
+      <span style={{ color: "var(--water-light)" }}>{text.slice(i, i + query.length)}</span>
       {text.slice(i + query.length)}
     </>
   );
@@ -74,12 +75,15 @@ export default function SearchResults({
                   className={ROW}
                   style={{ color: "var(--text-primary)", borderTop: i ? "1px solid var(--surface-variant)" : undefined }}
                 >
+                  <IconTile>
+                    <FerryIcon />
+                  </IconTile>
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-base">
+                    <span className={ROW_NAME}>
                       <Highlight text={quay.name} query={q} />
                     </span>
                     {dests.length > 0 && (
-                      <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>
+                      <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
                         {t("home.toDestinations", { destinations: dests.join(", ") })}
                       </span>
                     )}
@@ -105,13 +109,15 @@ export default function SearchResults({
                 className={ROW}
                 style={{ color: "var(--text-primary)", borderTop: i ? "1px solid var(--surface-variant)" : undefined }}
               >
-                <PlaceIcon className="text-[var(--water-light)]" />
+                <IconTile>
+                  <PlaceIcon />
+                </IconTile>
                 <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-base">
+                  <span className={ROW_NAME}>
                     <Highlight text={place.name} query={q} />
                   </span>
                   {place.subName && (
-                    <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>
+                    <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
                       {place.subName}
                     </span>
                   )}

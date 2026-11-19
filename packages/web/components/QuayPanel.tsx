@@ -140,7 +140,7 @@ export default function QuayPanel({
           <button type="button" onClick={onBack} aria-label={t("general.back")} className={`${BAND_BUTTON} w-11`}>
             <ChevronLeftIcon />
           </button>
-          <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[19px] font-bold leading-tight">{quay.name}</h1>
+          <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[23px] font-bold leading-tight">{quay.name}</h1>
           <button
             type="button"
             onClick={() => toggleFavorite(favoritePayload)}

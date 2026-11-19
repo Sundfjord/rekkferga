@@ -47,6 +47,14 @@ export const SearchIcon = ({ size = 20, className }: IconProps) => (
   </svg>
 );
 
+export const FerryIcon = ({ size = 20, className }: IconProps) => (
+  <svg {...stroke(size, className, 2)}>
+    <path d="M3 16h18l-2.2 4.5H5.2z" />
+    <path d="M6 16v-4.5h12V16" />
+    <path d="M10 11.5V8h4v3.5" />
+  </svg>
+);
+
 export const PlaceIcon = ({ size = 18, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
     <path

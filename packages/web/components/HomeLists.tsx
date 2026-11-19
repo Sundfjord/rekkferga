@@ -6,65 +6,118 @@ import { formatDuration } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { TIER_COLOR, destinationText, nextReachable, splitMargin, tierOf, withLiveMargins } from "@/lib/departures";
-import { ChevronRightIcon, PlaceIcon } from "@/components/icons";
+import { shortQuayName } from "@/lib/quays";
+import { PlaceIcon } from "@/components/icons";
 import DepartureTime from "@/components/DepartureTime";
 import ErrorNotice from "@/components/ErrorNotice";
 
+// Shared by the home lists and search results, so both read like the quay view: 17–19px
+// names, 15px secondary text, 13px bold section labels, cards with the departure card's radius.
+
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mx-1 mt-1 text-[13px] font-normal" style={{ color: "var(--text-secondary)" }}>
+    <h2 className="mx-1 mt-1 text-[13px] font-bold" style={{ color: "var(--text-secondary)" }}>
       {children}
     </h2>
   );
 }
 
-export const LIST_CARD = "overflow-hidden rounded-[20px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]";
-export const ROW = "flex min-h-[60px] w-full cursor-pointer items-center gap-3 py-2.5 pl-4 pr-3 text-left transition-colors hover:bg-[var(--surface-tint)]";
+export const LIST_CARD = "overflow-hidden rounded-[18px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]";
+export const ROW = "flex min-h-[64px] w-full cursor-pointer items-center gap-3 py-2.5 pl-3.5 pr-3.5 text-left transition-colors hover:bg-[var(--surface-tint)]";
+export const ROW_NAME = "truncate text-[17px] font-bold leading-tight";
+export const ROW_SUB = "truncate text-[15px] leading-snug";
+
+/** An icon in a tinted square, echoing the band's round buttons; marks what kind of row it is. */
+export function IconTile({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[11px]"
+      style={{ backgroundColor: "var(--surface-variant)", color: "var(--water-light)" }}
+    >
+      {children}
+    </span>
+  );
+}
 
 /**
- * The favourite's next reachable departure as a tier-coloured block. The margin is computed
- * here from the shared drive time and clock — the same inputs the quay view uses.
+ * A favourite quay as a card: name and next departure on the left, and on the right the
+ * margin in the tier colour as a full-height end cap, the same figure and position as on a
+ * departure card. Margins come from the shared drive time and clock, as in the quay view.
  */
-function NextBlock({
+function FavoriteCard({
+  quay,
   next,
   loaded,
   failed,
   arrivalAt,
+  now,
+  onSelect,
 }: {
+  quay: Quay;
   next: QuayNext | undefined;
   loaded: boolean;
   /** The favourites request failed and there is no earlier data for this quay. */
   failed: boolean;
   arrivalAt: Date | null;
+  now: number;
+  onSelect: () => void;
 }) {
   const t = useTranslation();
   const { language } = useLanguage();
-  const base = "flex min-w-[132px] flex-shrink-0 flex-col rounded-[14px] px-3 py-2";
-
-  if (!next && !loaded) {
-    return <span className={`${base} h-[58px] animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
-  }
   const dep = next ? nextReachable(withLiveMargins(next.departures, arrivalAt)) : null;
-  if (!dep) {
-    return (
-      <span className={`${base} justify-center text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
+  const margin = dep && dep.marginMinutes !== null ? splitMargin(dep.marginMinutes, language) : null;
+  const drive = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
+  const pending = !next && !loaded;
+
+  const cap = "flex min-w-[104px] flex-none flex-col items-end justify-center px-4 py-3";
+  let end: React.ReactNode;
+  if (pending) {
+    end = <span className={`${cap} animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
+  } else if (!dep) {
+    end = (
+      <span className={`${cap} text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
         {t(failed ? "general.unavailable" : "home.noNextDeparture")}
       </span>
     );
+  } else {
+    end = (
+      <span className={`${cap} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
+        <span className="text-[34px] font-bold leading-none tracking-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
+          {/* Without a position there's no margin: show the departure time instead. */}
+          {margin ? margin.value : <DepartureTime departure={dep} />}
+          {margin?.unit && <span className="text-[15px] tracking-normal"> {margin.unit}</span>}
+        </span>
+      </span>
+    );
   }
-  const margin = dep.marginMinutes === null ? null : splitMargin(dep.marginMinutes, language);
-  const dest = destinationText(dep, t("general.via"));
+
   return (
-    <span className={`${base} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
-      <span className="text-[22px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-        {margin ? margin.value : <DepartureTime departure={dep} />}
-        {margin?.unit && <span className="text-[13px]"> {margin.unit}</span>}
+    <button
+      type="button"
+      onClick={onSelect}
+      className="flex w-full cursor-pointer items-stretch overflow-hidden rounded-[18px] text-left shadow-[0_1px_3px_rgba(1,22,56,0.08)] transition-transform active:scale-[0.99]"
+      style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
+    >
+      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-3 pl-4 pr-3">
+        <span className="truncate text-[19px] font-bold leading-tight">{shortQuayName(quay.name)}</span>
+        {dep && (
+          <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
+            {margin && (
+              <b className="tabular-nums" style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}>
+                <DepartureTime departure={dep} />{" "}
+              </b>
+            )}
+            {t("home.to", { destination: destinationText(dep, t("general.via")) })}
+          </span>
+        )}
+        {drive != null && (
+          <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
+            {t("home.driveAway", { time: formatDuration(drive, language) })}
+          </span>
+        )}
       </span>
-      <span className="max-w-[180px] truncate text-xs">
-        {margin && <b style={{ fontFamily: "var(--font-mono)" }}><DepartureTime departure={dep} /> </b>}
-        {dest}
-      </span>
-    </span>
+      {end}
+    </button>
   );
 }
 
@@ -91,7 +144,6 @@ export default function HomeLists({
   onSelectPlace: (place: SavedDestination) => void;
 }) {
   const t = useTranslation();
-  const { language } = useLanguage();
 
   return (
     <div className="flex flex-col gap-2.5" style={{ fontFamily: "var(--font-dm-sans)" }}>
@@ -108,44 +160,31 @@ export default function HomeLists({
                   key={f.id}
                   type="button"
                   onClick={() => onSelectPlace(f)}
-                  className={`${ROW} rounded-[20px]`}
+                  className={`${ROW} rounded-[18px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]`}
                   style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
                 >
-                  <PlaceIcon className="text-[var(--water-light)]" />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-base font-bold">{f.name}</span>
-                    {f.subName && <span className="truncate text-[13px]" style={{ color: "var(--text-secondary)" }}>{f.subName}</span>}
+                  <IconTile>
+                    <PlaceIcon />
+                  </IconTile>
+                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <span className={ROW_NAME}>{f.name}</span>
+                    {f.subName && <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>{f.subName}</span>}
                   </span>
-                  <ChevronRightIcon size={20} className="text-[var(--text-secondary)]" />
                 </button>
               );
             }
             const next = favoriteNext.byId.get(quay.id);
-            const arrivalAt = arrivalFor(quay.id);
-            const drive = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
             return (
-              <button
+              <FavoriteCard
                 key={f.id}
-                type="button"
-                onClick={() => onSelectQuay(quay)}
-                className="flex w-full cursor-pointer items-center gap-3 rounded-[20px] py-2.5 pl-4 pr-2.5 text-left shadow-[0_1px_3px_rgba(1,22,56,0.08)]"
-                style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
-              >
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className="truncate text-[17px] font-bold">{quay.name}</span>
-                  {drive != null && (
-                    <span className="text-[13px]" style={{ color: "var(--text-secondary)" }}>
-                      {t("home.driveAway", { time: formatDuration(drive, language) })}
-                    </span>
-                  )}
-                </span>
-                <NextBlock
-                  next={next}
-                  loaded={favoriteNext.loaded}
-                  failed={favoriteNext.error && !next}
-                  arrivalAt={arrivalAt}
-                />
-              </button>
+                quay={quay}
+                next={next}
+                loaded={favoriteNext.loaded}
+                failed={favoriteNext.error && !next}
+                arrivalAt={arrivalFor(quay.id)}
+                now={now}
+                onSelect={() => onSelectQuay(quay)}
+              />
             );
           })}
         </>

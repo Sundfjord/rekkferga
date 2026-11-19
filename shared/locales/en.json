@@ -19,7 +19,7 @@
     "remove": "Remove from favorites"
   },
   "search": {
-    "placeholder": "Search for a quay or place",
+    "placeholder": "Quay or place",
     "ferryQuays": "Ferry quays",
     "places": "Places",
     "noResults": "No results for “{query}”",
@@ -34,9 +34,8 @@
     "driveAway": "{time} away",
     "noNextDeparture": "No departures",
     "favoritesError": "Couldn't fetch the next departures for your favourites.",
-    "heroTitle": "Will you make the ferry?",
-    "heroIntro": "Search for a ferry quay or where you're going, and we'll work out your margin.",
-    "suggestions": "Popular quays nearby"
+    "heroTitle": "Which ferry are you going for?",
+    "to": "to {destination}"
   },
   "quay": {
     "driveTime": "Drive time",
@@ -51,8 +50,8 @@
     "arrivalAtQuay": "Arrival at quay",
     "traffic": {
       "normal": "Normal traffic",
-      "moderate": "More traffic than usual · +{delay}",
-      "heavy": "Heavy traffic · +{delay}"
+      "moderate": "More traffic than usual +{delay}",
+      "heavy": "Heavy traffic +{delay}"
     }
   },
   "drive": {

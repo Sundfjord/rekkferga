@@ -202,14 +202,8 @@ export default function Home() {
           </div>
           {hero && (
             <div className="mt-3.5 flex flex-col gap-4" style={{ fontFamily: "var(--font-dm-sans)" }}>
-              <p className="text-center text-[15px] leading-snug" style={{ color: "var(--text-secondary)" }}>
-                {t("home.heroIntro")}
-              </p>
               {suggestions.length > 0 && (
                 <div className="flex flex-col items-center gap-2.5">
-                  <span className="text-[13px] font-bold" style={{ color: "var(--text-secondary)" }}>
-                    {t("home.suggestions")}
-                  </span>
                   <div className="flex flex-wrap justify-center gap-2">
                     {suggestions.map((q) => (
                       <button
