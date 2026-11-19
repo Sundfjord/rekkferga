@@ -34,7 +34,7 @@
     "noNextDeparture": "Ingen avgangar",
     "favoritesError": "Kunne ikkje hente neste avgangar for favorittane dine.",
     "heroTitle": "Kva ferje skal du rekke?",
-    "to": "til {destination}"
+    "suggested": "Føreslått for deg"
   },
   "quay": {
     "driveTime": "Køyretid",

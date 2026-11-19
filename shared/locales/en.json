@@ -35,7 +35,7 @@
     "noNextDeparture": "No departures",
     "favoritesError": "Couldn't fetch the next departures for your favourites.",
     "heroTitle": "Which ferry are you going for?",
-    "to": "to {destination}"
+    "suggested": "Suggested for you"
   },
   "quay": {
     "driveTime": "Drive time",

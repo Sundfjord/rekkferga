@@ -40,9 +40,10 @@ export function IconTile({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * A favourite quay as a card: name and next departure on the left, and on the right the
- * margin in the tier colour as a full-height end cap, the same figure and position as on a
- * departure card. Margins come from the shared drive time and clock, as in the quay view.
+ * A favourite quay as a compact card: name and drive time on the left; on the right a
+ * tier-coloured end cap with the next departure (time and destination) above the margin, the
+ * same figure as on a departure card. Margins come from the shared drive time and clock, as
+ * in the quay view.
  */
 function FavoriteCard({
   quay,
@@ -69,10 +70,12 @@ function FavoriteCard({
   const drive = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
   const pending = !next && !loaded;
 
-  const cap = "flex min-w-[104px] flex-none flex-col items-end justify-center px-4 py-3";
+  // The cap fills the list's shared second column (see HomeLists), so every favourite's cap
+  // is as wide as the widest one.
+  const cap = "flex min-w-[116px] flex-col items-end justify-center gap-0.5 px-3.5 py-2";
   let end: React.ReactNode;
   if (pending) {
-    end = <span className={`${cap} animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
+    end = <span className={`${cap} min-h-[64px] animate-pulse`} style={{ backgroundColor: "var(--surface-variant)" }} />;
   } else if (!dep) {
     end = (
       <span className={`${cap} text-[13px]`} style={{ backgroundColor: "var(--surface-variant)", color: "var(--text-secondary)" }}>
@@ -80,10 +83,22 @@ function FavoriteCard({
       </span>
     );
   } else {
+    const destination = destinationText(dep, t("general.via"));
     end = (
       <span className={`${cap} text-white`} style={{ backgroundColor: TIER_COLOR[tierOf(dep)] }}>
-        <span className="text-[34px] font-bold leading-none tracking-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
-          {/* Without a position there's no margin: show the departure time instead. */}
+        <span className="max-w-full truncate text-[13px] leading-tight">
+          {/* Without a position there's no margin; the time then takes the big figure below. */}
+          {margin && (
+            <>
+              {/* The space stays outside the mono span: a mono space reads as a double one. */}
+              <b className="tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
+                <DepartureTime departure={dep} />
+              </b>{" "}
+            </>
+          )}
+          {destination}
+        </span>
+        <span className="text-[30px] font-bold leading-none tracking-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
           {margin ? margin.value : <DepartureTime departure={dep} />}
           {margin?.unit && <span className="text-[15px] tracking-normal"> {margin.unit}</span>}
         </span>
@@ -95,21 +110,11 @@ function FavoriteCard({
     <button
       type="button"
       onClick={onSelect}
-      className="flex w-full cursor-pointer items-stretch overflow-hidden rounded-[18px] text-left shadow-[0_1px_3px_rgba(1,22,56,0.08)] transition-transform active:scale-[0.99]"
+      className="col-span-2 grid cursor-pointer grid-cols-subgrid items-stretch overflow-hidden rounded-[18px] text-left shadow-[0_1px_3px_rgba(1,22,56,0.08)] transition-transform active:scale-[0.99]"
       style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
     >
-      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-3 pl-4 pr-3">
+      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-2 pl-4 pr-3">
         <span className="truncate text-[19px] font-bold leading-tight">{shortQuayName(quay.name)}</span>
-        {dep && (
-          <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
-            {margin && (
-              <b className="tabular-nums" style={{ fontFamily: "var(--font-mono)", color: "var(--text-primary)" }}>
-                <DepartureTime departure={dep} />{" "}
-              </b>
-            )}
-            {t("home.to", { destination: destinationText(dep, t("general.via")) })}
-          </span>
-        )}
         {drive != null && (
           <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
             {t("home.driveAway", { time: formatDuration(drive, language) })}
@@ -151,6 +156,10 @@ export default function HomeLists({
         <>
           <SectionTitle>{t("favorites.title")}</SectionTitle>
           {favoriteNext.error && <ErrorNotice message={t("home.favoritesError")} onRetry={favoriteNext.retry} />}
+          {/* One grid for all favourites: each card spans both columns (subgrid), so the end
+              caps share the second column and are all as wide as the widest destination,
+              capped at 60% of the list. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_fit-content(60%)] gap-y-2.5">
           {favorites.map((f) => {
             const quay = quaysById.get(f.id);
             if (!quay) {
@@ -160,7 +169,7 @@ export default function HomeLists({
                   key={f.id}
                   type="button"
                   onClick={() => onSelectPlace(f)}
-                  className={`${ROW} rounded-[18px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]`}
+                  className={`${ROW} col-span-2 rounded-[18px] shadow-[0_1px_3px_rgba(1,22,56,0.08)]`}
                   style={{ backgroundColor: "var(--surface)", color: "var(--text-primary)" }}
                 >
                   <IconTile>
@@ -187,6 +196,7 @@ export default function HomeLists({
               />
             );
           })}
+          </div>
         </>
       )}
     </div>

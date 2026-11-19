@@ -11,7 +11,7 @@ import { useDestinationSearch } from "@/hooks/useDestinationSearch";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import Band from "@/components/Band";
-import HomeLists from "@/components/HomeLists";
+import HomeLists, { SectionTitle } from "@/components/HomeLists";
 import SearchResults from "@/components/SearchResults";
 import QuayPanel from "@/components/QuayPanel";
 import Spinner from "@/components/Spinner";
@@ -80,12 +80,17 @@ export default function Home() {
     inputRef.current?.blur();
   }, []);
 
-  // Empty home page (no favourites, not searching): the search field sits in the middle of
-  // the pane with suggested quays below it, and morphs up into the band once focused.
-  const hero = favorites.length === 0 && !searchOpen;
-  const suggestions = useMemo(() => (userLocation ? suggestQuays(quays, userLocation) : []), [quays, userLocation]);
+  // Home page (not searching): a heading and a large search field under the band's lip, then
+  // suggested quays and favourites. Focusing the field morphs it up into the band.
+  const hero = !searchOpen;
+  const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
+  // Quays already among the favourites aren't suggested again.
+  const suggestions = useMemo(
+    () => (userLocation ? suggestQuays(quays.filter((q) => !favoriteIds.has(q.id)), userLocation) : []),
+    [quays, userLocation, favoriteIds],
+  );
   const openSearch = () => (hero ? withViewTransition(() => setSearchOpen(true)) : setSearchOpen(true));
-  const cancelSearch = () => (favorites.length === 0 ? withViewTransition(closeSearch) : closeSearch());
+  const cancelSearch = () => withViewTransition(closeSearch);
 
   const selectQuay = useCallback(
     (q: Quay, destination: string | null = null) => {
@@ -129,7 +134,7 @@ export default function Home() {
 
   const showResults = searchOpen && query.trim().length > 0;
 
-  // Load errors and the place → quay lookup status; in the hero they sit under the field.
+  // Load errors and the place → quay lookup status, above the lists.
   const notices = (
     <>
       {quaysError && <ErrorNotice message={t("search.quaysError")} onRetry={retryQuays} />}
@@ -167,7 +172,7 @@ export default function Home() {
       <div className={`${selection ? "hidden lg:flex" : "flex"} relative min-h-0 w-full flex-col lg:w-[400px] lg:flex-none`}>
         <Band hero={hero}>
           {hero && (
-            <h2 className="mb-4 text-center text-[28px] font-bold leading-tight" style={{ fontFamily: "var(--font-dm-sans)", textWrap: "balance" }}>
+            <h2 className="mb-3.5 text-center text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-dm-sans)", textWrap: "balance" }}>
               {t("home.heroTitle")}
             </h2>
           )}
@@ -200,32 +205,28 @@ export default function Home() {
               </button>
             )}
           </div>
-          {hero && (
-            <div className="mt-3.5 flex flex-col gap-4" style={{ fontFamily: "var(--font-dm-sans)" }}>
-              {suggestions.length > 0 && (
-                <div className="flex flex-col items-center gap-2.5">
-                  <div className="flex flex-wrap justify-center gap-2">
-                    {suggestions.map((q) => (
-                      <button
-                        key={q.id}
-                        type="button"
-                        onClick={() => selectQuay(q)}
-                        className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
-                        style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
-                      >
-                        {shortQuayName(q.name)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {notices}
-            </div>
-          )}
         </Band>
 
-        <div className={`${hero ? "hidden" : "flex"} min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0`}>
+        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0">
           {notices}
+          {!showResults && suggestions.length > 0 && (
+            <>
+              <SectionTitle>{t("home.suggested")}</SectionTitle>
+              <div className="flex flex-wrap gap-2" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                {suggestions.map((q) => (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => selectQuay(q)}
+                    className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
+                    style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
+                  >
+                    {shortQuayName(q.name)}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           {showResults ? (
             <SearchResults
               query={query}
