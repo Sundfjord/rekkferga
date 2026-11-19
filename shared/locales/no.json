@@ -33,7 +33,10 @@
     "toDestinations": "Til {destinations}",
     "driveAway": "{time} unna",
     "noNextDeparture": "Ingen avganger",
-    "favoritesError": "Kunne ikke hente neste avganger for favorittene dine."
+    "favoritesError": "Kunne ikke hente neste avganger for favorittene dine.",
+    "heroTitle": "Rekker du ferja?",
+    "heroIntro": "Søk etter en ferjekai eller stedet du skal til, så regner vi ut marginen din.",
+    "suggestions": "Populære ferjekaier i nærheten"
   },
   "quay": {
     "driveTime": "Kjøretid",

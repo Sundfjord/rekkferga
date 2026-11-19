@@ -20,6 +20,9 @@ import SeaBackground from "@/components/SeaBackground";
 import { SearchIcon } from "@/components/icons";
 import type { Quay, ResultItem, FerryLeg } from "@shared/types";
 import { requestJourney } from "@shared/services/journey";
+import { suggestQuays } from "@shared/utils";
+import { shortQuayName } from "@/lib/quays";
+import { withViewTransition } from "@/lib/viewTransition";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -77,6 +80,13 @@ export default function Home() {
     inputRef.current?.blur();
   }, []);
 
+  // Empty home page (no favourites, not searching): the search field sits in the middle of
+  // the pane with suggested quays below it, and morphs up into the band once focused.
+  const hero = favorites.length === 0 && !searchOpen;
+  const suggestions = useMemo(() => (userLocation ? suggestQuays(quays, userLocation) : []), [quays, userLocation]);
+  const openSearch = () => (hero ? withViewTransition(() => setSearchOpen(true)) : setSearchOpen(true));
+  const cancelSearch = () => (favorites.length === 0 ? withViewTransition(closeSearch) : closeSearch());
+
   const selectQuay = useCallback(
     (q: Quay, destination: string | null = null) => {
       selectionTokenRef.current++;
@@ -119,6 +129,31 @@ export default function Home() {
 
   const showResults = searchOpen && query.trim().length > 0;
 
+  // Load errors and the place → quay lookup status; in the hero they sit under the field.
+  const notices = (
+    <>
+      {quaysError && <ErrorNotice message={t("search.quaysError")} onRetry={retryQuays} />}
+      {destinationStatus?.kind === "failed" && <ErrorNotice message={t("general.loadError")} onRetry={destinationStatus.retry} />}
+      {destinationStatus && destinationStatus.kind !== "failed" && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mx-1 flex items-center gap-2 text-sm"
+          style={{ color: destinationStatus.kind === "error" ? "var(--error)" : "var(--text-secondary)" }}
+        >
+          {destinationStatus.kind === "resolving" ? (
+            <>
+              <Spinner />
+              <span className="truncate">{t("search.findingQuay", { place: destinationStatus.name })}</span>
+            </>
+          ) : (
+            <span>{t(destinationStatus.messageKey)}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+
   return (
     // The top 2px are header blue: where the band meets the header on a fractional pixel, the
     // light page colour would otherwise show through as a thin line (light mode).
@@ -130,11 +165,19 @@ export default function Home() {
 
       {/* Search pane */}
       <div className={`${selection ? "hidden lg:flex" : "flex"} relative min-h-0 w-full flex-col lg:w-[400px] lg:flex-none`}>
-        <Band>
+        <Band hero={hero}>
+          {hero && (
+            <h2 className="mb-4 text-center text-[28px] font-bold leading-tight" style={{ fontFamily: "var(--font-dm-sans)", textWrap: "balance" }}>
+              {t("home.heroTitle")}
+            </h2>
+          )}
           <div className="flex items-center gap-2.5">
             <label
-              className="flex h-[54px] min-w-0 flex-1 items-center gap-2.5 rounded-[18px] px-4 shadow-[0_2px_10px_rgba(1,22,56,0.18)]"
-              style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
+              className={`flex min-w-0 flex-1 items-center gap-2.5 shadow-[0_2px_10px_rgba(1,22,56,0.18)] ${
+                hero ? "h-[62px] rounded-[20px] px-5" : "h-[54px] rounded-[18px] px-4"
+              }`}
+              // Morphs between the middle of the page and the band (lib/viewTransition).
+              style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)", viewTransitionName: "search-field" }}
             >
               <SearchIcon />
               <input
@@ -142,43 +185,53 @@ export default function Home() {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                onFocus={() => setSearchOpen(true)}
-                onKeyDown={(e) => e.key === "Escape" && closeSearch()}
+                onFocus={openSearch}
+                onKeyDown={(e) => e.key === "Escape" && cancelSearch()}
                 aria-label={t("search.placeholder")}
                 placeholder={t("search.placeholder")}
-                className="min-w-0 flex-1 bg-transparent text-[17px] outline-none"
+                className={`min-w-0 flex-1 bg-transparent outline-none ${hero ? "text-[18px]" : "text-[17px]"}`}
                 style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}
               />
               {places.isSearching && <Spinner className="h-5 w-5" />}
             </label>
             {searchOpen && (
-              <button type="button" onClick={closeSearch} className="h-11 cursor-pointer px-1 text-[15px]">
+              <button type="button" onClick={cancelSearch} className="h-11 cursor-pointer px-1 text-[15px]">
                 {t("general.cancel")}
               </button>
             )}
           </div>
-        </Band>
-
-        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0">
-          {quaysError && <ErrorNotice message={t("search.quaysError")} onRetry={retryQuays} />}
-          {destinationStatus?.kind === "failed" && <ErrorNotice message={t("general.loadError")} onRetry={destinationStatus.retry} />}
-          {destinationStatus && destinationStatus.kind !== "failed" && (
-            <div
-              role="status"
-              aria-live="polite"
-              className="mx-1 flex items-center gap-2 text-sm"
-              style={{ color: destinationStatus.kind === "error" ? "var(--error)" : "var(--text-secondary)" }}
-            >
-              {destinationStatus.kind === "resolving" ? (
-                <>
-                  <Spinner />
-                  <span className="truncate">{t("search.findingQuay", { place: destinationStatus.name })}</span>
-                </>
-              ) : (
-                <span>{t(destinationStatus.messageKey)}</span>
+          {hero && (
+            <div className="mt-3.5 flex flex-col gap-4" style={{ fontFamily: "var(--font-dm-sans)" }}>
+              <p className="text-center text-[15px] leading-snug" style={{ color: "var(--text-secondary)" }}>
+                {t("home.heroIntro")}
+              </p>
+              {suggestions.length > 0 && (
+                <div className="flex flex-col items-center gap-2.5">
+                  <span className="text-[13px] font-bold" style={{ color: "var(--text-secondary)" }}>
+                    {t("home.suggestions")}
+                  </span>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {suggestions.map((q) => (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => selectQuay(q)}
+                        className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
+                        style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
+                      >
+                        {shortQuayName(q.name)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
+              {notices}
             </div>
           )}
+        </Band>
+
+        <div className={`${hero ? "hidden" : "flex"} min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0`}>
+          {notices}
           {showResults ? (
             <SearchResults
               query={query}

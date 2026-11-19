@@ -33,7 +33,10 @@
     "toDestinations": "To {destinations}",
     "driveAway": "{time} away",
     "noNextDeparture": "No departures",
-    "favoritesError": "Couldn't fetch the next departures for your favourites."
+    "favoritesError": "Couldn't fetch the next departures for your favourites.",
+    "heroTitle": "Will you make the ferry?",
+    "heroIntro": "Search for a ferry quay or where you're going, and we'll work out your margin.",
+    "suggestions": "Popular quays nearby"
   },
   "quay": {
     "driveTime": "Drive time",
