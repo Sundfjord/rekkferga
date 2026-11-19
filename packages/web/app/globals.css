@@ -48,10 +48,11 @@
   --margin-missed: #B91C1C;
   --margin-none:   #2569A3; /* no arrival estimate (no position) */
 
-  /* Traffic vs usual (trafficLevel), drawn on the blue band: light tints so they read there. */
-  --traffic-normal:   #86EFAC;
-  --traffic-moderate: #FDE047;
-  --traffic-heavy:    #FCA5A5;
+  /* Traffic vs usual (trafficLevel): the drive-time figure and the dot. Strong on the light
+     surface; bright tints on the dark one. */
+  --traffic-normal:   #15803D;
+  --traffic-moderate: #B45309;
+  --traffic-heavy:    #B91C1C;
 
   /* ── Shadows ─────────────────────────────────────────────── */
   --shadow-search: 0 2px 8px rgba(0, 0, 0, 0.12);
@@ -128,7 +129,8 @@
 }
 
 body {
-  background: var(--background);
+  /* The page colour, not the header blue: it shows when scrolling past the page's edges. */
+  background: var(--surface-tint);
   color: var(--foreground);
   font-family: var(--font-dm-sans, 'DM Sans', sans-serif);
 }

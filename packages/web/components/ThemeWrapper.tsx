@@ -18,7 +18,7 @@ export function ThemeWrapper({ children }: ThemeWrapperProps) {
   // Show loading state until theme is properly initialized
   if (!mounted || resolvedTheme === undefined) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-surface-tint">
         <div className="mx-3 mt-3">
           <div className="h-14 bg-gray-100 dark:bg-gray-800 rounded-2xl animate-pulse" />
         </div>

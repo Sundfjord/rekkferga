@@ -63,7 +63,7 @@ export default function DriveMode({
         style={{ backgroundColor: color, fontFamily: "var(--font-dm-sans)" }}
       >
         {/* Same padding and radius as DepartureCard, so the heading stays put when a card opens.
-            Drive time and arrival sit in the band above (QuayPanel), as in the overview. */}
+            Drive time and arrival sit above (QuayPanel), as in the overview. */}
         <div className="flex items-start gap-3">
           <DepartureHeading departure={departure} className="flex-1" />
           <button

@@ -44,8 +44,8 @@ export default function RootLayout({
           <ThemeWrapper>
             <LanguageProvider>
             <FavoritesProvider>
-              {/* Full-viewport background: header on top, the ferry board fills the rest */}
-              <div className="h-screen bg-background flex justify-center">
+              {/* Full-viewport page background; the header and the ferry board sit in its centred column */}
+              <div className="h-screen bg-surface-tint flex justify-center">
                 <div className="w-full flex flex-col h-full">
                   <Header />
                   <main className="flex-1 overflow-hidden relative">{children}</main>

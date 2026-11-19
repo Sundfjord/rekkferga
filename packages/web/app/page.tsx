@@ -10,7 +10,6 @@ import { useFavoriteNext } from "@/hooks/useFavoriteNext";
 import { useDestinationSearch } from "@/hooks/useDestinationSearch";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import Band from "@/components/Band";
 import HomeLists, { SectionTitle } from "@/components/HomeLists";
 import SearchResults from "@/components/SearchResults";
 import QuayPanel from "@/components/QuayPanel";
@@ -22,7 +21,6 @@ import type { Quay, ResultItem, FerryLeg } from "@shared/types";
 import { requestJourney } from "@shared/services/journey";
 import { suggestQuays } from "@shared/utils";
 import { shortQuayName } from "@/lib/quays";
-import { withViewTransition } from "@/lib/viewTransition";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -34,8 +32,8 @@ type DestinationStatus =
 type Selection = { quay: Quay; destination: string | null } | null;
 
 /**
- * Map-free ferry board. Two panes in one responsive layout: search/favourites, and the
- * selected quay. On a phone only one pane shows at a time; from `lg` they sit side by side.
+ * Map-free ferry board: the search/favourites pane or the selected quay, one at a time, in
+ * one centred column (max-w-3xl) at every screen size.
  */
 export default function Home() {
   const t = useTranslation();
@@ -80,17 +78,12 @@ export default function Home() {
     inputRef.current?.blur();
   }, []);
 
-  // Home page (not searching): a heading and a large search field under the band's lip, then
-  // suggested quays and favourites. Focusing the field morphs it up into the band.
-  const hero = !searchOpen;
   const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
   // Quays already among the favourites aren't suggested again.
   const suggestions = useMemo(
     () => (userLocation ? suggestQuays(quays.filter((q) => !favoriteIds.has(q.id)), userLocation) : []),
     [quays, userLocation, favoriteIds],
   );
-  const openSearch = () => (hero ? withViewTransition(() => setSearchOpen(true)) : setSearchOpen(true));
-  const cancelSearch = () => withViewTransition(closeSearch);
 
   const selectQuay = useCallback(
     (q: Quay, destination: string | null = null) => {
@@ -160,114 +153,112 @@ export default function Home() {
   );
 
   return (
-    // The top 2px are header blue: where the band meets the header on a fractional pixel, the
-    // light page colour would otherwise show through as a thin line (light mode).
-    <div
-      className="relative isolate flex h-full lg:gap-6 lg:px-6"
-      style={{ background: "linear-gradient(var(--background) 2px, var(--surface-tint) 2px)" }}
-    >
+    <div className="relative isolate h-full" style={{ backgroundColor: "var(--surface-tint)" }}>
       <SeaBackground />
 
       {/* Search pane */}
-      <div className={`${selection ? "hidden lg:flex" : "flex"} relative min-h-0 w-full flex-col lg:w-[400px] lg:flex-none`}>
-        <Band hero={hero}>
-          {hero && (
-            <h2 className="mb-3.5 text-center text-[26px] font-bold leading-tight" style={{ fontFamily: "var(--font-dm-sans)", textWrap: "balance" }}>
-              {t("home.heroTitle")}
-            </h2>
-          )}
-          <div className="flex items-center gap-2.5">
-            <label
-              className={`flex min-w-0 flex-1 items-center gap-2.5 shadow-[0_2px_10px_rgba(1,22,56,0.18)] ${
-                hero ? "h-[62px] rounded-[20px] px-5" : "h-[54px] rounded-[18px] px-4"
-              }`}
-              // Morphs between the middle of the page and the band (lib/viewTransition).
-              style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)", viewTransitionName: "search-field" }}
-            >
-              <SearchIcon />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onFocus={openSearch}
-                onKeyDown={(e) => e.key === "Escape" && cancelSearch()}
-                aria-label={t("search.placeholder")}
-                placeholder={t("search.placeholder")}
-                className={`min-w-0 flex-1 bg-transparent outline-none ${hero ? "text-[18px]" : "text-[17px]"}`}
-                style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}
+      {/* One centred column at every width: home, or the selected quay, never both. */}
+      <div className="relative mx-auto flex h-full w-full max-w-3xl flex-col">
+        {/* Search pane (kept mounted while a quay is open, so the search state survives) */}
+        <div className={`${selection ? "hidden" : "flex"} min-h-0 w-full flex-1 flex-col`}>
+          {/* Page header: the title, then the search field. While searching the title steps
+              aside so the results get the room. */}
+          <div className="flex-shrink-0 px-4 pt-5" style={{ fontFamily: "var(--font-dm-sans)", color: "var(--text-primary)" }}>
+            {!searchOpen && (
+              <h2 className="mb-3.5 text-[26px] font-bold leading-tight" style={{ textWrap: "balance" }}>
+                {t("home.heroTitle")}
+              </h2>
+            )}
+            <div className="flex items-center gap-2.5">
+              <label
+                className="flex h-[58px] min-w-0 flex-1 items-center gap-2.5 rounded-[18px] px-4 shadow-[0_2px_10px_rgba(1,22,56,0.12)]"
+                style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
+              >
+                <SearchIcon />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  onKeyDown={(e) => e.key === "Escape" && closeSearch()}
+                  aria-label={t("search.placeholder")}
+                  placeholder={t("search.placeholder")}
+                  className="min-w-0 flex-1 bg-transparent text-[18px] outline-none"
+                  style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}
+                />
+                {places.isSearching && <Spinner className="h-5 w-5" />}
+              </label>
+              {searchOpen && (
+                <button type="button" onClick={closeSearch} className="h-11 cursor-pointer px-1 text-[15px]">
+                  {t("general.cancel")}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4 pt-[18px]">
+            {notices}
+            {!showResults && suggestions.length > 0 && (
+              <>
+                <SectionTitle>{t("home.suggested")}</SectionTitle>
+                <div className="flex flex-wrap gap-2" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                  {suggestions.map((q) => (
+                    <button
+                      key={q.id}
+                      type="button"
+                      onClick={() => selectQuay(q)}
+                      className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
+                      style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
+                    >
+                      {shortQuayName(q.name)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {showResults ? (
+              <SearchResults
+                query={query}
+                quays={quays}
+                quaysById={quaysById}
+                places={places.results}
+                placesSettled={places.settled}
+                placesError={places.error}
+                onRetryPlaces={places.retry}
+                onSelectQuay={selectQuay}
+                onSelectPlace={selectPlace}
               />
-              {places.isSearching && <Spinner className="h-5 w-5" />}
-            </label>
-            {searchOpen && (
-              <button type="button" onClick={cancelSearch} className="h-11 cursor-pointer px-1 text-[15px]">
-                {t("general.cancel")}
-              </button>
+            ) : (
+              <HomeLists
+                favorites={favorites}
+                quaysById={quaysById}
+                favoriteNext={favoriteNext}
+                arrivalFor={arrivalFor}
+                now={now}
+                onSelectQuay={selectQuay}
+                onSelectPlace={selectPlace}
+              />
             )}
           </div>
-        </Band>
+        </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3.5 pb-4 pt-[18px] lg:px-0">
-          {notices}
-          {!showResults && suggestions.length > 0 && (
-            <>
-              <SectionTitle>{t("home.suggested")}</SectionTitle>
-              <div className="flex flex-wrap gap-2" style={{ fontFamily: "var(--font-dm-sans)" }}>
-                {suggestions.map((q) => (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => selectQuay(q)}
-                    className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
-                    style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
-                  >
-                    {shortQuayName(q.name)}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-          {showResults ? (
-            <SearchResults
-              query={query}
-              quays={quays}
+        {/* Quay pane */}
+        <div className={`${selection ? "flex" : "hidden"} min-h-0 w-full min-w-0 flex-1 flex-col`}>
+          {selection && (
+            <QuayPanel
+              key={`${selection.quay.id}|${selection.destination ?? ""}`}
+              quay={selection.quay}
               quaysById={quaysById}
-              places={places.results}
-              placesSettled={places.settled}
-              placesError={places.error}
-              onRetryPlaces={places.retry}
-              onSelectQuay={selectQuay}
-              onSelectPlace={selectPlace}
-            />
-          ) : (
-            <HomeLists
-              favorites={favorites}
-              quaysById={quaysById}
-              favoriteNext={favoriteNext}
-              arrivalFor={arrivalFor}
+              initialDestination={selection.destination}
+              onBack={() => setSelection(null)}
+              {...departures}
+              drive={driveTimes.get(selection.quay.id) ?? null}
+              arrivalAt={arrivalFor(selection.quay.id)}
               now={now}
-              onSelectQuay={selectQuay}
-              onSelectPlace={selectPlace}
             />
           )}
         </div>
-      </div>
-
-      {/* Quay pane */}
-      <div className={`${selection ? "flex" : "hidden lg:flex"} relative min-h-0 w-full min-w-0 flex-1 flex-col`}>
-        {selection && (
-          <QuayPanel
-            key={`${selection.quay.id}|${selection.destination ?? ""}`}
-            quay={selection.quay}
-            quaysById={quaysById}
-            initialDestination={selection.destination}
-            onBack={() => setSelection(null)}
-            {...departures}
-            drive={driveTimes.get(selection.quay.id) ?? null}
-            arrivalAt={arrivalFor(selection.quay.id)}
-            now={now}
-          />
-        )}
       </div>
     </div>
   );

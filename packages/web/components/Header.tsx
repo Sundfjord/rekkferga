@@ -166,7 +166,12 @@ export default function Header() {
     : null;
 
   return (
-    <div className="flex items-center justify-between px-4 lg:px-6 py-3">
+    // The blue header is as wide as the page's centred column (app/page.tsx). On a phone that's
+    // the full width; once the column is narrower than the window, its bottom corners round off.
+    <div
+      className="mx-auto flex w-full max-w-3xl items-center justify-between p-4 lg:p-6 md:rounded-b-[24px]"
+      style={{ backgroundColor: "var(--background)" }}
+    >
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"

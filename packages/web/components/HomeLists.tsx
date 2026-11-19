@@ -27,7 +27,7 @@ export const ROW = "flex min-h-[64px] w-full cursor-pointer items-center gap-3 p
 export const ROW_NAME = "truncate text-[17px] font-bold leading-tight";
 export const ROW_SUB = "truncate text-[15px] leading-snug";
 
-/** An icon in a tinted square, echoing the band's round buttons; marks what kind of row it is. */
+/** An icon in a tinted square; marks what kind of row it is. */
 export function IconTile({ children }: { children: React.ReactNode }) {
   return (
     <span
