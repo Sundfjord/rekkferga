@@ -38,7 +38,7 @@ First-time setup: `./scripts/setup.sh`. The API has no automated tests yet.
 **Quay-centric**: the user picks a ferry quay (or a destination, resolved to the first ferry quay on the route) and sees the margin between their estimated arrival and upcoming departures.
 
 API endpoints:
-- `GET /quays` — committed Vegvesen NVDB snapshot (`packages/api/data/quays.json`, ~366 quays). `id` = EnTur NSR stop-place id; `relatedQuayIds` = destination quays. Refreshed monthly by `.github/workflows/refresh-quays.yml` → `scripts/refresh_quays.py`.
+- `GET /quays` — committed Vegvesen NVDB snapshot (`packages/api/data/quays.json`, ~366 quays). `id` = EnTur NSR stop-place id; `relatedQuayIds` = destination quays; `roadCategory` (E/R/F/K) and `dailyDepartures` (from `data/quay_departures.json`, EnTur, average over a week) feed the quay suggestions. Both files are refreshed monthly by `.github/workflows/refresh-quays.yml` → `packages/api/scripts/refresh_quays.py`.
 - `GET /quay/route` — HERE Routing traffic-aware drive duration plus the usual-traffic duration (`{durationSeconds, typicalDurationSeconds}`); clients rate traffic with `trafficLevel` in `shared/utils`.
 - `GET /quays/next?ids=…&from=lat,lng` — batch: next few departures + drive time per quay (the user's favourites), fetched in parallel.
 - `GET /quay/departures` — live from EnTur, margins computed, labeled by destination quay. `arrivalTime` optional (omitted → no margins); `limit` 1–12 (default 4).

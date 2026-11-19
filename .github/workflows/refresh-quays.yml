@@ -34,11 +34,14 @@ jobs:
       - name: Open PR if snapshot changed
         uses: peter-evans/create-pull-request@v6
         with:
-          add-paths: packages/api/data/quays.json
+          add-paths: |
+            packages/api/data/quays.json
+            packages/api/data/quay_departures.json
           branch: chore/refresh-quays
           commit-message: "chore(quays): refresh ferry-quay snapshot from Vegvesen"
           title: "chore(quays): refresh ferry-quay snapshot"
           body: |
             Automated refresh of `packages/api/data/quays.json` from
-            `ferry.atlas.vegvesen.no/quays`. Review the diff for added/removed quays
+            `ferry.atlas.vegvesen.no/quays`, and of the daily departure counts in
+            `packages/api/data/quay_departures.json` from EnTur. Review the diff for added/removed quays
             or changed coordinates before merging.

@@ -39,6 +39,8 @@ export interface Quay {
   longitude: number;
   relatedQuayIds: string[]; // NSR ids of connected (destination) quays
   subName?: string;
+  roadCategory?: string | null; // road class the crossing carries: E(uropa), R(iks), F(ylke), K(ommunal)
+  dailyDepartures?: number | null; // average departures per day over a week
 }
 
 export interface QuayRoute {
