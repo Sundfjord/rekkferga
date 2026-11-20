@@ -41,16 +41,19 @@
   --traffic-moderate: #B45309;
   --traffic-heavy:    #B91C1C;
 
-  /* ── Page backdrop (SeaBackground): low contrast against --surface-tint ── */
-  --deco-far: #E3EEF9;
-  --deco-wave-1: #E2EFFB;
-  --deco-wave-2: #D8E8F7;
-  --deco-wave-3: #CDE2F4;
-  --deco-land: #D7E7F6;
-  --deco-shape: #BDD5EC;
+  /* ── Page backdrop (SeaBackground): low contrast against --surface-tint; the sun is light-only, the moon dark-only ── */
+  --deco-far: #DAE8F7;
+  --deco-wave-1: #DAEAF9;
+  --deco-wave-2: #CDE2F5;
+  --deco-wave-3: #BFD9F1;
+  --deco-land: #CCE0F3;
+  --deco-shape: #AECBE7;
   --deco-lamp: #F5C06A;
-  --deco-beam: rgba(245, 192, 106, 0.30);
-  --deco-gull: #B5CEE6;
+  --deco-beam: rgba(245, 192, 106, 0.38);
+  --deco-gull: #9FBEDD;
+  --deco-sun: #FBD58A;
+  --deco-cloud: #DFEBF8;
+  --deco-glow: rgba(251, 213, 138, 0.35);
 }
 
 .dark {
@@ -67,15 +70,18 @@
   --traffic-moderate: #FACC15;
   --traffic-heavy:    #F87171;
 
-  --deco-far: #1D2B47;
-  --deco-wave-1: #1E2E4C;
-  --deco-wave-2: #213353;
-  --deco-wave-3: #25395C;
-  --deco-land: #1F2F4E;
-  --deco-shape: #2B3F67;
+  --deco-far: #1F3050;
+  --deco-wave-1: #213457;
+  --deco-wave-2: #253A61;
+  --deco-wave-3: #2A426B;
+  --deco-land: #223558;
+  --deco-shape: #324B78;
   --deco-lamp: #F5C06A;
-  --deco-beam: rgba(245, 192, 106, 0.13);
-  --deco-gull: #2E4470;
+  --deco-beam: rgba(245, 192, 106, 0.17);
+  --deco-gull: #3B5586;
+  --deco-moon: #8EA6CC;
+  --deco-cloud: #22355A;
+  --deco-glow: rgba(142, 166, 204, 0.14);
 }
 
 @theme inline {
@@ -164,8 +170,26 @@ body {
 
 .deco-beam { animation: deco-beam 7s ease-in-out infinite; }
 
+/* Page backdrop: gulls drift a few pixels, each group on its own delay. */
+@keyframes gull-glide {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(6px, -3px); }
+}
+
+.gull-glide { animation: gull-glide 9s ease-in-out infinite; }
+
+/* Page backdrop: clouds drift slowly sideways and back. */
+@keyframes cloud-drift {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(14px); }
+}
+
+.cloud-drift { animation: cloud-drift 40s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .scene-bob,
   .ferry-sail,
+  .gull-glide,
+  .cloud-drift,
   .deco-beam { animation: none; }
 }

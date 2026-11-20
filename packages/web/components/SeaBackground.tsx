@@ -2,16 +2,51 @@ import Image from "next/image";
 import { memo, useId } from "react";
 
 /**
- * Subtle maritime backdrop behind the ferry board: a distant mountain line, a headland with a
- * lighthouse, a ferry on the horizon and layered waves along the bottom edge. Low-contrast
+ * Subtle maritime backdrop behind the ferry board: a sun (moon in dark mode), clouds, a distant
+ * mountain line, a headland with a lighthouse, gulls, a ferry on the horizon and layered waves
+ * along the bottom edge. Low-contrast
  * `--deco-*` tokens keep it in the background; on the start page it fills the empty space,
  * in the quay view and drive mode the cards mostly cover it. Each piece is positioned on its
  * own so the scene works at any width (waves tile, the rest is anchored).
  */
+/** A pair of gulls (or one), as stroked wing curves in the gull colour. */
+function Gulls({ className, delay, single = false }: { className: string; delay: number; single?: boolean }) {
+  return (
+    <svg
+      className={`gull-glide absolute ${className}`}
+      style={{ animationDelay: `${delay}s` }}
+      viewBox={single ? "0 0 22 14" : "0 0 44 20"}
+      fill="none"
+      stroke="var(--deco-gull)"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+    >
+      {single ? (
+        <path d="M1 9 q5 -5 10 0 q5 -5 10 0" />
+      ) : (
+        <>
+          <path d="M2 12 q5 -5 10 0 q5 -5 10 0" />
+          <path d="M26 5 q4 -4 8 0 q4 -4 8 0" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/** A small puffy cloud in the cloud colour. */
+function Cloud({ className, delay }: { className: string; delay: number }) {
+  return (
+    <svg className={`cloud-drift absolute ${className}`} style={{ animationDelay: `${delay}s` }} viewBox="0 -2 64 28">
+      <path d="M8 24 a8 8 0 0 1 1 -16 a12 12 0 0 1 22 -3 a10 10 0 0 1 17 4 a8 8 0 0 1 8 15 Z" fill="var(--deco-cloud)" />
+    </svg>
+  );
+}
+
 function SeaBackground() {
   // SVG ids are document-global, so the pattern/gradient ids are made unique per instance.
   const uid = useId();
   const far = `${uid}-far`, mid = `${uid}-mid`, near = `${uid}-near`, beam = `${uid}-beam`;
+  const glow = `${uid}-glow`, crescent = `${uid}-crescent`;
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -55,18 +90,36 @@ function SeaBackground() {
         <polygon points="193,21 207,21 200,14" fill="var(--deco-shape)" />
       </svg>
 
-      {/* Gulls */}
-      <svg
-        className="absolute bottom-[194px] right-[38%] w-[44px] lg:bottom-[230px] lg:w-[56px]"
-        viewBox="0 0 44 20"
-        fill="none"
-        stroke="var(--deco-gull)"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-      >
-        <path d="M2 12 q5 -5 10 0 q5 -5 10 0" />
-        <path d="M26 5 q4 -4 8 0 q4 -4 8 0" />
+      {/* Sun (light) / moon (dark), low in the sky behind the mountains' left half. */}
+      <svg className="absolute bottom-[205px] left-[8%] w-[76px] lg:bottom-[250px] lg:left-[12%] lg:w-[96px]" viewBox="0 0 100 100">
+        <defs>
+          <radialGradient id={glow}>
+            <stop offset="0.45" stopColor="var(--deco-glow)" />
+            <stop offset="1" stopColor="var(--deco-glow)" stopOpacity="0" />
+          </radialGradient>
+          <mask id={crescent}>
+            <rect width="100" height="100" fill="white" />
+            <circle cx="60" cy="42" r="17" fill="black" />
+          </mask>
+        </defs>
+        <circle cx="50" cy="50" r="50" fill={`url(#${glow})`} />
+        <circle cx="50" cy="50" r="20" fill="var(--deco-sun)" className="dark:hidden" />
+        <circle cx="50" cy="50" r="18" fill="var(--deco-moon)" mask={`url(#${crescent})`} className="hidden dark:block" />
       </svg>
+
+      {/* Clouds: a few small ones scattered over the sky, drifting slowly. Placed clear of the
+          gulls, the sun and the lighthouse and its beam at phone and desktop widths. */}
+      <Cloud className="bottom-[236px] left-[30%] w-[64px] lg:bottom-[290px] lg:left-[42%] lg:w-[84px]" delay={0} />
+      <Cloud className="bottom-[300px] right-[28%] w-[44px] lg:bottom-[370px] lg:w-[58px]" delay={-14} />
+      <Cloud className="bottom-[214px] right-[20%] w-[50px] lg:bottom-[265px] lg:w-[64px]" delay={-26} />
+      <Cloud className="hidden lg:bottom-[340px] lg:left-[4%] lg:block lg:w-[70px]" delay={-8} />
+
+      {/* Gulls: a few groups at different distances (smaller and fainter further off), drifting
+          slightly out of step. The last one only fits on wide screens. */}
+      <Gulls className="bottom-[194px] right-[38%] w-[44px] lg:bottom-[230px] lg:w-[56px]" delay={0} />
+      <Gulls className="bottom-[262px] right-[12%] w-[22px] lg:bottom-[320px] lg:w-[28px]" delay={-3} single />
+      <Gulls className="bottom-[150px] left-[34%] w-[28px] opacity-70 lg:bottom-[175px] lg:w-[34px]" delay={-5} />
+      <Gulls className="hidden lg:bottom-[300px] lg:left-[30%] lg:block lg:w-[40px]" delay={-7} />
 
       {/* Waves: three tiled layers, back to front. A gentle swell: the waterline (top of the
           back layer) sits 16px below the top, i.e. 80px up (lg: 92px); the scene sits on it. */}
