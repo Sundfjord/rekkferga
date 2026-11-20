@@ -2,7 +2,6 @@
   "general": {
     "back": "Back",
     "cancel": "Cancel",
-    "now": "Now",
     "via": "via",
     "unavailable": "Unavailable",
     "updatedAt": "Updated {time}",
@@ -57,9 +56,7 @@
   "drive": {
     "allDepartures": "All departures",
     "marginOnArrival": "Margin on arrival",
-    "timelineTitle": "From here to the ferry",
     "planB": "Plan B",
-    "progressAria": "{minutes} minutes to the quay, arriving {arrival}. Ferry leaves {departure}.",
     "rush": {
       "-5to-3": [
         "This one will probably leave without you.",
@@ -127,8 +124,8 @@
     "open": "How Rekkferga works",
     "title": "What's the point of Rekkferga?",
     "intro": "Rekkferga uses traffic data and ferry routes to calculate the time margin from your current location to a given quay.",
-    "step1": "Allow Rekkferga access to your position. It is only used to calculate drive times to quays.",
-    "step2": "Search for and select a ferry quay or your destination.",
-    "step3": "See the departures and your time margin on arrival to the quay."
+    "step1": "Give Rekkferga access to your location.",
+    "step2": "Search for and select a ferry quay or a place.",
+    "step3": "See your time margin to the next relevant departure."
   }
 }

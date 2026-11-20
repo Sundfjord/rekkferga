@@ -1,5 +1,5 @@
 import type { DepartureOption } from "@shared/types";
-import { formatDuration, marginTier, type Language } from "@shared/utils";
+import { DEPARTURE_VISIBILITY_MINUTES, formatDuration, marginTier, type Language } from "@shared/utils";
 import { shortQuayName } from "@/lib/quays";
 
 export type Tier = "safe" | "tight" | "missed" | "none";
@@ -39,15 +39,19 @@ export const servesQuay = (d: DepartureOption, quayId: string) =>
 /**
  * Margins recomputed in the browser from one arrival time, so every view shows the same
  * number and it moves with the clock instead of jumping at each poll. Whole minutes,
- * rounded down (a 30-second miss shows −1, never 0). Without an arrival the server's
- * values (null without a position) are kept.
+ * rounded down (a 30-second miss shows −1, never 0), as in the API. Departures whose margin
+ * has passed DEPARTURE_VISIBILITY_MINUTES are dropped, the same cut-off the API applies, so
+ * one doesn't linger at −6 until the next poll. Without an arrival the server's values (null
+ * without a position) are kept.
  */
 export function withLiveMargins(departures: DepartureOption[], arrivalAt: Date | null): DepartureOption[] {
   if (!arrivalAt) return departures;
-  return departures.map((d) => ({
-    ...d,
-    marginMinutes: Math.floor((Date.parse(d.expectedDepartureTime) - arrivalAt.getTime()) / 60_000),
-  }));
+  return departures
+    .map((d) => ({
+      ...d,
+      marginMinutes: Math.floor((Date.parse(d.expectedDepartureTime) - arrivalAt.getTime()) / 60_000),
+    }))
+    .filter((d) => d.marginMinutes >= DEPARTURE_VISIBILITY_MINUTES);
 }
 
 /** The next departure you can make (margin ≥ 0), else the first — mirrors the API's pick. */
@@ -71,7 +75,8 @@ export function splitMargin(minutes: number, language: Language): { value: strin
  * still make (tight counts). Null when the pick is comfortable or nothing later fits.
  */
 export function planB(departures: DepartureOption[], selected: DepartureOption): DepartureOption | null {
-  if (selected.marginMinutes === null || selected.marginMinutes > 10) return null;
+  // Same line as the tight tier (marginTier): offered whenever the pick isn't green.
+  if (selected.marginMinutes === null || selected.marginMinutes > 5) return null;
   const after = Date.parse(selected.expectedDepartureTime);
   return (
     departures.find(
@@ -80,5 +85,3 @@ export function planB(departures: DepartureOption[], selected: DepartureOption):
   );
 }
 
-export const minutesUntil = (iso: string | Date, now: number) =>
-  ((typeof iso === "string" ? Date.parse(iso) : iso.getTime()) - now) / 60_000;

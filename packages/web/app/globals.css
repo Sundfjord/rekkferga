@@ -42,7 +42,7 @@
 
   /* ── Margin tiers ─────────────────────────────────────────
      One strong colour per tier, used everywhere a departure is shown
-     (cards, timeline, drive mode, Plan B), always with white text. */
+     (cards, favourites, drive mode, Plan B), always with white text. */
   --margin-safe:   #15803D;
   --margin-tight:  #B45309;
   --margin-missed: #B91C1C;

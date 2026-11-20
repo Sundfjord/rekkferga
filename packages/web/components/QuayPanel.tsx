@@ -188,8 +188,6 @@ export default function QuayPanel({
             key={selectedKey}
             departure={selected}
             departures={filtered}
-            arrivalAt={arrivalAt}
-            now={now}
             onSelect={select}
             onClose={backToOverview}
             closeLabel={t("drive.allDepartures", { quay: quay.name })}

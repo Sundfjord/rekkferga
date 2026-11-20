@@ -1,4 +1,5 @@
 import logging
+import math
 import requests
 from datetime import datetime
 
@@ -208,10 +209,11 @@ def serialise_journey(pattern):
 def compute_margin_minutes(departure_time_str, arrival_time_str):
     """
     Signed margin in minutes: positive = arrives before departure (buffer), negative = will miss.
+    Rounded down, like the web app's live margins: a 30-second miss is -1, never 0.
     """
     try:
         dep = datetime.fromisoformat(departure_time_str.replace("Z", "+00:00"))
         arr = datetime.fromisoformat(arrival_time_str.replace("Z", "+00:00"))
-        return int((dep - arr).total_seconds() / 60)
+        return math.floor((dep - arr).total_seconds() / 60)
     except (ValueError, AttributeError):
         return None

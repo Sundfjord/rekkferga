@@ -2,7 +2,6 @@
   "general": {
     "back": "Tilbake",
     "cancel": "Avbryt",
-    "now": "Nå",
     "via": "via",
     "unavailable": "Utilgjengelig",
     "updatedAt": "Oppdatert {time}",
@@ -57,9 +56,7 @@
   "drive": {
     "allDepartures": "Alle avganger fra {quay}",
     "marginOnArrival": "Margin ved ankomst",
-    "timelineTitle": "Herfra til ferja",
     "planB": "Plan B",
-    "progressAria": "{minutes} minutter igjen til kaia, fremme {arrival}. Ferja går {departure}.",
     "rush": {
       "-5to-3": [
         "Denne går nok uten deg.",
@@ -127,8 +124,8 @@
     "open": "Hvordan Rekkferga fungerer",
     "title": "Hva er poenget med Rekkferga?",
     "intro": "Rekkferga bruker trafikkdata og fergeruter til å beregne tidsmarginen du har fra der du er nå til en gitt fergeavgang.",
-    "step1": "Gi Rekkferga tilgang til posisjonen din. Posisjonen blir bare brukt til å regne ut kjøretid.",
-    "step2": "Søk etter og velg en fergekai eller stedet du skal til.",
-    "step3": "Se avgangene og tidsmarginen du har når du ankommer kaien."
+    "step1": "Gi Rekkferga tilgang til posisjonen din.",
+    "step2": "Søk etter og velg en fergekai eller et sted.",
+    "step3": "Se tidsmarginen til neste relevante avgang."
   }
 }

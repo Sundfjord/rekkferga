@@ -80,8 +80,15 @@ export const formatTime = (iso: string): string => {
 // Margins
 // ---------------------------------------------------------------------------
 
+/**
+ * A departure stays listed while its margin is this many minutes or better (-5: a few minutes
+ * late may still be catchable). Same value as _VISIBILITY_THRESHOLD_MINUTES in the API.
+ */
+export const DEPARTURE_VISIBILITY_MINUTES = -5;
+
+/** Margin colour: more than 5 min is safe (green), 0–5 tight (yellow), below 0 missed (red). */
 export function marginTier(minutes: number): "safe" | "tight" | "missed" {
-  if (minutes > 10) return "safe";
+  if (minutes > 5) return "safe";
   if (minutes >= 0) return "tight";
   return "missed";
 }

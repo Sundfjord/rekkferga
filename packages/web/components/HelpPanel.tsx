@@ -24,16 +24,9 @@ export default function HelpPanel() {
       <h2 className="text-[18px] font-bold leading-tight text-gray-900 dark:text-gray-100">{t("help.title")}</h2>
       <p className="mt-1.5 text-[16px] leading-snug text-gray-500 dark:text-gray-400">{t("help.intro")}</p>
       <ol className="mt-3.5 flex flex-col gap-3">
-        <Step n={1}>{t("help.step1")}</Step>
-        <Step n={2}>{t("help.step2")}</Step>
-        <Step n={3}>
-          {t("help.step3")}{" "}
-          <span className="ml-1 inline-flex translate-y-[1px] gap-1" aria-hidden>
-            {(["safe", "tight", "missed"] as const).map((tier) => (
-              <span key={tier} className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: `var(--margin-${tier})` }} />
-            ))}
-          </span>
-        </Step>
+        {[1, 2, 3].map((s) =>
+          <Step key={s} n={s}>{t(`help.step${s}`)}</Step>
+        )}
       </ol>
     </div>
   );

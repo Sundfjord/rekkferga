@@ -6,6 +6,8 @@ from util import format_datetime_for_api
 
 # Departures with margin below this threshold are excluded from the response.
 # See docs/business-rules.md — "Departure visibility window".
+# Departures with a worse margin are dropped. Same value as DEPARTURE_VISIBILITY_MINUTES in
+# shared/utils, which the web app applies as margins tick down between polls.
 _VISIBILITY_THRESHOLD_MINUTES = -5
 
 
