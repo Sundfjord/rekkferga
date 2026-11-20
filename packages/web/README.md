@@ -1,111 +1,42 @@
 # Rekkferga Web
 
-A Next.js web application for ferry information and route planning, designed with a similar feel to the Fergo mobile app.
+The ferry board at [rekkferga.no](https://rekkferga.no): pick a ferry quay (or a place, resolved
+to the first quay on the way) and see the margin between your estimated arrival and the next
+departures.
 
-## Features
-
-- **Header Component**: Responsive header with logo that adapts to light/dark themes
-- **Theme System**: Automatic theme switching based on system preferences
-- **Responsive Design**: Mobile-first design with Tailwind CSS
-- **Norwegian Language**: Interface in Norwegian (Nynorsk/Bokmål)
-
-## Project Structure
-
-```
-rekkferga-web/
-├── app/
-│   ├── layout.tsx          # Root layout with Header and ThemeProvider
-│   ├── page.tsx            # Home page with ferry information cards
-│   └── globals.css         # Global styles with CSS custom properties
-├── components/
-│   ├── Header.tsx          # Header component with logo and settings
-│   └── ThemeProvider.tsx   # Theme context provider
-├── public/
-│   ├── logo-light.png      # Light theme logo
-│   └── logo-dark.png       # Dark theme logo
-└── package.json
-```
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18.18.0 or higher (required for Next.js 15)
-- npm or yarn
-
-### Installation
-
-1. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-2. Set up environment variables:
-
-   ```bash
-   # Create .env.local file
-   NEXT_PUBLIC_API_URL=your_api_url_here
-   ```
-
-3. Run the development server:
-
-   ```bash
-   npm run dev
-   ```
-
-4. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-## Design System
-
-The app uses a design system inspired by the Fergo mobile app with:
-
-- **Primary Colors**: Material Design Blue (#1976d2)
-- **Secondary Colors**: Material Design Orange (#ff9800)
-- **Theme Support**: Light and dark mode with system preference detection
-- **Typography**: Geist Sans and Geist Mono fonts
-- **Spacing**: Consistent spacing using Tailwind CSS utilities
-
-## Components
-
-### Header
-
-- Centered logo that adapts to theme
-- Optional settings button (gear icon)
-- Responsive design with proper spacing
-
-### ThemeProvider
-
-- Wraps the app with theme context
-- Supports light, dark, and system themes
-- Automatic theme switching
-
-## Styling
-
-The app uses Tailwind CSS v4 with CSS custom properties for theming:
-
-- CSS variables for colors and spacing
-- Responsive design utilities
-- Hover effects and transitions
-- Consistent component styling
+Next.js 15 (App Router, React 19) with Tailwind CSS v4, built as a **static export** (`out/`) and
+served by a Cloudflare Worker as static assets (`wrangler.jsonc`). There is no Next.js server:
+no API routes, server actions or image optimisation. Live data comes from the Flask API in
+`packages/api`.
 
 ## Development
 
-- **TypeScript**: Full TypeScript support
-- **ESLint**: Code quality and consistency
-- **Tailwind CSS**: Utility-first CSS framework
-- **Next.js 15**: Latest React framework with App Router
-
-## Building for Production
+Run from the repository root (see the root `CLAUDE.md` for the full command list):
 
 ```bash
-npm run build
-npm start
+npm run dev:web        # Next.js on :3000
+npm run dev:api        # the API it talks to, on :5000
+npm run check          # vitest + web lint + web type-check
 ```
 
-## Contributing
+The API URL comes from `NEXT_PUBLIC_API_URL` in `packages/web/.env.local` (copy `.env.example`).
+It is inlined when the dev server starts, so restart `dev:web` after changing it.
 
-1. Follow the existing code style and patterns
-2. Use TypeScript for all new components
-3. Maintain the design system consistency
-4. Test both light and dark themes
+## Layout
+
+| Path | What |
+|---|---|
+| `app/` | `layout.tsx` (providers, header), `page.tsx` (the ferry board), `globals.css` (design tokens) |
+| `components/` | UI: `QuayPanel`, `DriveMode`, `DepartureCard`, `HomeLists`, `SearchResults`, `List` (shared list parts), `icons` |
+| `hooks/` | Data and device state: position, drive times, departures polling, favourites' next departures, place search |
+| `lib/` | Pure logic: margin tiers, Plan B, departure identity (`departures.ts`), quay names, view transitions |
+| `contexts/` | Language and favourites (both stored in `localStorage`) |
+
+Shared types, utilities, API clients and the en/no/nn strings live in `/shared`.
+
+## Styling
+
+Colours are CSS variables in `app/globals.css`, redefined under `.dark` (next-themes puts the
+class on `<html>`). The ones used from markup are exposed to Tailwind (`bg-surface`,
+`text-text-secondary`, `shadow-raised`, …); the tier colours (`--margin-*`) are applied inline
+because they depend on data.
