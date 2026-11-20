@@ -21,7 +21,7 @@ npm run dev:api    # Flask on :5000 (no auto-reload — restart after API edits)
 npm run dev:web    # Next.js on :3000
 npm run dev:app    # Expo
 npm run check        # shared tests (vitest) + web lint + web type-check
-npm run test:shared  # vitest over shared/**/*.test.ts
+npm run test:shared  # vitest over shared/ and packages/web/{lib,hooks} (pure logic)
 npm run typecheck:web
 npm run lint:web
 ```
@@ -47,7 +47,7 @@ API endpoints:
 - No database: quays are the snapshot, departures are always live.
 
 Web (`packages/web`, alias `@/*` → `packages/web/*`, `@shared/*` → `shared/*`):
-- `app/page.tsx` — map-free "ferry board": a search pane (title and search field as the page header, then `HomeLists` = live favourites, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time at every width, in a centred `max-w-3xl` column (the header aligns to it). The blue app `Header` (logo, language, theme, help dropdown → `HelpPanel`) sits on top; there is no band below it. `SeaBackground` is a decorative layer behind both panes (`--deco-*` tokens); the start page deliberately has no nearby-quay list so it shows. Below the field: "Suggested for you" chips (`suggestQuays` in `shared/utils/suggestions.ts`: proximity × popularity, skipping the far end of a crossing and existing favourites) and the favourites. While searching, the title hides to give the results room.
+- `app/page.tsx` — map-free "ferry board": a search pane (title and search field as the page header, then `HomeLists` = live favourites, or `SearchResults` = quays + places) and a quay pane (`QuayPanel`). One pane at a time at every width, in a centred `max-w-3xl` column (the header aligns to it). The blue app `Header` (logo, language, theme, help dropdown → `HelpPanel`) sits on top; there is no band below it. `SeaBackground` is a decorative layer behind both panes (`--deco-*` tokens); the start page deliberately has no nearby-quay list so it shows. Below the field: "Suggested for you" chips (`suggestQuays` in `shared/utils/suggestions.ts`: proximity × popularity, skipping the far end of a crossing and existing favourites) and the favourites. The title stays put while searching.
 - `components/QuayPanel.tsx` — a header row (back, quay name, favourite); below it cards with drive time + arrival and traffic, a crossing filter (multi-crossing quays) and `DepartureCard`s; tapping a card switches to `DriveMode`. Tier logic, Plan B and departure identity live in `lib/departures.ts`; tier colours are `--margin-{safe,tight,missed,none}` in `globals.css`.
 - `hooks/usePosition.ts` follows the user (`watchPosition`): `position` per fix, a coarse `location` that moves only after ~1 km (re-sorts/re-fetches key off it), `getPosition` for polls. `hooks/useDriveTimes.ts` — one drive time per quay shared by all views, each with where/when it was measured; the quay view re-fetches it when >3 min old or >1 min old after a 300 m move (`isFresh`). `estimateArrival` keeps the arrival fixed once the user is on the way. Displayed margins are recomputed client-side from that arrival and one shared `useNow` clock (`withLiveMargins` in `lib/departures.ts`), so every view shows the same numbers. Traffic vs usual (`trafficLevel`) colours the drive time in the quay view; `LiveStatus` below it combines traffic and the last update time.
 - `hooks/useQuayDepartures.ts` — margin-adaptive departure polling for the selected quay; refreshes the shared drive time when stale.
