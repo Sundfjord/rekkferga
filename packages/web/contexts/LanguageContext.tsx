@@ -1,10 +1,11 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { Language } from "@shared/utils";
 
 const STORAGE_KEY = "rekkferga-language";
 const DEFAULT_LANG: Language = "no";
+const LANGUAGES: readonly Language[] = ["en", "no", "nn"];
 
 interface LanguageContextType {
   language: Language;
@@ -20,22 +21,30 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLang] = useState<Language>(DEFAULT_LANG);
 
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
-    if (saved && (["en", "no", "nn"] as Language[]).includes(saved)) {
-      setLang(saved);
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
+      if (saved && LANGUAGES.includes(saved)) setLang(saved);
+    } catch {
+      /* storage unavailable — keep the default */
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
-    setLang(lang);
-    localStorage.setItem(STORAGE_KEY, lang);
-  };
+  // Screen readers pick their voice from <html lang>, so it follows the chosen language.
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
-  return (
-    <LanguageContext.Provider value={{ language, setLanguage }}>
-      {children}
-    </LanguageContext.Provider>
-  );
+  const setLanguage = useCallback((lang: Language) => {
+    setLang(lang);
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch {
+      /* storage unavailable — applies to this visit only */
+    }
+  }, []);
+
+  const value = useMemo(() => ({ language, setLanguage }), [language, setLanguage]);
+  return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {

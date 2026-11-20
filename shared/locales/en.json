@@ -10,7 +10,12 @@
     "loadError": "Couldn't fetch data. Check your connection and try again.",
     "retry": "Try again",
     "scheduled": "Scheduled",
-    "newTime": "new time"
+    "newTime": "new time",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
   },
   "favorites": {
     "title": "Favorites",

@@ -9,7 +9,12 @@
     "loadError": "Kunne ikkje hente data. Sjekk nettilkoplinga og prøv igjen.",
     "retry": "Prøv igjen",
     "scheduled": "Planlagt",
-    "newTime": "ny tid"
+    "newTime": "ny tid",
+    "language": "Språk",
+    "theme": "Tema",
+    "themeLight": "Lys",
+    "themeDark": "Mørk",
+    "themeSystem": "System"
   },
   "favorites": {
     "title": "Favorittar",

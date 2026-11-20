@@ -1,52 +1,13 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import HelpPanel from "@/components/HelpPanel";
+import { CheckIcon, ChevronDownIcon, HelpIcon, MonitorIcon, MoonIcon, SunIcon } from "@/components/icons";
 import type { Language } from "@shared/utils";
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
-
-const SunIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-    <path d="M12 4.5a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 4.5ZM18.364 6.343a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 1 1-1.062-1.061l1.061-1.061a.75.75 0 0 1 1.061 0ZM19.5 12a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5a.75.75 0 0 1 .75.75ZM16.243 17.303a.75.75 0 0 1-1.061 0l-1.061-1.06a.75.75 0 1 1 1.06-1.062l1.062 1.061a.75.75 0 0 1 0 1.061ZM12 18a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 12 18ZM7.757 16.243a.75.75 0 0 1 0 1.06l-1.06 1.062a.75.75 0 0 1-1.062-1.061l1.061-1.061a.75.75 0 0 1 1.061 0ZM4.5 12a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 0 1.5h-1.5A.75.75 0 0 1 4.5 12ZM7.757 7.757a.75.75 0 0 1-1.061 0L5.636 6.696a.75.75 0 0 1 1.06-1.061l1.062 1.06a.75.75 0 0 1 0 1.062ZM12 8.25a3.75 3.75 0 1 0 0 7.5 3.75 3.75 0 0 0 0-7.5Z" />
-  </svg>
-);
-
-const MoonIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-    <path fillRule="evenodd" d="M9.528 1.718a.75.75 0 0 1 .162.819A8.97 8.97 0 0 0 9 6a9 9 0 0 0 9 9 8.97 8.97 0 0 0 3.463-.69.75.75 0 0 1 .981.98 10.503 10.503 0 0 1-9.694 6.46c-5.799 0-10.5-4.7-10.5-10.5 0-4.368 2.667-8.112 6.46-9.694a.75.75 0 0 1 .818.162Z" clipRule="evenodd" />
-  </svg>
-);
-
-const MonitorIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 24 24" aria-hidden>
-    <path fillRule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.59V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v9.75c0 .83.672 1.5 1.5 1.5h13.5c.828 0 1.5-.67 1.5-1.5V5.25c0-.828-.672-1.5-1.5-1.5H5.25c-.828 0-1.5.672-1.5 1.5Z" clipRule="evenodd" />
-  </svg>
-);
-
-const CheckIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-    <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
-  </svg>
-);
-
-const ChevronIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-    <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 0 1 1.06.02L10 11.168l3.71-3.938a.75.75 0 1 1 1.08 1.04l-4.25 4.5a.75.75 0 0 1-1.08 0l-4.25-4.5a.75.75 0 0 1 .02-1.06Z" clipRule="evenodd" />
-  </svg>
-);
-
-const HelpIcon = ({ className }: { className?: string }) => (
-  <svg className={className} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" viewBox="0 0 24 24" aria-hidden>
-    <circle cx="12" cy="12" r="9.25" />
-    <path d="M9.5 9.25a2.6 2.6 0 0 1 5.05.85c0 1.75-2.55 2.3-2.55 3.9" />
-    <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
-  </svg>
-);
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -56,9 +17,9 @@ const ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px] text-white/70";
 const MENU_ICON_CLS = "w-4 h-4 sm:w-[18px] sm:h-[18px]";
 
 const THEME_OPTIONS = [
-  { value: "light",  label: "Light",  icon: <SunIcon className={MENU_ICON_CLS} /> },
-  { value: "dark",   label: "Dark",   icon: <MoonIcon className={MENU_ICON_CLS} /> },
-  { value: "system", label: "System", icon: <MonitorIcon className={MENU_ICON_CLS} /> },
+  { value: "light",  labelKey: "general.themeLight",  icon: <SunIcon className={MENU_ICON_CLS} /> },
+  { value: "dark",   labelKey: "general.themeDark",   icon: <MoonIcon className={MENU_ICON_CLS} /> },
+  { value: "system", labelKey: "general.themeSystem", icon: <MonitorIcon className={MENU_ICON_CLS} /> },
 ];
 
 const LANG_OPTIONS: { value: Language; label: string; flag: string; code: string }[] = [
@@ -79,8 +40,8 @@ function DropdownShell({
   children,
 }: {
   trigger: React.ReactNode;
-  /** Accessible name for an icon-only trigger. */
-  label?: string;
+  /** Accessible name (and tooltip) for the trigger; must contain any visible trigger text. */
+  label: string;
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -104,11 +65,10 @@ function DropdownShell({
         title={label}
         aria-expanded={open}
         onClick={() => (open ? onClose() : onOpen())}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors"
-        style={{ backgroundColor: "rgba(255,255,255,0.15)", backdropFilter: "blur(8px)" }}
+        className="flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-[8px] transition-colors"
       >
         {trigger}
-        <ChevronIcon className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && (
@@ -134,7 +94,9 @@ function DropdownItem({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-sm sm:text-base text-left transition-colors
         ${active
           ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-medium"
@@ -154,24 +116,20 @@ type OpenSection = "theme" | "lang" | "help" | null;
 export default function Header() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
+  // The theme is only known in the browser, so the menus render after mount.
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState<OpenSection>(null);
+  const close = useCallback(() => setOpen(null), []);
   const t = useTranslation();
 
   useEffect(() => { setMounted(true); }, []);
 
   const currentLang = LANG_OPTIONS.find((l) => l.value === language) ?? LANG_OPTIONS[1];
-  const currentThemeIcon = mounted
-    ? resolvedTheme === "dark" ? <MoonIcon className={ICON_CLS} /> : <SunIcon className={ICON_CLS} />
-    : null;
 
   return (
     // The blue header is as wide as the page's centred column (app/page.tsx). On a phone that's
     // the full width; once the column is narrower than the window, its bottom corners round off.
-    <div
-      className="mx-auto flex w-full max-w-3xl items-center justify-between p-4 lg:p-6 md:rounded-b-[24px]"
-      style={{ backgroundColor: "var(--background)" }}
-    >
+    <header className="mx-auto flex w-full max-w-3xl items-center justify-between bg-background p-4 lg:p-6 md:rounded-b-[24px]">
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"
@@ -189,36 +147,38 @@ export default function Header() {
                 {currentLang.code}
               </span>
             }
+            label={`${t("general.language")}: ${currentLang.code}`}
             open={open === "lang"}
             onOpen={() => setOpen("lang")}
-            onClose={() => setOpen(null)}
+            onClose={close}
           >
             {LANG_OPTIONS.map((opt) => (
               <DropdownItem
                 key={opt.value}
                 active={language === opt.value}
-                onClick={() => { setLanguage(opt.value); setOpen(null); }}
+                onClick={() => { setLanguage(opt.value); close(); }}
               >
-                <span className="text-base leading-none">{opt.flag}</span>
+                <span className="text-base leading-none" aria-hidden>{opt.flag}</span>
                 <span className="flex-1">{opt.label}</span>
               </DropdownItem>
             ))}
           </DropdownShell>
 
           <DropdownShell
-            trigger={currentThemeIcon}
+            trigger={resolvedTheme === "dark" ? <MoonIcon className={ICON_CLS} /> : <SunIcon className={ICON_CLS} />}
+            label={t("general.theme")}
             open={open === "theme"}
             onOpen={() => setOpen("theme")}
-            onClose={() => setOpen(null)}
+            onClose={close}
           >
             {THEME_OPTIONS.map((opt) => (
               <DropdownItem
                 key={opt.value}
                 active={theme === opt.value}
-                onClick={() => { setTheme(opt.value); setOpen(null); }}
+                onClick={() => { setTheme(opt.value); close(); }}
               >
                 {opt.icon}
-                <span className="flex-1">{opt.label}</span>
+                <span className="flex-1">{t(opt.labelKey)}</span>
               </DropdownItem>
             ))}
           </DropdownShell>
@@ -228,13 +188,13 @@ export default function Header() {
             label={t("help.open")}
             open={open === "help"}
             onOpen={() => setOpen("help")}
-            onClose={() => setOpen(null)}
+            onClose={close}
             panelClassName="w-[min(450px,calc(100vw-32px))]"
           >
             <HelpPanel />
           </DropdownShell>
         </div>
       )}
-    </div>
+    </header>
   );
 }
