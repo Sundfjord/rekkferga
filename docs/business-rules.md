@@ -168,9 +168,13 @@ monthly with the quay snapshot.
 ## Favourites
 
 - At most 20 favourites, stored in the browser.
+- On page load the favourites are fetched once the position is known (or denied, or after 8 s
+  without an answer), so the first answer already has drive times and margins. Until it is in,
+  each favourite shows as a skeleton card.
 - A favourite that matches a quay opens that quay. Older favourites saved as places (from
   before the app became quay-centric) are resolved like a place search.
 - The batch endpoint for favourites (`/quays/next`) accepts at most 20 quays, matching the
   favourite limit.
 
-*Code*: `MAX_FAVORITES` (`shared/utils/favorites.ts`), `MAX_NEXT_QUAYS` (`packages/api/app.py`).
+*Code*: `MAX_FAVORITES` (`shared/utils/favorites.ts`), `MAX_NEXT_QUAYS` (`packages/api/app.py`),
+`useFavoriteNext`, `usePosition` (`settled`), `HomeLists`.

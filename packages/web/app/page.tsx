@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useQuays } from "@/hooks/useQuays";
 import { estimateArrival, useDriveTimes } from "@/hooks/useDriveTimes";
 import { usePosition } from "@/hooks/usePosition";
@@ -50,7 +50,7 @@ export default function Home() {
 
   // `position` follows every GPS fix; `userLocation` only moves after ~1 km (re-sorts and
   // re-fetches key off it), and polls read the latest fix through `getPosition`.
-  const { position, location: userLocation, getPosition } = usePosition();
+  const { position, location: userLocation, settled: positionSettled, getPosition } = usePosition();
 
   const quaysById = useMemo(() => new Map(quays.map((q) => [q.id, q])), [quays]);
   const favoriteQuayIds = useMemo(() => favorites.filter((f) => quaysById.has(f.id)).map((f) => f.id), [favorites, quaysById]);
@@ -59,7 +59,16 @@ export default function Home() {
   const now = useNow();
   const driveTimes = useDriveTimes();
   const arrivalFor = useCallback((id: string) => estimateArrival(now, driveTimes.get(id), position), [now, driveTimes, position]);
-  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, getPosition, driveTimes.put);
+  const favoriteNext = useFavoriteNext(favoriteQuayIds, userLocation, getPosition, driveTimes.put, positionSettled);
+  // Favourites show as skeletons until their first full load: the quays are known (else every
+  // favourite looks like a legacy place) and the departures and drive times are in. After that,
+  // later loads (a new favourite) only placeholder the cards that lack data.
+  const [favoritesShown, setFavoritesShown] = useState(false);
+  const favoritesReady = favoritesShown || ((quays.length > 0 || quaysError) && favoriteNext.loaded);
+  // Favourites are read from storage after mount, so only latch once there are some.
+  useEffect(() => {
+    if (favoritesReady && favorites.length > 0) setFavoritesShown(true);
+  }, [favoritesReady, favorites.length]);
   const places = useDestinationSearch(searchOpen ? query : "", userLocation);
 
   const quay = selection?.quay ?? null;
@@ -223,6 +232,7 @@ export default function Home() {
                 favorites={favorites}
                 quaysById={quaysById}
                 favoriteNext={favoriteNext}
+                ready={favoritesReady}
                 arrivalFor={arrivalFor}
                 now={now}
                 onSelectQuay={selectQuay}

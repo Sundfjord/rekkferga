@@ -95,12 +95,14 @@ function FavoriteCard({
 }
 
 /**
- * Home: favourites with their next reachable departure (live).
+ * Home: favourites with their next reachable departure (live). Until the first full load is
+ * in (`ready`), one skeleton card per favourite, so cards never show half their data.
  */
 export default function HomeLists({
   favorites,
   quaysById,
   favoriteNext,
+  ready,
   arrivalFor,
   now,
   onSelectQuay,
@@ -109,6 +111,8 @@ export default function HomeLists({
   favorites: SavedDestination[];
   quaysById: Map<string, Quay>;
   favoriteNext: FavoriteNext;
+  /** The first full load is in; until then one skeleton card per favourite. */
+  ready: boolean;
   /** Estimated arrival per quay from the shared drive time (useDriveTimes); null when unknown. */
   arrivalFor: (quayId: string) => Date | null;
   /** Shared clock, so margins match the quay view exactly. */
@@ -122,44 +126,54 @@ export default function HomeLists({
   return (
     <div className="flex flex-col gap-2 sm:gap-2.5">
       <SectionTitle>{t("favorites.title")}</SectionTitle>
-      {favoriteNext.error && <ErrorNotice message={t("home.favoritesError")} onRetry={favoriteNext.retry} />}
-      {/* One grid for all favourites: each card spans both columns (subgrid), so the end caps
-          share the second column and are all as wide as the widest destination, capped at 60%
-          of the list. */}
-      <div className="grid grid-cols-[minmax(0,1fr)_fit-content(60%)] gap-y-2 sm:gap-y-2.5">
-        {favorites.map((f) => {
-          const quay = quaysById.get(f.id);
-          if (!quay) {
-            // A saved place from before the quay-centric redesign: resolve it like a search.
-            return (
-              <button
-                key={f.id}
-                type="button"
-                onClick={() => onSelectPlace(f)}
-                className={`${ROW} col-span-2 rounded-[18px] bg-surface shadow-raised`}
-              >
-                <IconTile>
-                  <PlaceIcon />
-                </IconTile>
-                <RowText name={f.name} sub={f.subName} />
-              </button>
-            );
-          }
-          const next = favoriteNext.byId.get(quay.id);
-          return (
-            <FavoriteCard
-              key={f.id}
-              quay={quay}
-              next={next}
-              loaded={favoriteNext.loaded}
-              failed={favoriteNext.error && !next}
-              arrivalAt={arrivalFor(quay.id)}
-              now={now}
-              onSelect={() => onSelectQuay(quay)}
-            />
-          );
-        })}
-      </div>
+      {!ready ? (
+        <div role="status" aria-busy className="flex flex-col gap-2 sm:gap-2.5">
+          {favorites.map((f) => (
+            <div key={f.id} className="h-[56px] animate-pulse rounded-[18px] bg-surface shadow-raised sm:h-[64px]" />
+          ))}
+        </div>
+      ) : (
+        <>
+          {favoriteNext.error && <ErrorNotice message={t("home.favoritesError")} onRetry={favoriteNext.retry} />}
+          {/* One grid for all favourites: each card spans both columns (subgrid), so the end caps
+              share the second column and are all as wide as the widest destination, capped at 60%
+              of the list. */}
+          <div className="grid grid-cols-[minmax(0,1fr)_fit-content(60%)] gap-y-2 sm:gap-y-2.5">
+            {favorites.map((f) => {
+              const quay = quaysById.get(f.id);
+              if (!quay) {
+                // A saved place from before the quay-centric redesign: resolve it like a search.
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => onSelectPlace(f)}
+                    className={`${ROW} col-span-2 rounded-[18px] bg-surface shadow-raised`}
+                  >
+                    <IconTile>
+                      <PlaceIcon />
+                    </IconTile>
+                    <RowText name={f.name} sub={f.subName} />
+                  </button>
+                );
+              }
+              const next = favoriteNext.byId.get(quay.id);
+              return (
+                <FavoriteCard
+                  key={f.id}
+                  quay={quay}
+                  next={next}
+                  loaded={favoriteNext.loaded}
+                  failed={favoriteNext.error && !next}
+                  arrivalAt={arrivalFor(quay.id)}
+                  now={now}
+                  onSelect={() => onSelectQuay(quay)}
+                />
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

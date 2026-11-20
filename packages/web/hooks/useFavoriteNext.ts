@@ -11,7 +11,10 @@ const REFRESH_MS = 120_000;
 
 export interface FavoriteNext {
   byId: Map<string, QuayNext>;
-  /** True once a load has finished (even a failed one), so cards can stop showing a placeholder. */
+  /**
+   * True once a load for the current set of quays has finished (even a failed one), so cards can
+   * stop showing a placeholder. False again while a changed set (a new favourite) loads.
+   */
   loaded: boolean;
   /** The latest load failed. Earlier results (if any) are kept in `byId`. */
   error: boolean;
@@ -21,24 +24,32 @@ export interface FavoriteNext {
 /**
  * Next few departures per favourite quay, keyed by quay id; refreshed every 2 min and when the
  * coarse `location` changes. Drive times are measured from the latest fix (`getPosition`) and
- * written to the shared store, so the quay view reuses them.
+ * written to the shared store, so the quay view reuses them. Nothing loads until `ready` (the
+ * position has settled), so the first load already has drive times and margins.
  */
 export function useFavoriteNext(
   quayIds: string[],
   location: LatLng | null,
   getPosition: () => LatLng | null,
   putDrive: DriveTimes["put"],
+  ready: boolean,
 ): FavoriteNext {
-  const [state, setState] = useState<Omit<FavoriteNext, "retry">>({ byId: new Map(), loaded: false, error: false });
+  // `key`: which quays the state was loaded for, so `loaded` is per set of quays.
+  const [state, setState] = useState<{ key: string | null; byId: Map<string, QuayNext>; error: boolean }>({
+    key: null,
+    byId: new Map(),
+    error: false,
+  });
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
   const key = quayIds.join(",");
 
   useEffect(() => {
     if (!API_URL || !key) {
-      setState({ byId: new Map(), loaded: true, error: false });
+      setState({ key, byId: new Map(), error: false });
       return;
     }
+    if (!ready) return;
     const apiUrl = API_URL;
     let cancelled = false;
     const load = async () => {
@@ -51,9 +62,9 @@ export function useFavoriteNext(
             putDrive(r.quayId, { seconds: r.driveSeconds, typicalSeconds: r.typicalDriveSeconds ?? null, from });
           }
         }
-        setState({ byId: new Map(rows.map((r) => [r.quayId, r])), loaded: true, error: false });
+        setState({ key, byId: new Map(rows.map((r) => [r.quayId, r])), error: false });
       } catch {
-        if (!cancelled) setState((s) => ({ ...s, loaded: true, error: true }));
+        if (!cancelled) setState((s) => ({ ...s, key, error: true }));
       }
     };
     load();
@@ -62,7 +73,7 @@ export function useFavoriteNext(
       cancelled = true;
       clearInterval(id);
     };
-  }, [key, location, getPosition, putDrive, attempt]);
+  }, [key, location, getPosition, putDrive, ready, attempt]);
 
-  return { ...state, retry };
+  return { byId: state.byId, loaded: state.key === key, error: state.error, retry };
 }
