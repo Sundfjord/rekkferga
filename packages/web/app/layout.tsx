@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -25,6 +25,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Rekkferga - Finn din kai. Rekk ferga.",
   description: "Rekkferga - Finn din kai. Rekk ferga.",
+  // favicon.ico, icon.svg and apple-icon.png in app/ are linked automatically; the manifest's
+  // 192/512 px icons are in public/. All come from the ferry's wheelhouse.
+  manifest: "/site.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#011638",
 };
 
 export default function RootLayout({
