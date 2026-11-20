@@ -2,7 +2,7 @@ import Image from "next/image";
 import { memo, useId } from "react";
 
 /**
- * Subtle maritime backdrop behind the ferry board: a sun (moon in dark mode), clouds, a distant
+ * Subtle maritime backdrop behind the ferry board: a sun (moon in dark mode), a distant
  * mountain line, a headland with a lighthouse, gulls, a ferry on the horizon and layered waves
  * along the bottom edge. Low-contrast
  * `--deco-*` tokens keep it in the background; on the start page it fills the empty space,
@@ -29,15 +29,6 @@ function Gulls({ className, delay, single = false }: { className: string; delay:
           <path d="M26 5 q4 -4 8 0 q4 -4 8 0" />
         </>
       )}
-    </svg>
-  );
-}
-
-/** A small puffy cloud in the cloud colour. */
-function Cloud({ className, delay }: { className: string; delay: number }) {
-  return (
-    <svg className={`cloud-drift absolute ${className}`} style={{ animationDelay: `${delay}s` }} viewBox="0 -2 64 28">
-      <path d="M8 24 a8 8 0 0 1 1 -16 a12 12 0 0 1 22 -3 a10 10 0 0 1 17 4 a8 8 0 0 1 8 15 Z" fill="var(--deco-cloud)" />
     </svg>
   );
 }
@@ -80,7 +71,7 @@ function SeaBackground() {
             <stop offset="1" stopColor="var(--deco-beam)" stopOpacity="0" />
           </linearGradient>
         </defs>
-        <polygon className="deco-beam" points="200,28 40,6 40,62 200,34" fill={`url(#${beam})`} />
+        <polygon className="deco-beam" points="200,22 40,6 40,62 200,28" fill={`url(#${beam})`} />
         <path d="M0 130 Q40 106 90 102 Q130 98 160 80 Q190 64 222 70 Q246 76 260 88 V130 Z" fill="var(--deco-land)" />
         <rect x="112" y="88" width="16" height="11" fill="var(--deco-shape)" />
         <polygon points="110,88 130,88 120,80" fill="var(--deco-shape)" />
@@ -90,8 +81,9 @@ function SeaBackground() {
         <polygon points="193,21 207,21 200,14" fill="var(--deco-shape)" />
       </svg>
 
-      {/* Sun (light) / moon (dark), low in the sky behind the mountains' left half. */}
-      <svg className="absolute bottom-[205px] left-[8%] w-[76px] lg:bottom-[250px] lg:left-[12%] lg:w-[96px]" viewBox="0 0 100 100">
+      {/* Sun (light) / moon (dark), low in the sky behind the mountains' left half. Smaller and
+          fainter on phones, where the scene is more crowded. */}
+      <svg className="absolute bottom-[205px] left-[8%] w-[60px] opacity-75 sm:w-[76px] sm:opacity-100 lg:bottom-[250px] lg:left-[12%] lg:w-[96px]" viewBox="0 0 100 100">
         <defs>
           <radialGradient id={glow}>
             <stop offset="0.45" stopColor="var(--deco-glow)" />
@@ -106,13 +98,6 @@ function SeaBackground() {
         <circle cx="50" cy="50" r="20" fill="var(--deco-sun)" className="dark:hidden" />
         <circle cx="50" cy="50" r="18" fill="var(--deco-moon)" mask={`url(#${crescent})`} className="hidden dark:block" />
       </svg>
-
-      {/* Clouds: a few small ones scattered over the sky, drifting slowly. Placed clear of the
-          gulls, the sun and the lighthouse and its beam at phone and desktop widths. */}
-      <Cloud className="bottom-[236px] left-[30%] w-[64px] lg:bottom-[290px] lg:left-[42%] lg:w-[84px]" delay={0} />
-      <Cloud className="bottom-[300px] right-[28%] w-[44px] lg:bottom-[370px] lg:w-[58px]" delay={-14} />
-      <Cloud className="bottom-[214px] right-[20%] w-[50px] lg:bottom-[265px] lg:w-[64px]" delay={-26} />
-      <Cloud className="hidden lg:bottom-[340px] lg:left-[4%] lg:block lg:w-[70px]" delay={-8} />
 
       {/* Gulls: a few groups at different distances (smaller and fainter further off), drifting
           slightly out of step. The last one only fits on wide screens. */}

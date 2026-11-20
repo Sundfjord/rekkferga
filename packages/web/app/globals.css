@@ -48,11 +48,10 @@
   --deco-wave-3: #BFD9F1;
   --deco-land: #CCE0F3;
   --deco-shape: #AECBE7;
-  --deco-lamp: #F5C06A;
-  --deco-beam: rgba(245, 192, 106, 0.38);
+  --deco-lamp: #EED9AE; /* daylight: an unlit, faintly warm lamp */
+  --deco-beam: transparent; /* no beam by day */
   --deco-gull: #9FBEDD;
   --deco-sun: #FBD58A;
-  --deco-cloud: #DFEBF8;
   --deco-glow: rgba(251, 213, 138, 0.35);
 }
 
@@ -80,7 +79,6 @@
   --deco-beam: rgba(245, 192, 106, 0.17);
   --deco-gull: #3B5586;
   --deco-moon: #8EA6CC;
-  --deco-cloud: #22355A;
   --deco-glow: rgba(142, 166, 204, 0.14);
 }
 
@@ -178,18 +176,9 @@ body {
 
 .gull-glide { animation: gull-glide 9s ease-in-out infinite; }
 
-/* Page backdrop: clouds drift slowly sideways and back. */
-@keyframes cloud-drift {
-  0%, 100% { transform: translateX(0); }
-  50%      { transform: translateX(14px); }
-}
-
-.cloud-drift { animation: cloud-drift 40s ease-in-out infinite; }
-
 @media (prefers-reduced-motion: reduce) {
   .scene-bob,
   .ferry-sail,
   .gull-glide,
-  .cloud-drift,
   .deco-beam { animation: none; }
 }
