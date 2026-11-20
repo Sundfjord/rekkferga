@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { translate, translateList, type Translations } from "@shared/utils";
 import en from "@shared/locales/en.json";
@@ -11,11 +12,15 @@ export type Translate = ((key: string, variables?: Record<string, string | numbe
   list: (key: string) => string[];
 };
 
-/** `t("group.key", vars)` for strings, `t.list("group.key")` for lists. */
+/** `t("group.key", vars)` for strings, `t.list("group.key")` for lists. Stable per language. */
 export function useTranslation(): Translate {
   const { language } = useLanguage();
-  return Object.assign(
-    (key: string, variables?: Record<string, string | number>) => translate(translations, language, key, variables),
-    { list: (key: string) => translateList(translations, language, key) },
+  return useMemo(
+    () =>
+      Object.assign(
+        (key: string, variables?: Record<string, string | number>) => translate(translations, language, key, variables),
+        { list: (key: string) => translateList(translations, language, key) },
+      ),
+    [language],
   );
 }

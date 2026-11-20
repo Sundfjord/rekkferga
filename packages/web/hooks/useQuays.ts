@@ -9,10 +9,20 @@ const CACHE_KEY = "rekkferga-quays";
 
 export interface QuaysState {
   quays: Quay[];
-  loading: boolean;
   /** The fetch failed and there is no cached copy to fall back on. */
   error: boolean;
   retry: () => void;
+}
+
+function readCache(): { raw: string; quays: Quay[] } | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const quays: unknown = JSON.parse(raw);
+    return Array.isArray(quays) && quays.length ? { raw, quays } : null;
+  } catch {
+    return null; // corrupt cache or storage unavailable
+  }
 }
 
 // The quay dataset is static (refreshed monthly server-side), so cache it in localStorage
@@ -20,51 +30,33 @@ export interface QuaysState {
 // revalidation is only reported when there is nothing cached to show.
 export function useQuays(): QuaysState {
   const [quays, setQuays] = useState<Quay[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   useEffect(() => {
     let cancelled = false;
-    let hasCache = false;
     setError(false);
 
-    const cached = typeof localStorage !== "undefined" ? localStorage.getItem(CACHE_KEY) : null;
-    if (cached) {
-      try {
-        const parsed: Quay[] = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length) {
-          hasCache = true;
-          setQuays(parsed);
-          setLoading(false);
-        }
-      } catch {
-        /* ignore corrupt cache */
-      }
-    }
+    const cached = readCache();
+    if (cached) setQuays(cached.quays);
+    if (!API_URL) return;
 
-    if (!API_URL) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(!hasCache);
     fetchQuays(API_URL)
       .then((data) => {
         if (cancelled || !data.length) return;
+        const raw = JSON.stringify(data);
+        // Usually unchanged: keep the cached array, so nothing downstream recomputes.
+        if (raw === cached?.raw) return;
         setQuays(data);
         try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          localStorage.setItem(CACHE_KEY, raw);
         } catch {
           /* quota / unavailable — non-fatal */
         }
       })
       .catch(() => {
-        if (!cancelled && !hasCache) setError(true);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && !cached) setError(true);
       });
 
     return () => {
@@ -72,5 +64,5 @@ export function useQuays(): QuaysState {
     };
   }, [attempt]);
 
-  return { quays, loading, error, retry };
+  return { quays, error, retry };
 }
