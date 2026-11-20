@@ -11,10 +11,10 @@ import DestinationName from "@/components/DestinationName";
 export default function DepartureHeading({ departure, className = "" }: { departure: DepartureOption; className?: string }) {
   return (
     <span className={`flex min-w-0 flex-col gap-0.5 ${className}`}>
-      <span className="truncate text-[21px] font-bold leading-tight">
+      <span className="truncate text-[18px] font-bold leading-tight sm:text-[21px]">
         <DestinationName departure={departure} />
       </span>
-      <span className="font-mono text-[26px] font-bold leading-tight tabular-nums">
+      <span className="font-mono text-[22px] font-bold leading-tight tabular-nums sm:text-[26px]">
         <DepartureTime departure={departure} />
       </span>
     </span>

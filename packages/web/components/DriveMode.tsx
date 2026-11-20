@@ -42,7 +42,7 @@ export default function DriveMode({
   return (
     <div className="flex flex-1 flex-col">
       <div
-        className="flex flex-1 flex-col gap-[18px] rounded-[18px] px-4 py-3.5 text-white"
+        className="flex flex-1 flex-col gap-3.5 rounded-[18px] px-3.5 py-2.5 text-white sm:gap-[18px] sm:px-4 sm:py-3.5"
         style={{ backgroundColor: color }}
       >
         {/* Same padding and radius as DepartureCard, so the heading stays put when a card opens.
@@ -60,15 +60,15 @@ export default function DriveMode({
         </div>
 
         {margin && tier !== "none" && (
-          <div className="flex flex-col gap-1 rounded-[14px] bg-white/15 px-3.5 py-3">
-            <span className="text-[19px] leading-snug">{t("drive.marginOnArrival")}</span>
+          <div className="flex flex-col gap-1 rounded-[14px] bg-white/15 px-3.5 py-2.5 sm:py-3">
+            <span className="text-[17px] leading-snug sm:text-[19px]">{t("drive.marginOnArrival")}</span>
             {/* Self-sized (not full width) so it morphs cleanly from the card's margin. */}
             <span
-              className="self-start font-mono text-[clamp(64px,24vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums [view-transition-class:morph]"
+              className="self-start font-mono text-[clamp(56px,20vw,112px)] font-bold leading-[0.95] tracking-[-0.05em] tabular-nums [view-transition-class:morph]"
               style={{ viewTransitionName: transitionName("margin", departureKey(departure)) }}
             >
               {margin.value}
-              {margin.unit && <span className="text-[30px] tracking-normal"> {margin.unit}</span>}
+              {margin.unit && <span className="text-[24px] tracking-normal sm:text-[30px]"> {margin.unit}</span>}
             </span>
             {/* Rush messages temporarily disabled — restore this line and the rushMessage import.
             <span className="mt-1.5 text-[19px] font-semibold leading-snug">{rushMessage(t.list, departure.marginMinutes ?? 0, departureKey(departure))}</span>
@@ -81,12 +81,12 @@ export default function DriveMode({
         <button
           type="button"
           onClick={() => onSelect(alt)}
-          className="mt-2.5 flex min-h-14 cursor-pointer items-center gap-3 rounded-2xl py-2.5 pl-4 pr-3 text-left text-white"
+          className="mt-2 flex min-h-14 cursor-pointer sm:mt-2.5 items-center gap-3 rounded-2xl py-2.5 pl-4 pr-3 text-left text-white"
           style={{ backgroundColor: TIER_COLOR[altTier] }}
         >
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[13px]">{t("drive.planB")}</span>
-            <span className="truncate text-[17px] font-bold">
+            <span className="truncate text-[16px] font-bold sm:text-[17px]">
               <DestinationName departure={alt} />{" "}
               <span className="font-mono"><DepartureTime departure={alt} /></span>
             </span>

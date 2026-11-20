@@ -20,7 +20,7 @@ import { ChevronLeftIcon, HeartIcon } from "@/components/icons";
 
 const VISIBLE_DEPARTURES = 5;
 const HEADER_BUTTON =
-  "flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface shadow-raised transition-colors hover:bg-surface-variant";
+  "flex h-10 w-10 flex-shrink-0 cursor-pointer sm:h-11 sm:w-11 items-center justify-center rounded-full bg-surface shadow-raised transition-colors hover:bg-surface-variant";
 
 export interface QuayPanelProps extends QuayDeparturesState {
   /** Shared drive time for this quay (useDriveTimes); null when unknown. */
@@ -44,7 +44,7 @@ function LoadingState({ label }: { label: string }) {
         <span>{label}</span>
       </div>
       {[0, 1].map((i) => (
-        <div key={i} className="h-[92px] animate-pulse rounded-[18px] bg-surface-variant" />
+        <div key={i} className="h-[78px] animate-pulse sm:h-[92px] rounded-[18px] bg-surface-variant" />
       ))}
     </div>
   );
@@ -53,9 +53,9 @@ function LoadingState({ label }: { label: string }) {
 /** Label + big value on a card, the same in the overview and in drive mode. */
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-[18px] bg-surface px-4 py-3 shadow-raised">
-      <span className="text-[15px] leading-snug text-text-secondary">{label}</span>
-      <span className="font-mono text-[30px] font-bold leading-tight tabular-nums" style={{ color: color ?? "var(--text-primary)" }}>
+    <div className="flex flex-col gap-0.5 rounded-[18px] bg-surface px-3.5 py-2.5 shadow-raised sm:px-4 sm:py-3">
+      <span className="text-[14px] leading-snug text-text-secondary sm:text-[15px]">{label}</span>
+      <span className="font-mono text-[24px] font-bold leading-tight tabular-nums sm:text-[30px]" style={{ color: color ?? "var(--text-primary)" }}>
         {value}
       </span>
     </div>
@@ -134,11 +134,11 @@ export default function QuayPanel({
     <section aria-labelledby={titleId} className="flex min-h-0 flex-1 flex-col">
       {/* Page header: back, the quay's name, favourite. It stays in drive mode too; drive mode
           closes from its own hero. */}
-      <div className="flex flex-shrink-0 items-center gap-1.5 px-4 pt-4 text-text-primary">
+      <div className="flex flex-shrink-0 items-center gap-1.5 px-4 pt-3 text-text-primary sm:pt-4">
         <button type="button" onClick={onBack} aria-label={t("general.back")} className={HEADER_BUTTON}>
           <ChevronLeftIcon />
         </button>
-        <h1 id={titleId} className="ml-1.5 min-w-0 flex-1 truncate text-[23px] font-bold leading-tight">
+        <h1 id={titleId} className="ml-1.5 min-w-0 flex-1 truncate text-[20px] font-bold leading-tight sm:text-[23px]">
           {quay.name}
         </h1>
         <button
@@ -152,10 +152,10 @@ export default function QuayPanel({
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4 pt-3.5">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 pt-3 sm:gap-2.5 sm:pt-3.5">
         {/* Drive time and arrival at the quay, in overview and drive mode alike. */}
         {arrivalAt && (
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
             {/* Time left to the quay, from the same arrival estimate the margins use. It takes
                 the traffic colour, as in map apps. */}
             <Stat
@@ -227,7 +227,7 @@ export default function QuayPanel({
                 {t("quay.noDepartures")}
               </div>
             ) : (
-              <div className="grid gap-2.5">
+              <div className="grid gap-2 sm:gap-2.5">
                 {visible.map((d) => (
                   <DepartureCard key={departureKey(d)} departure={d} onSelect={() => select(d)} />
                 ))}

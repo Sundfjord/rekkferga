@@ -33,7 +33,7 @@ export default function LiveStatus({
   const updated = t("general.updatedAt", { time: formatTime(updatedAt.toISOString()) });
 
   return (
-    <div className="flex items-center gap-2.5 px-1 text-[15px] text-text-secondary">
+    <div className="flex items-center gap-2.5 px-1 text-[14px] text-text-secondary sm:text-[15px]">
       <span className="relative flex h-3 w-3 flex-shrink-0 items-center justify-center" aria-hidden>
         {refreshing ? (
           <Spinner className="h-3 w-3" />

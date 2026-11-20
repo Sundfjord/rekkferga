@@ -42,7 +42,7 @@ export default function RootLayout({
             <FavoritesProvider>
               {/* Full-viewport page: the header, then the ferry board filling the rest. Both
                   are prerendered; settings stored in the browser apply after hydration. */}
-              <div className="flex h-screen w-full flex-col bg-surface-tint">
+              <div className="flex h-dvh w-full flex-col bg-surface-tint">
                 <Header />
                 <main className="relative flex-1 overflow-hidden">{children}</main>
               </div>

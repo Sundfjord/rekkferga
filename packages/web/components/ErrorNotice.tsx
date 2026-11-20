@@ -12,7 +12,7 @@ export default function ErrorNotice({ message, onRetry }: { message: string; onR
   return (
     <div
       role="alert"
-      className="flex items-start gap-3 rounded-[16px] border-[1.5px] border-margin-missed/35 px-4 py-3 text-[15px] text-text-primary"
+      className="flex items-start gap-3 rounded-[16px] border-[1.5px] border-margin-missed/35 px-3.5 py-2.5 text-[14px] text-text-primary sm:px-4 sm:py-3 sm:text-[15px]"
       style={{ backgroundColor: "color-mix(in srgb, var(--margin-missed) 8%, var(--surface))" }}
     >
       <WarningIcon className="mt-0.5 flex-shrink-0 text-margin-missed" />

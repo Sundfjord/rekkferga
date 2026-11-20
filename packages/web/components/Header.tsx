@@ -6,7 +6,7 @@ import { useTheme } from "next-themes";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import HelpPanel from "@/components/HelpPanel";
-import { CheckIcon, ChevronDownIcon, HelpIcon, MonitorIcon, MoonIcon, SunIcon } from "@/components/icons";
+import { CheckIcon, ChevronDownIcon, HelpIcon, MenuIcon, MonitorIcon, MoonIcon, SunIcon } from "@/components/icons";
 import type { Language } from "@shared/utils";
 
 // ── Data ──────────────────────────────────────────────────────────────────────
@@ -36,6 +36,8 @@ function DropdownShell({
   open,
   onOpen,
   onClose,
+  chevron = true,
+  triggerClassName = "px-3 py-2",
   panelClassName = "min-w-[160px]",
   children,
 }: {
@@ -45,7 +47,11 @@ function DropdownShell({
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
-  /** Panel width; menus size to their items, the help panel is wider. */
+  /** A chevron after the trigger (the desktop menus); the phone's hamburger has none. */
+  chevron?: boolean;
+  /** Trigger padding / size. */
+  triggerClassName?: string;
+  /** Panel width; menus size to their items, the help panel and phone menu are wider. */
   panelClassName?: string;
   children: React.ReactNode;
 }) {
@@ -65,10 +71,10 @@ function DropdownShell({
         title={label}
         aria-expanded={open}
         onClick={() => (open ? onClose() : onOpen())}
-        className="flex items-center gap-1.5 rounded-xl bg-white/15 px-3 py-2 backdrop-blur-[8px] transition-colors"
+        className={`flex cursor-pointer items-center gap-1.5 rounded-xl bg-white/15 backdrop-blur-[8px] transition-colors ${triggerClassName}`}
       >
         {trigger}
-        <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />
+        {chevron && <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`} />}
       </button>
 
       {open && (
@@ -109,10 +115,54 @@ function DropdownItem({
   );
 }
 
+/** A labelled row of equal-width options, one of them active (the phone menu's language and theme). */
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T | undefined;
+  options: { value: T; label: string; icon?: React.ReactNode }[];
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div role="group" aria-label={label} className="flex flex-col gap-1.5">
+      <span className="text-[13px] font-bold text-gray-500 dark:text-gray-400">{label}</span>
+      <div className="grid grid-cols-3 gap-1 rounded-xl bg-gray-100 p-1 dark:bg-gray-800">
+        {options.map((opt) => {
+          const active = opt.value === value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(opt.value)}
+              className={`flex min-w-0 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-[14px] transition-colors ${
+                active
+                  ? "bg-white font-semibold text-blue-600 shadow-sm dark:bg-gray-700 dark:text-blue-300"
+                  : "text-gray-700 hover:bg-white/60 dark:text-gray-300 dark:hover:bg-gray-700/50"
+              }`}
+            >
+              {opt.icon}
+              <span className="truncate">{opt.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Header ────────────────────────────────────────────────────────────────────
 
-type OpenSection = "theme" | "lang" | "help" | null;
+type OpenSection = "theme" | "lang" | "help" | "menu" | null;
 
+/**
+ * The blue app header: the logo, then the language, theme and help dropdowns. On a phone the
+ * three collapse into one hamburger menu holding the same settings and the help text.
+ */
 export default function Header() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const { language, setLanguage } = useLanguage();
@@ -129,71 +179,106 @@ export default function Header() {
   return (
     // The blue header is as wide as the page's centred column (app/page.tsx). On a phone that's
     // the full width; once the column is narrower than the window, its bottom corners round off.
-    <header className="mx-auto flex w-full max-w-3xl items-center justify-between bg-background p-4 lg:p-6 md:rounded-b-[24px]">
+    <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 bg-background px-4 py-2.5 sm:p-4 md:rounded-b-[24px] lg:p-6">
       <Image
         src="/logo-revised.png"
         alt="Rekkferga"
         width={125}
         height={73}
         priority
-        className="object-contain"
+        className="h-auto w-[86px] object-contain sm:w-[125px]"
       />
 
       {mounted && (
-        <div className="flex items-center gap-2">
-          <DropdownShell
-            trigger={
-              <span className="text-sm font-semibold tracking-wide text-white/80">
-                {currentLang.code}
-              </span>
-            }
-            label={`${t("general.language")}: ${currentLang.code}`}
-            open={open === "lang"}
-            onOpen={() => setOpen("lang")}
-            onClose={close}
-          >
-            {LANG_OPTIONS.map((opt) => (
-              <DropdownItem
-                key={opt.value}
-                active={language === opt.value}
-                onClick={() => { setLanguage(opt.value); close(); }}
-              >
-                <span className="text-base leading-none" aria-hidden>{opt.flag}</span>
-                <span className="flex-1">{opt.label}</span>
-              </DropdownItem>
-            ))}
-          </DropdownShell>
+        <>
+          {/* Phone: one hamburger menu. */}
+          <div className="sm:hidden">
+            <DropdownShell
+              trigger={<MenuIcon className="text-white/85" />}
+              label={t("general.menu")}
+              open={open === "menu"}
+              onOpen={() => setOpen("menu")}
+              onClose={close}
+              chevron={false}
+              triggerClassName="h-10 w-10 justify-center"
+              panelClassName="w-[calc(100vw-32px)] max-h-[calc(100dvh-80px)] overflow-y-auto!"
+            >
+              <div className="flex flex-col gap-3 px-4 pb-4 pt-3.5">
+                <Segmented
+                  label={t("general.language")}
+                  value={language}
+                  options={LANG_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                  onChange={setLanguage}
+                />
+                <Segmented
+                  label={t("general.theme")}
+                  value={theme}
+                  options={THEME_OPTIONS.map((o) => ({ value: o.value, label: t(o.labelKey), icon: o.icon }))}
+                  onChange={setTheme}
+                />
+              </div>
+              <div className="border-t border-gray-100 dark:border-gray-800">
+                <HelpPanel />
+              </div>
+            </DropdownShell>
+          </div>
 
-          <DropdownShell
-            trigger={resolvedTheme === "dark" ? <MoonIcon className={ICON_CLS} /> : <SunIcon className={ICON_CLS} />}
-            label={t("general.theme")}
-            open={open === "theme"}
-            onOpen={() => setOpen("theme")}
-            onClose={close}
-          >
-            {THEME_OPTIONS.map((opt) => (
-              <DropdownItem
-                key={opt.value}
-                active={theme === opt.value}
-                onClick={() => { setTheme(opt.value); close(); }}
-              >
-                {opt.icon}
-                <span className="flex-1">{t(opt.labelKey)}</span>
-              </DropdownItem>
-            ))}
-          </DropdownShell>
+          {/* Wider screens: the three dropdowns. */}
+          <div className="hidden items-center gap-2 sm:flex">
+            <DropdownShell
+              trigger={
+                <span className="text-sm font-semibold tracking-wide text-white/80">
+                  {currentLang.code}
+                </span>
+              }
+              label={`${t("general.language")}: ${currentLang.code}`}
+              open={open === "lang"}
+              onOpen={() => setOpen("lang")}
+              onClose={close}
+            >
+              {LANG_OPTIONS.map((opt) => (
+                <DropdownItem
+                  key={opt.value}
+                  active={language === opt.value}
+                  onClick={() => { setLanguage(opt.value); close(); }}
+                >
+                  <span className="text-base leading-none" aria-hidden>{opt.flag}</span>
+                  <span className="flex-1">{opt.label}</span>
+                </DropdownItem>
+              ))}
+            </DropdownShell>
 
-          <DropdownShell
-            trigger={<HelpIcon className={ICON_CLS} />}
-            label={t("help.open")}
-            open={open === "help"}
-            onOpen={() => setOpen("help")}
-            onClose={close}
-            panelClassName="w-[min(450px,calc(100vw-32px))]"
-          >
-            <HelpPanel />
-          </DropdownShell>
-        </div>
+            <DropdownShell
+              trigger={resolvedTheme === "dark" ? <MoonIcon className={ICON_CLS} /> : <SunIcon className={ICON_CLS} />}
+              label={t("general.theme")}
+              open={open === "theme"}
+              onOpen={() => setOpen("theme")}
+              onClose={close}
+            >
+              {THEME_OPTIONS.map((opt) => (
+                <DropdownItem
+                  key={opt.value}
+                  active={theme === opt.value}
+                  onClick={() => { setTheme(opt.value); close(); }}
+                >
+                  {opt.icon}
+                  <span className="flex-1">{t(opt.labelKey)}</span>
+                </DropdownItem>
+              ))}
+            </DropdownShell>
+
+            <DropdownShell
+              trigger={<HelpIcon className={ICON_CLS} />}
+              label={t("help.open")}
+              open={open === "help"}
+              onOpen={() => setOpen("help")}
+              onClose={close}
+              panelClassName="w-[min(450px,calc(100vw-32px))]"
+            >
+              <HelpPanel />
+            </DropdownShell>
+          </div>
+        </>
       )}
     </header>
   );

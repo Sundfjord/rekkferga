@@ -27,17 +27,17 @@ export default function DepartureCard({ departure, onSelect }: { departure: Depa
       <DepartureHeading departure={departure} className="flex-1" />
       {margin && (
         <span
-          className="flex-shrink-0 font-mono text-[34px] font-bold leading-none tracking-tight tabular-nums [view-transition-class:morph]"
+          className="flex-shrink-0 font-mono text-[28px] font-bold sm:text-[34px] leading-none tracking-tight tabular-nums [view-transition-class:morph]"
           style={{ viewTransitionName: transitionName("margin", key) }}
         >
           {margin.value}
-          {margin.unit && <span className="text-[15px] font-bold tracking-normal"> {margin.unit}</span>}
+          {margin.unit && <span className="text-[14px] font-bold tracking-normal sm:text-[15px]"> {margin.unit}</span>}
         </span>
       )}
     </>
   );
 
-  const className = "flex w-full items-center gap-3 rounded-[18px] px-4 py-3.5 text-left text-white";
+  const className = "flex w-full items-center gap-3 rounded-[18px] px-3.5 py-2.5 text-left text-white sm:px-4 sm:py-3.5";
   const style = { backgroundColor: TIER_COLOR[tier] };
 
   if (!onSelect || !margin) {

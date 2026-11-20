@@ -46,10 +46,10 @@ function FavoriteCard({
 
   // The cap fills the list's shared second column (see HomeLists), so every favourite's cap
   // is as wide as the widest one.
-  const cap = "flex min-w-[116px] flex-col items-end justify-center gap-0.5 px-3.5 py-2";
+  const cap = "flex min-w-[104px] flex-col items-end justify-center gap-0.5 px-3 py-1.5 sm:min-w-[116px] sm:px-3.5 sm:py-2";
   let end: React.ReactNode;
   if (pending) {
-    end = <span className={`${cap} min-h-[64px] animate-pulse bg-surface-variant`} />;
+    end = <span className={`${cap} min-h-[56px] animate-pulse sm:min-h-[64px] bg-surface-variant`} />;
   } else if (!dep) {
     end = (
       <span className={`${cap} bg-surface-variant text-[13px] text-text-secondary`}>
@@ -71,9 +71,9 @@ function FavoriteCard({
           )}
           {destinationText(dep, t("general.via"))}
         </span>
-        <span className="font-mono text-[30px] font-bold leading-none tracking-tight tabular-nums">
+        <span className="font-mono text-[26px] font-bold leading-none tracking-tight tabular-nums sm:text-[30px]">
           {margin ? margin.value : <DepartureTime departure={dep} />}
-          {margin?.unit && <span className="text-[15px] tracking-normal"> {margin.unit}</span>}
+          {margin?.unit && <span className="text-[14px] tracking-normal sm:text-[15px]"> {margin.unit}</span>}
         </span>
       </span>
     );
@@ -85,8 +85,8 @@ function FavoriteCard({
       onClick={onSelect}
       className="col-span-2 grid cursor-pointer grid-cols-subgrid items-stretch overflow-hidden rounded-[18px] bg-surface text-left text-text-primary shadow-raised transition-transform active:scale-[0.99]"
     >
-      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-2 pl-4 pr-3">
-        <span className="truncate text-[19px] font-bold leading-tight">{shortQuayName(quay.name)}</span>
+      <span className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-1.5 pl-3.5 pr-3 sm:py-2 sm:pl-4">
+        <span className="truncate text-[17px] font-bold leading-tight sm:text-[19px]">{shortQuayName(quay.name)}</span>
         {drive != null && <span className={ROW_SUB}>{t("home.driveAway", { time: formatDuration(drive, language) })}</span>}
       </span>
       {end}
@@ -120,13 +120,13 @@ export default function HomeLists({
   if (favorites.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-2.5">
+    <div className="flex flex-col gap-2 sm:gap-2.5">
       <SectionTitle>{t("favorites.title")}</SectionTitle>
       {favoriteNext.error && <ErrorNotice message={t("home.favoritesError")} onRetry={favoriteNext.retry} />}
       {/* One grid for all favourites: each card spans both columns (subgrid), so the end caps
           share the second column and are all as wide as the widest destination, capped at 60%
           of the list. */}
-      <div className="grid grid-cols-[minmax(0,1fr)_fit-content(60%)] gap-y-2.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_fit-content(60%)] gap-y-2 sm:gap-y-2.5">
         {favorites.map((f) => {
           const quay = quaysById.get(f.id);
           if (!quay) {

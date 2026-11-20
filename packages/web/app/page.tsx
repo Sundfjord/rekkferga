@@ -161,10 +161,10 @@ export default function Home() {
         {/* Search pane (kept mounted while a quay is open, so the search state survives) */}
         <div className={`${selection ? "hidden" : "flex"} min-h-0 w-full flex-1 flex-col`}>
           {/* Page header: the title, then the search field. */}
-          <div className="flex-shrink-0 px-4 pt-5 text-text-primary">
-            <h1 className="mb-3.5 text-balance text-[26px] font-bold leading-tight">{t("home.heroTitle")}</h1>
+          <div className="flex-shrink-0 px-4 pt-4 text-text-primary sm:pt-5">
+            <h1 className="mb-3 text-balance text-[22px] font-bold leading-tight sm:mb-3.5 sm:text-[26px]">{t("home.heroTitle")}</h1>
             <div className="flex items-center gap-2.5">
-              <label className="flex h-[58px] min-w-0 flex-1 items-center gap-2.5 rounded-[18px] bg-surface px-4 text-text-secondary shadow-field">
+              <label className="flex h-[50px] min-w-0 flex-1 items-center gap-2.5 rounded-[16px] bg-surface px-3.5 sm:h-[58px] sm:rounded-[18px] sm:px-4 text-text-secondary shadow-field">
                 <SearchIcon />
                 <input
                   ref={inputRef}
@@ -175,7 +175,7 @@ export default function Home() {
                   onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                   aria-label={t("search.placeholder")}
                   placeholder={t("search.placeholder")}
-                  className="min-w-0 flex-1 bg-transparent text-[18px] text-text-primary outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[17px] text-text-primary outline-none sm:text-[18px]"
                 />
                 {places.isSearching && <Spinner className="h-5 w-5" />}
               </label>
@@ -187,7 +187,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4 pt-[18px]">
+          <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4 pb-4 pt-3.5 sm:gap-2.5 sm:pt-[18px]">
             {notices}
             {!showResults && suggestions.length > 0 && (
               <>
@@ -198,7 +198,7 @@ export default function Home() {
                       key={q.id}
                       type="button"
                       onClick={() => selectQuay(q)}
-                      className="h-10 cursor-pointer rounded-full border-[1.5px] border-surface-variant bg-surface px-4 text-[15px] text-text-primary transition-colors hover:bg-surface-tint"
+                      className="h-9 cursor-pointer rounded-full border-[1.5px] border-surface-variant bg-surface px-3.5 text-[14px] sm:h-10 sm:px-4 sm:text-[15px] text-text-primary transition-colors hover:bg-surface-tint"
                     >
                       {shortQuayName(q.name)}
                     </button>

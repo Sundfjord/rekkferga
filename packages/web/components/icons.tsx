@@ -111,3 +111,9 @@ export const HelpIcon = ({ className }: { className?: string }) => (
     <circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none" />
   </svg>
 );
+
+export const MenuIcon = ({ size = 22, className }: IconProps) => (
+  <svg {...stroke(size, className)}>
+    <path d="M4 7h16M4 12h16M4 17h16" />
+  </svg>
+);
