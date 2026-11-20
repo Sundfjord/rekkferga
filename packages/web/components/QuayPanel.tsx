@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { DepartureOption, Quay, ResultItem } from "@shared/types";
 import { formatDuration, formatTime, trafficLevel } from "@shared/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -8,7 +8,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import type { QuayDeparturesState } from "@/hooks/useQuayDepartures";
 import { departureKey, servesQuay, withLiveMargins } from "@/lib/departures";
-import type { DriveTime } from "@/hooks/useDriveTimes";
+import { secondsUntil, type DriveTime } from "@/hooks/useDriveTimes";
 import LiveStatus from "@/components/LiveStatus";
 import { withViewTransition } from "@/lib/viewTransition";
 // import { shortQuayName } from "@/lib/quays"; // with the crossing filter
@@ -19,7 +19,8 @@ import ErrorNotice from "@/components/ErrorNotice";
 import { ChevronLeftIcon, HeartIcon } from "@/components/icons";
 
 const VISIBLE_DEPARTURES = 5;
-const HEADER_BUTTON = "flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full shadow-[0_1px_3px_rgba(1,22,56,0.08)] transition-colors hover:bg-[var(--surface-variant)]";
+const HEADER_BUTTON =
+  "flex h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface shadow-raised transition-colors hover:bg-surface-variant";
 
 export interface QuayPanelProps extends QuayDeparturesState {
   /** Shared drive time for this quay (useDriveTimes); null when unknown. */
@@ -38,12 +39,12 @@ export interface QuayPanelProps extends QuayDeparturesState {
 function LoadingState({ label }: { label: string }) {
   return (
     <div role="status" aria-live="polite" className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+      <div className="flex items-center gap-2 text-sm text-text-secondary">
         <Spinner />
         <span>{label}</span>
       </div>
       {[0, 1].map((i) => (
-        <div key={i} className="h-[92px] animate-pulse rounded-[18px]" style={{ backgroundColor: "var(--surface-variant)" }} />
+        <div key={i} className="h-[92px] animate-pulse rounded-[18px] bg-surface-variant" />
       ))}
     </div>
   );
@@ -52,9 +53,9 @@ function LoadingState({ label }: { label: string }) {
 /** Label + big value on a card, the same in the overview and in drive mode. */
 function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-[18px] px-4 py-3 shadow-[0_1px_3px_rgba(1,22,56,0.08)]" style={{ backgroundColor: "var(--surface)" }}>
-      <span className="text-[15px] leading-snug" style={{ color: "var(--text-secondary)" }}>{label}</span>
-      <span className="text-[30px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)", color: color ?? "var(--text-primary)" }}>
+    <div className="flex flex-col gap-0.5 rounded-[18px] bg-surface px-4 py-3 shadow-raised">
+      <span className="text-[15px] leading-snug text-text-secondary">{label}</span>
+      <span className="font-mono text-[30px] font-bold leading-tight tabular-nums" style={{ color: color ?? "var(--text-primary)" }}>
         {value}
       </span>
     </div>
@@ -85,6 +86,7 @@ export default function QuayPanel({
   const t = useTranslation();
   const { language } = useLanguage();
   const { isFavorite, toggleFavorite } = useFavorites();
+  const titleId = useId();
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   // A place search can still pre-select a crossing; the filter buttons are commented out below.
   const [destination] = useState<string | null>(initialDestination);
@@ -94,11 +96,9 @@ export default function QuayPanel({
   // const crossings = quay.relatedQuayIds
   //   .map((id) => ({ id, name: quaysById.get(id)?.name }))
   //   .filter((c): c is { id: string; name: string } => !!c.name);
+  const traffic = drive ? trafficLevel(drive.seconds, drive.typicalSeconds) : null;
   // Margins are recomputed from the shared drive time and clock, so they match the
   // favourites and tick with the clock rather than jumping at each poll.
-  // Time left to the quay, from the same arrival estimate the margins use.
-  const remainingSeconds = arrivalAt ? Math.max(0, (arrivalAt.getTime() - now) / 1000) : null;
-  const traffic = drive ? trafficLevel(drive.seconds, drive.typicalSeconds) : null;
   const live = withLiveMargins(departures, arrivalAt);
   // A crossing filter keeps departures that end there or call there on the way.
   const filtered = destination ? live.filter((d) => servesQuay(d, destination)) : live;
@@ -131,27 +131,22 @@ export default function QuayPanel({
       : null;
 
   return (
-    <section aria-label={quay.name} className="flex min-h-0 flex-1 flex-col" style={{ fontFamily: "var(--font-dm-sans)" }}>
+    <section aria-labelledby={titleId} className="flex min-h-0 flex-1 flex-col">
       {/* Page header: back, the quay's name, favourite. It stays in drive mode too; drive mode
           closes from its own hero. */}
-      <div className="flex flex-shrink-0 items-center gap-1.5 px-4 pt-4" style={{ color: "var(--text-primary)" }}>
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label={t("general.back")}
-          className={HEADER_BUTTON}
-          style={{ backgroundColor: "var(--surface)" }}
-        >
+      <div className="flex flex-shrink-0 items-center gap-1.5 px-4 pt-4 text-text-primary">
+        <button type="button" onClick={onBack} aria-label={t("general.back")} className={HEADER_BUTTON}>
           <ChevronLeftIcon />
         </button>
-        <h1 className="ml-1.5 min-w-0 flex-1 truncate text-[23px] font-bold leading-tight">{quay.name}</h1>
+        <h1 id={titleId} className="ml-1.5 min-w-0 flex-1 truncate text-[23px] font-bold leading-tight">
+          {quay.name}
+        </h1>
         <button
           type="button"
           onClick={() => toggleFavorite(favoritePayload)}
           aria-label={isFav ? t("favorites.remove") : t("favorites.add")}
           aria-pressed={isFav}
-          className={HEADER_BUTTON}
-          style={{ backgroundColor: "var(--surface)", color: isFav ? "#DC2626" : undefined }}
+          className={`${HEADER_BUTTON} ${isFav ? "text-favorite" : ""}`}
         >
           <HeartIcon filled={isFav} />
         </button>
@@ -159,18 +154,17 @@ export default function QuayPanel({
 
       <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-4 pb-4 pt-3.5">
         {/* Drive time and arrival at the quay, in overview and drive mode alike. */}
-        {remainingSeconds != null && arrivalAt && (
-          <>
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* The drive time takes the traffic colour, as in map apps. */}
-              <Stat
-                label={t("quay.driveTime")}
-                value={formatDuration(remainingSeconds, language)}
-                color={traffic ? `var(--traffic-${traffic})` : undefined}
-              />
-              <Stat label={t("quay.arrivalAtQuay")} value={formatTime(arrivalAt.toISOString())} />
-            </div>
-          </>
+        {arrivalAt && (
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Time left to the quay, from the same arrival estimate the margins use. It takes
+                the traffic colour, as in map apps. */}
+            <Stat
+              label={t("quay.driveTime")}
+              value={formatDuration(secondsUntil(arrivalAt, now), language)}
+              color={traffic ? `var(--traffic-${traffic})` : undefined}
+            />
+            <Stat label={t("quay.arrivalAtQuay")} value={formatTime(arrivalAt.toISOString())} />
+          </div>
         )}
         {/* How live this is: traffic vs usual and when it was last updated, in one line. */}
         {updatedAt && (
@@ -229,7 +223,7 @@ export default function QuayPanel({
             ) : departuresError && departures.length === 0 ? (
               <ErrorNotice message={t("quay.departuresError")} onRetry={retry} />
             ) : visible.length === 0 ? (
-              <div className="px-1 py-2 text-sm" style={{ color: "var(--text-secondary)" }}>
+              <div className="px-1 py-2 text-sm text-text-secondary">
                 {t("quay.noDepartures")}
               </div>
             ) : (

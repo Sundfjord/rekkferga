@@ -42,6 +42,9 @@ export function estimateArrival(now: number, drive: DriveTime | undefined, posit
   return new Date((onTheWay ? drive.at : now) + drive.seconds * 1000);
 }
 
+/** Time left to the quay (seconds, never negative) from an estimateArrival result. */
+export const secondsUntil = (arrivalAt: Date, now: number) => Math.max(0, (arrivalAt.getTime() - now) / 1000);
+
 export interface DriveTimes {
   /** Latest drive time for a quay, if any. Stable identity — safe in effect deps. */
   get: (quayId: string) => DriveTime | undefined;

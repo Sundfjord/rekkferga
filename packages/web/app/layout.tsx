@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "../components/ThemeProvider";
-import { ThemeWrapper } from "../components/ThemeWrapper";
-import { LanguageProvider } from "../contexts/LanguageContext";
-import { FavoritesProvider } from "../contexts/FavoritesContext";
-import Header from "../components/Header";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { LanguageProvider } from "@/contexts/LanguageContext";
+import { FavoritesProvider } from "@/contexts/FavoritesContext";
+import Header from "@/components/Header";
 
 // Variable font: every weight in one file, plus the optical-size axis so headings get
 // tighter letterforms than body text automatically (font-optical-sizing: auto).
@@ -34,26 +33,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="no"
-      suppressHydrationWarning
-      className={`${dmSans.variable} ${jetbrainsMono.variable}`}
-    >
+    // suppressHydrationWarning: next-themes sets the theme class, and LanguageProvider `lang`,
+    // on <html> in the browser.
+    <html lang="no" suppressHydrationWarning className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
       <body className="antialiased">
         <ThemeProvider>
-          <ThemeWrapper>
-            <LanguageProvider>
+          <LanguageProvider>
             <FavoritesProvider>
-              {/* Full-viewport page background; the header and the ferry board sit in its centred column */}
-              <div className="h-screen bg-surface-tint flex justify-center">
-                <div className="w-full flex flex-col h-full">
-                  <Header />
-                  <main className="flex-1 overflow-hidden relative">{children}</main>
-                </div>
+              {/* Full-viewport page: the header, then the ferry board filling the rest. Both
+                  are prerendered; settings stored in the browser apply after hydration. */}
+              <div className="flex h-screen w-full flex-col bg-surface-tint">
+                <Header />
+                <main className="relative flex-1 overflow-hidden">{children}</main>
               </div>
             </FavoritesProvider>
-            </LanguageProvider>
-          </ThemeWrapper>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { destinationNames } from "@/lib/quays";
 import { FerryIcon, HeartIcon, PlaceIcon } from "@/components/icons";
-import { IconTile, LIST_CARD, ROW, ROW_NAME, ROW_SUB, SectionTitle } from "@/components/HomeLists";
+import { IconTile, ListCard, ROW, RowText, SectionTitle } from "@/components/List";
 import ErrorNotice from "@/components/ErrorNotice";
 
 const MAX_QUAY_HITS = 8;
@@ -17,7 +17,7 @@ function Highlight({ text, query }: { text: string; query: string }) {
     <>
       {text.slice(0, i)}
       {/* Names are bold already, so the match stands out by colour. */}
-      <span style={{ color: "var(--water-light)" }}>{text.slice(i, i + query.length)}</span>
+      <span className="text-water-light">{text.slice(i, i + query.length)}</span>
       {text.slice(i + query.length)}
     </>
   );
@@ -59,12 +59,12 @@ export default function SearchResults({
   const noResults = quayHits.length === 0 && places.length === 0 && placesSettled && !placesError;
 
   return (
-    <div className="flex flex-col gap-2.5" style={{ fontFamily: "var(--font-dm-sans)" }}>
+    <div className="flex flex-col gap-2.5">
       {quayHits.length > 0 && (
         <>
           <SectionTitle>{t("search.ferryQuays")}</SectionTitle>
-          <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
-            {quayHits.map((quay, i) => {
+          <ListCard>
+            {quayHits.map((quay) => {
               const dests = destinationNames(quay, quaysById);
               return (
                 <button
@@ -73,65 +73,48 @@ export default function SearchResults({
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => onSelectQuay(quay)}
                   className={ROW}
-                  style={{ color: "var(--text-primary)", borderTop: i ? "1px solid var(--surface-variant)" : undefined }}
                 >
                   <IconTile>
                     <FerryIcon />
                   </IconTile>
-                  <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className={ROW_NAME}>
-                      <Highlight text={quay.name} query={q} />
-                    </span>
-                    {dests.length > 0 && (
-                      <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
-                        {t("home.toDestinations", { destinations: dests.join(", ") })}
-                      </span>
-                    )}
-                  </span>
-                  {isFavorite(quay.id) && <HeartIcon filled size={18} className="text-[#DC2626]" />}
+                  <RowText
+                    name={<Highlight text={quay.name} query={q} />}
+                    sub={dests.length > 0 ? t("home.toDestinations", { destinations: dests.join(", ") }) : undefined}
+                  />
+                  {isFavorite(quay.id) && <HeartIcon filled size={18} className="text-favorite" />}
                 </button>
               );
             })}
-          </div>
+          </ListCard>
         </>
       )}
 
       {places.length > 0 && (
         <>
           <SectionTitle>{t("search.places")}</SectionTitle>
-          <div className={LIST_CARD} style={{ backgroundColor: "var(--surface)" }}>
-            {places.map((place, i) => (
+          <ListCard>
+            {places.map((place) => (
               <button
                 key={place.id}
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => onSelectPlace(place)}
                 className={ROW}
-                style={{ color: "var(--text-primary)", borderTop: i ? "1px solid var(--surface-variant)" : undefined }}
               >
                 <IconTile>
                   <PlaceIcon />
                 </IconTile>
-                <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <span className={ROW_NAME}>
-                    <Highlight text={place.name} query={q} />
-                  </span>
-                  {place.subName && (
-                    <span className={ROW_SUB} style={{ color: "var(--text-secondary)" }}>
-                      {place.subName}
-                    </span>
-                  )}
-                </span>
+                <RowText name={<Highlight text={place.name} query={q} />} sub={place.subName} />
               </button>
             ))}
-          </div>
+          </ListCard>
         </>
       )}
 
       {placesError && <ErrorNotice message={t("search.placesError")} onRetry={onRetryPlaces} />}
 
       {noResults && (
-        <p className="mx-1 text-[15px]" style={{ color: "var(--text-secondary)" }}>
+        <p role="status" className="mx-1 text-[15px] text-text-secondary">
           {t("search.noResults", { query: q })}
         </p>
       )}

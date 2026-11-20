@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useId } from "react";
+import { memo, useId } from "react";
 
 /**
  * Subtle maritime backdrop behind the ferry board: a distant mountain line, a headland with a
@@ -8,8 +8,8 @@ import { useId } from "react";
  * in the quay view and drive mode the cards mostly cover it. Each piece is positioned on its
  * own so the scene works at any width (waves tile, the rest is anchored).
  */
-export default function SeaBackground() {
-  // Pattern/gradient ids per instance (see CoastScene for why).
+function SeaBackground() {
+  // SVG ids are document-global, so the pattern/gradient ids are made unique per instance.
   const uid = useId();
   const far = `${uid}-far`, mid = `${uid}-mid`, near = `${uid}-near`, beam = `${uid}-beam`;
 
@@ -89,3 +89,6 @@ export default function SeaBackground() {
     </div>
   );
 }
+
+// Static decoration: memoised so it doesn't re-render with the page on every GPS fix and clock tick.
+export default memo(SeaBackground);

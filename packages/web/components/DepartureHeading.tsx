@@ -14,7 +14,7 @@ export default function DepartureHeading({ departure, className = "" }: { depart
       <span className="truncate text-[21px] font-bold leading-tight">
         <DestinationName departure={departure} />
       </span>
-      <span className="text-[26px] font-bold leading-tight tabular-nums" style={{ fontFamily: "var(--font-mono)" }}>
+      <span className="font-mono text-[26px] font-bold leading-tight tabular-nums">
         <DepartureTime departure={departure} />
       </span>
     </span>

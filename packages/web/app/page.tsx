@@ -10,7 +10,8 @@ import { useFavoriteNext } from "@/hooks/useFavoriteNext";
 import { useDestinationSearch } from "@/hooks/useDestinationSearch";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import HomeLists, { SectionTitle } from "@/components/HomeLists";
+import HomeLists from "@/components/HomeLists";
+import { SectionTitle } from "@/components/List";
 import SearchResults from "@/components/SearchResults";
 import QuayPanel from "@/components/QuayPanel";
 import Spinner from "@/components/Spinner";
@@ -136,9 +137,7 @@ export default function Home() {
       {destinationStatus && destinationStatus.kind !== "failed" && (
         <div
           role="status"
-          aria-live="polite"
-          className="mx-1 flex items-center gap-2 text-sm"
-          style={{ color: destinationStatus.kind === "error" ? "var(--error)" : "var(--text-secondary)" }}
+          className={`mx-1 flex items-center gap-2 text-sm ${destinationStatus.kind === "error" ? "text-error" : "text-text-secondary"}`}
         >
           {destinationStatus.kind === "resolving" ? (
             <>
@@ -154,27 +153,18 @@ export default function Home() {
   );
 
   return (
-    <div className="relative isolate h-full" style={{ backgroundColor: "var(--surface-tint)" }}>
+    <div className="relative isolate h-full bg-surface-tint">
       <SeaBackground />
 
-      {/* Search pane */}
       {/* One centred column at every width: home, or the selected quay, never both. */}
       <div className="relative mx-auto flex h-full w-full max-w-3xl flex-col">
         {/* Search pane (kept mounted while a quay is open, so the search state survives) */}
         <div className={`${selection ? "hidden" : "flex"} min-h-0 w-full flex-1 flex-col`}>
-          {/* Page header: the title, then the search field. While searching the title steps
-              aside so the results get the room. */}
-          <div className="flex-shrink-0 px-4 pt-5" style={{ fontFamily: "var(--font-dm-sans)", color: "var(--text-primary)" }}>
-            {!searchOpen && (
-              <h2 className="mb-3.5 text-[26px] font-bold leading-tight" style={{ textWrap: "balance" }}>
-                {t("home.heroTitle")}
-              </h2>
-            )}
+          {/* Page header: the title, then the search field. */}
+          <div className="flex-shrink-0 px-4 pt-5 text-text-primary">
+            <h1 className="mb-3.5 text-balance text-[26px] font-bold leading-tight">{t("home.heroTitle")}</h1>
             <div className="flex items-center gap-2.5">
-              <label
-                className="flex h-[58px] min-w-0 flex-1 items-center gap-2.5 rounded-[18px] px-4 shadow-[0_2px_10px_rgba(1,22,56,0.12)]"
-                style={{ backgroundColor: "var(--surface)", color: "var(--text-secondary)" }}
-              >
+              <label className="flex h-[58px] min-w-0 flex-1 items-center gap-2.5 rounded-[18px] bg-surface px-4 text-text-secondary shadow-field">
                 <SearchIcon />
                 <input
                   ref={inputRef}
@@ -185,8 +175,7 @@ export default function Home() {
                   onKeyDown={(e) => e.key === "Escape" && closeSearch()}
                   aria-label={t("search.placeholder")}
                   placeholder={t("search.placeholder")}
-                  className="min-w-0 flex-1 bg-transparent text-[18px] outline-none"
-                  style={{ color: "var(--text-primary)", fontFamily: "var(--font-dm-sans)" }}
+                  className="min-w-0 flex-1 bg-transparent text-[18px] text-text-primary outline-none"
                 />
                 {places.isSearching && <Spinner className="h-5 w-5" />}
               </label>
@@ -203,14 +192,13 @@ export default function Home() {
             {!showResults && suggestions.length > 0 && (
               <>
                 <SectionTitle>{t("home.suggested")}</SectionTitle>
-                <div className="flex flex-wrap gap-2" style={{ fontFamily: "var(--font-dm-sans)" }}>
+                <div className="flex flex-wrap gap-2">
                   {suggestions.map((q) => (
                     <button
                       key={q.id}
                       type="button"
                       onClick={() => selectQuay(q)}
-                      className="h-10 cursor-pointer rounded-full border-[1.5px] px-4 text-[15px] transition-colors hover:bg-[var(--surface-tint)]"
-                      style={{ backgroundColor: "var(--surface)", borderColor: "var(--surface-variant)", color: "var(--text-primary)" }}
+                      className="h-10 cursor-pointer rounded-full border-[1.5px] border-surface-variant bg-surface px-4 text-[15px] text-text-primary transition-colors hover:bg-surface-tint"
                     >
                       {shortQuayName(q.name)}
                     </button>

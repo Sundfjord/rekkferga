@@ -9,11 +9,6 @@
   --water-light: #3A85C2;
   --water-dark: #011638;
 
-  /* ── Accent ─────────────────────────────────────────────── */
-  --accent: #E8A020;
-  --accent-light: #F5C06A;
-  --accent-dark: #C07A10;
-
   /* ── Background / Foreground ─────────────────────────────── */
   --background: var(--water);
   --foreground: #0D1B2A;
@@ -26,19 +21,11 @@
   /* ── Text ────────────────────────────────────────────────── */
   --text-primary: #0D1B2A;
   --text-secondary: #3D5F7F;
-  --text-disabled: #9AB3C9;
-  --text-on-water: #ffffff;
-  --text-on-water-muted: rgba(255, 255, 255, 0.70);
-
-  /* ── Border ──────────────────────────────────────────────── */
-  --border: #e0e0e0;
-  --border-variant: #bdbdbd;
 
   /* ── State ───────────────────────────────────────────────── */
   --error: #d32f2f;
-  --error-text: #ffffff;
-  --success: #388e3c;
-  --success-text: #ffffff;
+  /* The favourite heart (quay header, search results). */
+  --favorite: #DC2626;
 
   /* ── Margin tiers ─────────────────────────────────────────
      One strong colour per tier, used everywhere a departure is shown
@@ -54,12 +41,6 @@
   --traffic-moderate: #B45309;
   --traffic-heavy:    #B91C1C;
 
-  /* ── Shadows ─────────────────────────────────────────────── */
-  --shadow-search: 0 2px 8px rgba(0, 0, 0, 0.12);
-  --shadow-search-focus: 0 0 0 3px rgba(58, 133, 194, 0.30), 0 2px 8px rgba(0, 0, 0, 0.12);
-  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
-  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.14);
-
   /* ── Page backdrop (SeaBackground): low contrast against --surface-tint ── */
   --deco-far: #E3EEF9;
   --deco-wave-1: #E2EFFB;
@@ -70,7 +51,6 @@
   --deco-lamp: #F5C06A;
   --deco-beam: rgba(245, 192, 106, 0.30);
   --deco-gull: #B5CEE6;
-
 }
 
 .dark {
@@ -83,15 +63,9 @@
 
   --text-primary: #E8F0F8;
   --text-secondary: #8AAECE;
-  --text-disabled: #3D5573;
-  --text-on-water: #E8F0F8;
-  --text-on-water-muted: rgba(232, 240, 248, 0.60);
   --traffic-normal:   #4ADE80;
   --traffic-moderate: #FACC15;
   --traffic-heavy:    #F87171;
-
-  --border: #2a2a2a;
-  --border-variant: #404040;
 
   --deco-far: #1D2B47;
   --deco-wave-1: #1E2E4C;
@@ -102,7 +76,6 @@
   --deco-lamp: #F5C06A;
   --deco-beam: rgba(245, 192, 106, 0.13);
   --deco-gull: #2E4470;
-
 }
 
 @theme inline {
@@ -110,22 +83,25 @@
   --color-foreground:   var(--foreground);
   --color-water:        var(--water);
   --color-water-light:  var(--water-light);
-  --color-water-dark:   var(--water-dark);
-  --color-accent:       var(--accent);
   --color-surface:      var(--surface);
   --color-surface-tint: var(--surface-tint);
   --color-surface-variant: var(--surface-variant);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
-  --color-text-disabled: var(--text-disabled);
-  --color-border:       var(--border);
   --color-error:        var(--error);
-  --color-success:      var(--success);
+  --color-favorite:     var(--favorite);
+  --color-margin-missed: var(--margin-missed);
 
-  --font-display: var(--font-dm-sans); /* headings: same family, set bold */
-  --font-body:    var(--font-dm-sans);
-  --font-mono:    var(--font-jetbrains-mono);
-  --font-sans:    var(--font-dm-sans);
+  /* One family everywhere (headings are DM Sans set bold); figures in JetBrains Mono. */
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains-mono);
+}
+
+/* Shadows, the same in both themes: shadow-raised (cards, rows, round buttons) and
+   shadow-field (the search field). */
+@theme {
+  --shadow-raised: 0 1px 3px rgba(1, 22, 56, 0.08);
+  --shadow-field: 0 2px 10px rgba(1, 22, 56, 0.12);
 }
 
 body {
@@ -166,10 +142,6 @@ body {
   animation: scene-bob 4.5s ease-in-out infinite;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .scene-bob { animation: none; }
-}
-
 /* Page backdrop: the ferry crosses from off-screen left to off-screen right, waits there,
    then sails back (it's double-ended, so no flip) and waits again. 45 s per leg incl. a ~5 s
    wait. Animating `left` keeps the off-screen points relative to the backdrop's width;
@@ -184,10 +156,6 @@ body {
 
 .ferry-sail { animation: ferry-sail 90s linear infinite; }
 
-@media (prefers-reduced-motion: reduce) {
-  .ferry-sail { animation: none; }
-}
-
 /* Lighthouse beam on the page backdrop: a slow sweep of brightness. */
 @keyframes deco-beam {
   0%, 100% { opacity: 0.35; }
@@ -197,5 +165,7 @@ body {
 .deco-beam { animation: deco-beam 7s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
+  .scene-bob,
+  .ferry-sail,
   .deco-beam { animation: none; }
 }

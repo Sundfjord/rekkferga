@@ -75,8 +75,9 @@ export function splitMargin(minutes: number, language: Language): { value: strin
  * still make (tight counts). Null when the pick is comfortable or nothing later fits.
  */
 export function planB(departures: DepartureOption[], selected: DepartureOption): DepartureOption | null {
-  // Same line as the tight tier (marginTier): offered whenever the pick isn't green.
-  if (selected.marginMinutes === null || selected.marginMinutes > 5) return null;
+  // Offered whenever the pick isn't green (and has a margin at all).
+  const tier = tierOf(selected);
+  if (tier === "safe" || tier === "none") return null;
   const after = Date.parse(selected.expectedDepartureTime);
   return (
     departures.find(
