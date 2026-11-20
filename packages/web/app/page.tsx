@@ -79,9 +79,10 @@ export default function Home() {
   }, []);
 
   const favoriteIds = useMemo(() => new Set(favorites.map((f) => f.id)), [favorites]);
-  // Quays already among the favourites aren't suggested again.
+  // Quays already among the favourites aren't suggested again. They're excluded inside
+  // suggestQuays, not filtered out first, so they still block the far end of their crossings.
   const suggestions = useMemo(
-    () => (userLocation ? suggestQuays(quays.filter((q) => !favoriteIds.has(q.id)), userLocation) : []),
+    () => (userLocation ? suggestQuays(quays, userLocation, 3, favoriteIds) : []),
     [quays, userLocation, favoriteIds],
   );
 

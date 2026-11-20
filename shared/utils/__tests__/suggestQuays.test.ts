@@ -41,6 +41,15 @@ describe("suggestQuays", () => {
     expect(names(STORD)).not.toContain("Halhjem");
   });
 
+  it("never suggests the far end of a crossing whose near end is excluded", () => {
+    // Oppedal and Hatvik are favourites: Lavik and Venjaneset must not take their place.
+    const suggested = suggestQuays(QUAYS, BERGEN, 3, new Set(["oppedal", "hatvik"])).map((q) => q.name);
+    expect(suggested).not.toContain("Oppedal");
+    expect(suggested).not.toContain("Lavik");
+    expect(suggested).not.toContain("Venjaneset");
+    expect(suggested).toEqual(["Halhjem", "Breistein"]);
+  });
+
   it("suggests nothing when every quay is far away", () => {
     expect(names(OSLO)).toEqual([]);
   });

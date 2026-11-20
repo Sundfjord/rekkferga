@@ -28,14 +28,17 @@ export function quayPopularity(quay: Pick<Quay, "dailyDepartures" | "roadCategor
  * Quays worth suggesting from a position, best first: popular crossings that are reasonably
  * near. A quay is left out when a quay at the other end of one of its crossings is nearer —
  * you'd depart from that one (in Bergen, Oppedal is suggested and Lavik is not).
+ *
+ * Pass the full quay list and put quays not to suggest (e.g. favourites) in `exclude`: they
+ * still count as the near end of their crossings, so excluding Oppedal never promotes Lavik.
  */
-export function suggestQuays(quays: Quay[], from: [number, number], count = 3): Quay[] {
+export function suggestQuays(quays: Quay[], from: [number, number], count = 3, exclude?: ReadonlySet<string>): Quay[] {
   const byId = new Map(quays.map((q) => [q.id, q]));
   const distanceTo = (q: Quay) => calculateDistance(from[0], from[1], q.latitude, q.longitude);
 
   return quays
     .map((quay) => ({ quay, km: distanceTo(quay) }))
-    .filter(({ km }) => km <= MAX_DISTANCE_KM)
+    .filter(({ quay, km }) => km <= MAX_DISTANCE_KM && !exclude?.has(quay.id))
     .filter(({ quay, km }) =>
       quay.relatedQuayIds.every((id) => {
         const other = byId.get(id);
